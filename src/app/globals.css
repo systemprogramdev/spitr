@@ -2801,7 +2801,7 @@ a:hover {
     color: var(--sys-bg) !important;
     width: 48px;
     height: 48px;
-    border-radius: 50%;
+    border-radius: 12px;
     box-shadow: 0 0 20px rgba(var(--sys-primary-rgb), 0.5);
     animation: newSpitPulse 2s ease-in-out infinite;
   }
@@ -2816,7 +2816,7 @@ a:hover {
     color: var(--sys-bg) !important;
     width: 52px !important;
     height: 52px !important;
-    border-radius: 50% !important;
+    border-radius: 12px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
