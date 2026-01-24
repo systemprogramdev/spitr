@@ -64,7 +64,7 @@ export default function MainLayout({
         {/* Mobile Header */}
         <header className="mobile-header">
           <Link href="/" className="mobile-header-logo">
-            <span className="logo-text" data-text="SPITr">SPITr</span>
+            <img src="/logo.png" alt="SPITr" className="logo-image" />
           </Link>
 
           <div className="mobile-header-right">
@@ -172,7 +172,7 @@ export default function MainLayout({
           <nav className="sidebar-nav">
             {/* Logo */}
             <Link href="/" className="sidebar-logo">
-              <span className="logo-text" data-text="SPITr">SPITr</span>
+              <img src="/logo.png" alt="SPITr" className="logo-image" />
             </Link>
 
             {/* Nav Items */}

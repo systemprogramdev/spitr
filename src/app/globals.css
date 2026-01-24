@@ -1585,6 +1585,25 @@ a:hover {
   text-decoration: none;
 }
 
+/* Logo Image */
+.logo-image {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  transition: filter 0.2s, transform 0.2s;
+}
+
+.sidebar-logo:hover .logo-image,
+.mobile-header-logo:hover .logo-image {
+  filter: drop-shadow(0 0 10px var(--sys-primary)) brightness(1.1);
+  transform: scale(1.02);
+}
+
+/* Mobile header logo sizing */
+.mobile-header-logo .logo-image {
+  height: 32px;
+}
+
 /* Cyberpunk Logo Text */
 .logo-text {
   font-size: 1.75rem;
