@@ -497,7 +497,6 @@ export interface SpitWithAuthor extends Spit {
   is_liked: boolean
   is_respit: boolean
   is_pinned?: boolean
-  effect?: string | null
 }
 
 export interface ConversationWithParticipants extends Conversation {

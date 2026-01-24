@@ -124,6 +124,7 @@ export function useFeed() {
         content,
         image_url: null,
         reply_to_id: null,
+        effect: null,
         created_at: new Date().toISOString(),
         author: user,
         like_count: 0,

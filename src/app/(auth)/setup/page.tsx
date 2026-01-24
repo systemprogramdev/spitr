@@ -68,7 +68,7 @@ export default function SetupPage() {
       .from('users')
       .select('id')
       .ilike('handle', value)
-      .neq('id', userId)
+      .neq('id', userId!)
       .single()
 
     if (data) {
