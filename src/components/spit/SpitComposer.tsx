@@ -184,7 +184,9 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
       setShowEffects(false)
       setImageFile(null)
       setImagePreview(null)
-      if (!replyTo) {
+      if (replyTo) {
+        window.dispatchEvent(new CustomEvent('spit-reply-posted', { detail: { replyToId: replyTo, content: content.trim() } }))
+      } else {
         window.dispatchEvent(new CustomEvent('spit-posted', { detail: { content: content.trim() } }))
       }
       onSuccess?.()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { formatDistanceToNow } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -59,8 +59,22 @@ export function Spit({ spit, showActions = true }: SpitProps) {
   const [isRespit, setIsRespit] = useState(spit.is_respit)
   const [likeCount, setLikeCount] = useState(spit.like_count)
   const [respitCount, setRespitCount] = useState(spit.respit_count)
-  const [replyCount] = useState(spit.reply_count)
+  const [replyCount, setReplyCount] = useState(spit.reply_count)
   const [isLoading, setIsLoading] = useState(false)
+
+  // Listen for reply events to update count instantly
+  useEffect(() => {
+    const handleReplyPosted = (e: CustomEvent<{ replyToId: string }>) => {
+      if (e.detail?.replyToId === spit.id) {
+        setReplyCount(c => c + 1)
+      }
+    }
+
+    window.addEventListener('spit-reply-posted', handleReplyPosted as EventListener)
+    return () => {
+      window.removeEventListener('spit-reply-posted', handleReplyPosted as EventListener)
+    }
+  }, [spit.id])
   const [showLikeAnim, setShowLikeAnim] = useState(false)
   const [showPinModal, setShowPinModal] = useState(false)
   const [isPinning, setIsPinning] = useState(false)
