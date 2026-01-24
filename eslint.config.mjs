@@ -13,6 +13,16 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      // Allow data fetching pattern in useEffect (common React pattern)
+      "react-hooks/set-state-in-effect": "off",
+      // Allow img elements for external URLs
+      "@next/next/no-img-element": "warn",
+      // Allow underscore-prefixed unused vars in tests
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+    },
+  },
 ]);
 
 export default eslintConfig;

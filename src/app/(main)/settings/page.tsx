@@ -1,0 +1,183 @@
+'use client'
+
+import Link from 'next/link'
+import { useAuth } from '@/hooks/useAuth'
+import { useUIStore } from '@/stores/uiStore'
+
+const themes = [
+  { id: 'terminal', name: 'Terminal', description: 'Classic green phosphor' },
+  { id: 'neon', name: 'Neon', description: 'Vibrant cyberpunk colors' },
+  { id: 'hologram', name: 'Hologram', description: 'Futuristic blue glow' },
+  { id: 'terminal-amber', name: 'Amber', description: 'Warm amber monochrome' },
+  { id: 'military', name: 'Military', description: 'Tactical ops style' },
+]
+
+export default function SettingsPage() {
+  const { user, signOut } = useAuth()
+  const { theme, scanlines, setTheme, toggleScanlines } = useUIStore()
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme)
+    document.body.setAttribute('data-theme', newTheme)
+  }
+
+  const handleScanlinesToggle = () => {
+    toggleScanlines()
+    document.body.setAttribute('data-scanlines', (!scanlines).toString())
+  }
+
+  return (
+    <div>
+      <header className="feed-header">
+        <h1 className="text-glow" style={{ fontSize: '1.25rem', fontWeight: 'bold', fontFamily: 'var(--sys-font-display)' }}>
+          <span className="sys-icon sys-icon-settings" style={{ marginRight: '0.5rem' }}></span>
+          Settings
+        </h1>
+      </header>
+
+      <div style={{ padding: '1.5rem' }}>
+        {/* Profile Settings */}
+        <div className="panel-bash" style={{ marginBottom: '1.5rem' }}>
+          <div className="panel-bash-header">
+            <div className="panel-bash-dots">
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+            </div>
+            <span className="panel-bash-title">profile</span>
+          </div>
+          <div className="panel-bash-body" style={{ padding: '1rem' }}>
+            {user && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                <div
+                  className="avatar"
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    backgroundColor: 'var(--sys-primary)',
+                    backgroundImage: user.avatar_url ? `url(${user.avatar_url})` : undefined,
+                  }}
+                />
+                <div>
+                  <div style={{ fontWeight: 'bold', color: 'var(--sys-text)' }}>{user.name}</div>
+                  <div style={{ color: 'var(--sys-text-muted)' }}>@{user.handle}</div>
+                </div>
+              </div>
+            )}
+            <Link href="/settings/profile" className="btn btn-outline" style={{ width: '100%' }}>
+              <span className="sys-icon sys-icon-edit" style={{ marginRight: '0.5rem' }}></span>
+              Edit Profile
+            </Link>
+          </div>
+        </div>
+
+        {/* Theme Settings */}
+        <div className="panel-bash" style={{ marginBottom: '1.5rem' }}>
+          <div className="panel-bash-header">
+            <div className="panel-bash-dots">
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+            </div>
+            <span className="panel-bash-title">appearance</span>
+          </div>
+          <div className="panel-bash-body" style={{ padding: '1rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={scanlines}
+                  onChange={handleScanlinesToggle}
+                />
+                <span style={{ color: 'var(--sys-text)' }}>Enable scanlines effect</span>
+              </label>
+            </div>
+
+            <div>
+              <label className="label" style={{ marginBottom: '0.75rem', display: 'block' }}>
+                Theme
+              </label>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {themes.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleThemeChange(t.id)}
+                    className={theme === t.id ? 'panel glow' : 'panel'}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem 1rem',
+                      border: theme === t.id ? '1px solid var(--sys-primary)' : '1px solid var(--sys-border)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                      background: theme === t.id ? 'var(--sys-surface)' : 'transparent',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: theme === t.id ? 'bold' : 'normal', color: 'var(--sys-text)' }}>{t.name}</div>
+                      <div style={{ fontSize: '0.875rem', color: 'var(--sys-text-muted)' }}>{t.description}</div>
+                    </div>
+                    {theme === t.id && <span className="badge badge-glow">Active</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Settings */}
+        <div className="panel-bash" style={{ marginBottom: '1.5rem' }}>
+          <div className="panel-bash-header">
+            <div className="panel-bash-dots">
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+            </div>
+            <span className="panel-bash-title">account</span>
+          </div>
+          <div className="panel-bash-body" style={{ padding: '1rem' }}>
+            <Link
+              href="/settings/account"
+              className="btn btn-outline"
+              style={{ width: '100%', marginBottom: '0.75rem' }}
+            >
+              <span className="sys-icon sys-icon-user" style={{ marginRight: '0.5rem' }}></span>
+              Account Settings
+            </Link>
+            <button
+              onClick={signOut}
+              className="btn btn-outline"
+              style={{ width: '100%' }}
+            >
+              <span className="sys-icon sys-icon-lock" style={{ marginRight: '0.5rem' }}></span>
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+        {/* Danger Zone */}
+        <div className="panel-bash" style={{ border: '1px solid var(--sys-danger)' }}>
+          <div className="panel-bash-header" style={{ borderColor: 'var(--sys-danger)' }}>
+            <div className="panel-bash-dots">
+              <span className="panel-bash-dot" style={{ background: 'var(--sys-danger)' }}></span>
+              <span className="panel-bash-dot" style={{ background: 'var(--sys-danger)' }}></span>
+              <span className="panel-bash-dot" style={{ background: 'var(--sys-danger)' }}></span>
+            </div>
+            <span className="panel-bash-title" style={{ color: 'var(--sys-danger)' }}>danger_zone</span>
+          </div>
+          <div className="panel-bash-body" style={{ padding: '1rem' }}>
+            <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--sys-text-muted)' }}>
+              Once you delete your account, there is no going back. Please be certain.
+            </p>
+            <button className="btn btn-danger" style={{ width: '100%' }}>
+              <span className="sys-icon sys-icon-alert-triangle" style={{ marginRight: '0.5rem' }}></span>
+              Delete Account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

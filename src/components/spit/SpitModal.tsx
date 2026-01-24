@@ -1,0 +1,456 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/authStore'
+import { useModalStore } from '@/stores/modalStore'
+import { useCredits } from '@/hooks/useCredits'
+import { SPIT_EFFECTS, EFFECT_COST } from '@/lib/effects'
+
+const IMAGE_COST = 50
+
+export function SpitModal() {
+  const { user } = useAuthStore()
+  const { isSpitModalOpen, replyToId, replyToHandle, closeSpitModal } = useModalStore()
+  const { balance, deductCredit, hasCredits } = useCredits()
+  const [content, setContent] = useState('')
+  const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
+  const [showEffects, setShowEffects] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
+
+  const charCount = content.length
+  const maxChars = 280
+  const isOverLimit = charCount > maxChars
+  const totalCost = 1 + (selectedEffect ? EFFECT_COST : 0) + (imageFile ? IMAGE_COST : 0)
+
+  useEffect(() => {
+    if (isSpitModalOpen && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [isSpitModalOpen])
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isSpitModalOpen) {
+        closeSpitModal()
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isSpitModalOpen, closeSpitModal])
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be under 5MB')
+        return
+      }
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${user!.id}/${Date.now()}.${fileExt}`
+
+    console.log('Uploading to spit-images bucket:', fileName)
+
+    const { error: uploadError, data: uploadData } = await supabase.storage
+      .from('spit-images')
+      .upload(fileName, file)
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError.message, uploadError)
+      if (uploadError.message.includes('not found') || uploadError.message.includes('Bucket')) {
+        setError('Storage bucket "spit-images" not found. Run the storage migration.')
+      }
+      return null
+    }
+
+    console.log('Upload success:', uploadData)
+
+    const { data } = supabase.storage
+      .from('spit-images')
+      .getPublicUrl(fileName)
+
+    return data.publicUrl
+  }
+
+  const handleSubmit = async () => {
+    if (!user || !content.trim() || isOverLimit || isLoading) return
+
+    if (!hasCredits(totalCost)) {
+      setError(`Insufficient spits! You need ${totalCost} spits.`)
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    // Upload image FIRST before deducting any credits
+    let imageUrl: string | null = null
+    if (imageFile) {
+      imageUrl = await uploadImage(imageFile)
+      if (!imageUrl) {
+        setError('Failed to upload image. Check that storage bucket exists.')
+        setIsLoading(false)
+        return
+      }
+    }
+
+    // Now deduct credits after image upload succeeds
+    const creditDeducted = await deductCredit(replyToId ? 'reply' : 'post')
+    if (!creditDeducted) {
+      setError('Failed to process credit. Please try again.')
+      setIsLoading(false)
+      return
+    }
+
+    if (selectedEffect) {
+      const effectDeducted = await deductCredit('post')
+      if (!effectDeducted) {
+        setError('Failed to process effect credit.')
+        setIsLoading(false)
+        return
+      }
+    }
+
+    // Deduct image cost after successful upload
+    if (imageFile) {
+      for (let i = 0; i < IMAGE_COST; i++) {
+        await deductCredit('post')
+      }
+    }
+
+    const insertData: {
+      user_id: string
+      content: string
+      reply_to_id: string | null
+      effect?: string
+      image_url?: string
+    } = {
+      user_id: user.id,
+      content: content.trim(),
+      reply_to_id: replyToId || null,
+    }
+    if (selectedEffect) {
+      insertData.effect = selectedEffect
+    }
+    if (imageUrl) {
+      insertData.image_url = imageUrl
+    }
+
+    const { error: insertError } = await supabase.from('spits').insert(insertData)
+
+    if (insertError) {
+      console.error('Insert error:', insertError.message, insertError.code)
+      setError(`Failed to post: ${insertError.message}`)
+    } else {
+      const postedContent = content.trim()
+      setContent('')
+      setSelectedEffect(null)
+      setShowEffects(false)
+      setImageFile(null)
+      setImagePreview(null)
+      closeSpitModal()
+      window.dispatchEvent(new CustomEvent('spit-posted', { detail: { content: postedContent } }))
+    }
+
+    setIsLoading(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSubmit()
+    }
+  }
+
+  if (!isSpitModalOpen || !user) return null
+
+  return (
+    <div
+      className="modal-overlay"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
+        paddingTop: '10vh',
+        zIndex: 1000,
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) closeSpitModal()
+      }}
+    >
+      <div
+        className="panel-bash glow"
+        style={{
+          width: '100%',
+          maxWidth: '600px',
+          margin: '0 1rem',
+          animation: 'slideDown 0.2s ease-out',
+        }}
+      >
+        <div className="panel-bash-header">
+          <div className="panel-bash-dots">
+            <span className="panel-bash-dot"></span>
+            <span className="panel-bash-dot"></span>
+            <span className="panel-bash-dot"></span>
+          </div>
+          <span className="panel-bash-title">
+            {replyToId ? `reply_to_@${replyToHandle}` : 'new_spit'} [{balance} spits]
+          </span>
+          <button
+            onClick={closeSpitModal}
+            style={{
+              marginLeft: 'auto',
+              background: 'none',
+              border: 'none',
+              color: 'var(--sys-text-muted)',
+              cursor: 'pointer',
+              padding: '0.25rem',
+            }}
+          >
+            <span className="sys-icon sys-icon-x"></span>
+          </button>
+        </div>
+        <div className="panel-bash-body" style={{ padding: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div
+              className="avatar"
+              style={{
+                width: '48px',
+                height: '48px',
+                backgroundColor: 'var(--sys-primary)',
+                backgroundImage: user.avatar_url ? `url(${user.avatar_url})` : undefined,
+                flexShrink: 0,
+              }}
+            />
+            <div style={{ flex: 1 }}>
+              <textarea
+                ref={textareaRef}
+                className="composer-textarea"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={replyToId ? `Reply to @${replyToHandle}...` : "What's happening?"}
+                rows={4}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  color: 'var(--sys-text)',
+                  fontFamily: 'var(--sys-font-mono)',
+                  fontSize: '1rem',
+                }}
+              />
+
+              {imagePreview && (
+                <div style={{ position: 'relative', marginTop: '0.5rem', display: 'inline-block' }}>
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    style={{
+                      maxWidth: '200px',
+                      maxHeight: '150px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--sys-border)',
+                    }}
+                  />
+                  <button
+                    onClick={removeImage}
+                    style={{
+                      position: 'absolute',
+                      top: '-8px',
+                      right: '-8px',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'var(--sys-danger)',
+                      border: 'none',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '14px',
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+
+              {error && (
+                <div className="alert alert-danger" style={{ marginTop: '0.5rem', padding: '0.5rem' }}>
+                  {error}
+                </div>
+              )}
+
+              {showEffects && (
+                <div style={{
+                  marginTop: '0.75rem',
+                  padding: '0.75rem',
+                  background: 'var(--sys-bg)',
+                  borderRadius: '4px',
+                  border: '1px solid var(--sys-border)',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.5rem',
+                  }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--sys-text-muted)', fontFamily: 'var(--sys-font-mono)' }}>
+                      SELECT EFFECT (+{EFFECT_COST} spit)
+                    </span>
+                    {selectedEffect && (
+                      <button
+                        onClick={() => setSelectedEffect(null)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--sys-danger)',
+                          fontSize: '0.7rem',
+                          cursor: 'pointer',
+                          fontFamily: 'var(--sys-font-mono)',
+                        }}
+                      >
+                        [CLEAR]
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {SPIT_EFFECTS.map((effect) => (
+                      <button
+                        key={effect.id}
+                        onClick={() => setSelectedEffect(selectedEffect === effect.id ? null : effect.id)}
+                        className={selectedEffect === effect.id ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                        style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
+                        title={effect.description}
+                      >
+                        {effect.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '1rem',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid var(--sys-border)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span
+                    style={{
+                      fontSize: '0.875rem',
+                      color: isOverLimit ? 'var(--sys-danger)' : 'var(--sys-text-muted)',
+                    }}
+                  >
+                    {charCount}/{maxChars}
+                  </span>
+                  {imageFile && (
+                    <span className="badge badge-secondary" style={{ fontSize: '0.65rem' }}>
+                      +IMG ({IMAGE_COST})
+                    </span>
+                  )}
+                  {selectedEffect && (
+                    <span className="badge badge-secondary" style={{ fontSize: '0.65rem' }}>
+                      +FX
+                    </span>
+                  )}
+                  {!hasCredits(totalCost) && <span className="badge badge-danger">Need {totalCost} spits!</span>}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    className="btn btn-outline btn-sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    title={`Add image (+${IMAGE_COST} spits)`}
+                    style={{ padding: '0.25rem 0.5rem' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                  </button>
+                  <button
+                    className={`btn btn-outline btn-sm ${showEffects ? 'btn-active' : ''}`}
+                    onClick={() => setShowEffects(!showEffects)}
+                    title="Add effect (+1 spit)"
+                    style={{ padding: '0.25rem 0.5rem' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    </svg>
+                  </button>
+                  <button className="btn btn-outline" onClick={closeSpitModal}>
+                    Cancel
+                  </button>
+                  <button
+                    className="btn btn-primary btn-glow"
+                    onClick={handleSubmit}
+                    disabled={!content.trim() || isOverLimit || isLoading || !hasCredits(totalCost)}
+                  >
+                    {isLoading ? '...' : replyToId ? 'Reply' : 'Spit'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
+  )
+}

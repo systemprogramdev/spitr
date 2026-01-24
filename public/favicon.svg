@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88"/>
+      <stop offset="50%" style="stop-color:#00ffff"/>
+      <stop offset="100%" style="stop-color:#00ff88"/>
+    </linearGradient>
+    <filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-strong" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="32" height="32" rx="6" fill="#0a0a0f"/>
+
+  <!-- Subtle grid pattern -->
+  <pattern id="grid" width="4" height="4" patternUnits="userSpaceOnUse">
+    <path d="M 4 0 L 0 0 0 4" fill="none" stroke="#00ff8810" stroke-width="0.5"/>
+  </pattern>
+  <rect width="32" height="32" rx="6" fill="url(#grid)"/>
+
+  <!-- Corner accents -->
+  <path d="M2 8 L2 2 L8 2" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.6"/>
+  <path d="M24 2 L30 2 L30 8" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.6"/>
+  <path d="M30 24 L30 30 L24 30" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.6"/>
+  <path d="M8 30 L2 30 L2 24" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.6"/>
+
+  <!-- Main S letter with glow -->
+  <g filter="url(#glow-strong)">
+    <text x="16" y="24"
+          font-family="Arial Black, sans-serif"
+          font-size="20"
+          font-weight="900"
+          fill="url(#glow)"
+          text-anchor="middle"
+          style="letter-spacing: -1px">S</text>
+  </g>
+
+  <!-- Scan line effect -->
+  <line x1="0" y1="16" x2="32" y2="16" stroke="#00ffff" stroke-width="0.5" opacity="0.3"/>
+</svg>

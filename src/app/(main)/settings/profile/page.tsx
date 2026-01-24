@@ -1,0 +1,334 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/authStore'
+
+export default function EditProfilePage() {
+  const router = useRouter()
+  const { user, setUser } = useAuthStore()
+  const [name, setName] = useState(user?.name || '')
+  const [bio, setBio] = useState(user?.bio || '')
+  const [location, setLocation] = useState(user?.location || '')
+  const [website, setWebsite] = useState(user?.website || '')
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '')
+  const [bannerUrl, setBannerUrl] = useState(user?.banner_url || '')
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false)
+  const [error, setError] = useState('')
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const bannerInputRef = useRef<HTMLInputElement>(null)
+  const supabase = createClient()
+
+  const uploadImage = async (file: File, bucket: 'avatars' | 'banners') => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${user?.id}-${Date.now()}.${fileExt}`
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file, { upsert: true })
+
+    if (uploadError) {
+      throw uploadError
+    }
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(fileName)
+    return data.publicUrl
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be less than 2MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    setError('')
+
+    try {
+      const url = await uploadImage(file, 'avatars')
+      setAvatarUrl(url)
+    } catch (err) {
+      setError('Failed to upload avatar')
+      console.error(err)
+    }
+
+    setIsUploadingAvatar(false)
+  }
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setError('Banner must be less than 4MB')
+      return
+    }
+
+    setIsUploadingBanner(true)
+    setError('')
+
+    try {
+      const url = await uploadImage(file, 'banners')
+      setBannerUrl(url)
+    } catch (err) {
+      setError('Failed to upload banner')
+      console.error(err)
+    }
+
+    setIsUploadingBanner(false)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || isSaving) return
+
+    setIsSaving(true)
+    setError('')
+
+    const { data, error: updateError } = await supabase
+      .from('users')
+      .update({
+        name: name.trim(),
+        bio: bio.trim() || null,
+        location: location.trim() || null,
+        website: website.trim() || null,
+        avatar_url: avatarUrl || null,
+        banner_url: bannerUrl || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
+      .select()
+      .single()
+
+    if (updateError) {
+      setError('Failed to update profile')
+      setIsSaving(false)
+      return
+    }
+
+    if (data) {
+      setUser(data)
+    }
+
+    setIsSaving(false)
+    router.push('/settings')
+  }
+
+  if (!user) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div className="loading-spinner"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <header className="feed-header" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <button
+          onClick={() => router.back()}
+          className="btn btn-sm"
+          style={{ background: 'none', border: 'none', padding: '0.5rem' }}
+        >
+          <span className="sys-icon sys-icon-arrow-left"></span>
+        </button>
+        <h1 className="text-glow" style={{ fontSize: '1.25rem', fontWeight: 'bold', fontFamily: 'var(--sys-font-display)' }}>
+          Edit Profile
+        </h1>
+      </header>
+
+      <form onSubmit={handleSubmit}>
+        {/* Banner Upload */}
+        <div
+          className="image-upload banner-upload"
+          style={{
+            backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
+          }}
+          onClick={() => bannerInputRef.current?.click()}
+        >
+          <input
+            ref={bannerInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleBannerChange}
+            style={{ display: 'none' }}
+          />
+          {!bannerUrl && !isUploadingBanner && (
+            <div className="banner-upload-placeholder">
+              <span className="sys-icon sys-icon-image sys-icon-lg"></span>
+              <span>Click to upload banner</span>
+            </div>
+          )}
+          {isUploadingBanner && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <div className="loading-spinner"></div>
+            </div>
+          )}
+          <div className="image-upload-overlay">
+            <div className="image-upload-icon">
+              <span className="sys-icon sys-icon-camera"></span>
+            </div>
+          </div>
+        </div>
+
+        {/* Avatar Upload */}
+        <div style={{ padding: '0 1.5rem' }}>
+          <div
+            className="image-upload avatar-upload"
+            style={{
+              backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
+            }}
+            onClick={() => avatarInputRef.current?.click()}
+          >
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              style={{ display: 'none' }}
+            />
+            {!avatarUrl && !isUploadingAvatar && (
+              <span className="avatar-upload-letter">{name[0]?.toUpperCase() || '?'}</span>
+            )}
+            {isUploadingAvatar && (
+              <div className="loading-spinner"></div>
+            )}
+            <div className="image-upload-overlay">
+              <div className="image-upload-icon">
+                <span className="sys-icon sys-icon-camera"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: '1.5rem' }}>
+          <div className="panel-bash">
+            <div className="panel-bash-header">
+              <div className="panel-bash-dots">
+                <span className="panel-bash-dot"></span>
+                <span className="panel-bash-dot"></span>
+                <span className="panel-bash-dot"></span>
+              </div>
+              <span className="panel-bash-title">edit_profile</span>
+            </div>
+            <div className="panel-bash-body" style={{ padding: '1rem' }}>
+              {error && (
+                <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
+                  {error}
+                </div>
+              )}
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                  Display Name
+                </label>
+              <input
+                type="text"
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={50}
+                required
+                style={{ width: '100%' }}
+              />
+              <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>
+                {name.length}/50
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                Bio
+              </label>
+              <textarea
+                className="input"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                maxLength={160}
+                rows={3}
+                style={{ width: '100%', resize: 'none', fontFamily: 'var(--sys-font-mono)' }}
+                placeholder="Tell us about yourself..."
+              />
+              <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>
+                {bio.length}/160
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                Location
+              </label>
+              <input
+                type="text"
+                className="input"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                maxLength={30}
+                style={{ width: '100%' }}
+                placeholder="Your location"
+              />
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                Website
+              </label>
+              <input
+                type="url"
+                className="input"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                style={{ width: '100%' }}
+                placeholder="https://your-website.com"
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="btn btn-outline"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-glow"
+                  disabled={isSaving || !name.trim() || isUploadingAvatar || isUploadingBanner}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="loading-spinner" style={{ width: '1rem', height: '1rem', marginRight: '0.5rem' }}></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <span className="sys-icon sys-icon-check" style={{ marginRight: '0.5rem' }}></span>
+                      Save Changes
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+}
