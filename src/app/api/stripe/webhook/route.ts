@@ -56,6 +56,19 @@ export async function POST(request: NextRequest) {
     if (userId && credits) {
       const creditsAmount = parseInt(credits, 10)
 
+      // Check if this payment was already processed (idempotency)
+      const { data: existingTransaction } = await supabase
+        .from('credit_transactions')
+        .select('id')
+        .eq('reference_id', referenceId)
+        .single()
+
+      if (existingTransaction) {
+        // Already processed by confirm-payment endpoint
+        console.log(`Payment ${referenceId} already processed, skipping webhook`)
+        return NextResponse.json({ received: true, alreadyProcessed: true })
+      }
+
       // Get current balance
       const { data: currentCredits } = await supabase
         .from('user_credits')
@@ -89,7 +102,7 @@ export async function POST(request: NextRequest) {
         reference_id: referenceId,
       })
 
-      console.log(`Added ${creditsAmount} credits to user ${userId}. New balance: ${newBalance}`)
+      console.log(`Webhook: Added ${creditsAmount} credits to user ${userId}. New balance: ${newBalance}`)
     }
   }
 
