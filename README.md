@@ -41,7 +41,7 @@ SPITr uses a credit-based economy to gamify user engagement:
 | Image attachment | +50 credits |
 | Pin purchase | 500 credits |
 
-New users start with **1,000 credits** and receive **1,000 free credits every 30 days**. Additional credits can be purchased through the integrated Stripe payment system.
+New users start with **1,000 credits** and receive **1,000 free credits every 30 days**. Additional credits can be purchased through the integrated Stripe payment system. (test mode for now)
 
 ---
 
