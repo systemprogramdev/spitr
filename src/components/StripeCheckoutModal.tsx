@@ -50,11 +50,13 @@ const cardStyle = {
 function CheckoutForm({
   pkg,
   onClose,
-  onSuccess
+  onSuccess,
+  clientSecret
 }: {
   pkg: CreditPackage
   onClose: () => void
   onSuccess: (credits: number) => void
+  clientSecret: string
 }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -80,7 +82,7 @@ function CheckoutForm({
     setError(null)
 
     const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(
-      (elements as any)._commonOptions.clientSecret,
+      clientSecret,
       {
         payment_method: {
           card: cardNumber,
@@ -422,7 +424,7 @@ export function StripeCheckoutModal({
                 },
               }}
             >
-              <CheckoutForm pkg={pkg} onClose={onClose} onSuccess={onSuccess} />
+              <CheckoutForm pkg={pkg} onClose={onClose} onSuccess={onSuccess} clientSecret={clientSecret} />
             </Elements>
           )}
         </div>
