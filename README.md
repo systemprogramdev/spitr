@@ -39,7 +39,7 @@ SPITr uses a credit-based economy to gamify user engagement:
 | Reply | 1 credit |
 | Respit | 1 credit |
 | Image attachment | +50 credits |
-| Pin purchase | 100 credits |
+| Pin purchase | 500 credits |
 
 New users start with **1,000 credits**. Additional credits can be purchased through the integrated Stripe payment system.
 
