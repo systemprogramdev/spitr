@@ -163,12 +163,34 @@ export function SpitModal() {
       insertData.image_url = imageUrl
     }
 
-    const { error: insertError } = await supabase.from('spits').insert(insertData)
+    const { data: newSpit, error: insertError } = await supabase
+      .from('spits')
+      .insert(insertData)
+      .select('id')
+      .single()
 
     if (insertError) {
       console.error('Insert error:', insertError.message, insertError.code)
       setError(`Failed to post: ${insertError.message}`)
     } else {
+      // Create notification for reply
+      if (replyToId && newSpit) {
+        const { data: originalSpit } = await supabase
+          .from('spits')
+          .select('user_id')
+          .eq('id', replyToId)
+          .single()
+
+        if (originalSpit && originalSpit.user_id !== user.id) {
+          await supabase.from('notifications').insert({
+            user_id: originalSpit.user_id,
+            type: 'reply',
+            actor_id: user.id,
+            spit_id: newSpit.id,
+          })
+        }
+      }
+
       const postedContent = content.trim()
       setContent('')
       setSelectedEffect(null)
@@ -176,7 +198,13 @@ export function SpitModal() {
       setImageFile(null)
       setImagePreview(null)
       closeSpitModal()
-      window.dispatchEvent(new CustomEvent('spit-posted', { detail: { content: postedContent } }))
+
+      // Dispatch appropriate event
+      if (replyToId) {
+        window.dispatchEvent(new CustomEvent('spit-reply-posted', { detail: { replyToId, content: postedContent } }))
+      } else {
+        window.dispatchEvent(new CustomEvent('spit-posted', { detail: { content: postedContent } }))
+      }
     }
 
     setIsLoading(false)

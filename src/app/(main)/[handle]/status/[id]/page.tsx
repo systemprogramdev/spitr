@@ -48,6 +48,20 @@ export default function SpitDetailPage() {
     fetchSpit()
   }, [fetchSpit])
 
+  // Listen for replies posted from the modal
+  useEffect(() => {
+    const handleReplyPosted = (e: CustomEvent<{ replyToId: string }>) => {
+      if (e.detail?.replyToId === spitId) {
+        fetchSpit()
+      }
+    }
+
+    window.addEventListener('spit-reply-posted', handleReplyPosted as EventListener)
+    return () => {
+      window.removeEventListener('spit-reply-posted', handleReplyPosted as EventListener)
+    }
+  }, [spitId, fetchSpit])
+
   if (isLoading) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
