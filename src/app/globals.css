@@ -3031,7 +3031,7 @@ a:hover {
 /* Extra small screens */
 @media (max-width: 380px) {
   .spit-action-count {
-    display: none;
+    font-size: 0.7rem;
   }
 
   .spit-action {
