@@ -39,14 +39,23 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/login?error=profile_creation_failed`)
         }
 
-        // Create credits for new user
+        // Create credits for new user (1000 free credits, with renewal date set)
         const { error: creditsError } = await adminClient.from('user_credits').insert({
           user_id: data.user.id,
           balance: 1000,
+          free_credits_at: new Date().toISOString(),
         })
 
         if (creditsError) {
           console.error('Failed to create user credits:', creditsError)
+        } else {
+          // Log the initial free credits transaction
+          await adminClient.from('credit_transactions').insert({
+            user_id: data.user.id,
+            type: 'free_monthly',
+            amount: 1000,
+            balance_after: 1000,
+          })
         }
 
         // Redirect to setup page for new OAuth users
