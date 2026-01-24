@@ -12,7 +12,7 @@ const IMAGE_COST = 50
 export function SpitModal() {
   const { user } = useAuthStore()
   const { isSpitModalOpen, replyToId, replyToHandle, closeSpitModal } = useModalStore()
-  const { balance, deductCredit, hasCredits } = useCredits()
+  const { balance, deductCredit, deductAmount, hasCredits } = useCredits()
   const [content, setContent] = useState('')
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
   const [showEffects, setShowEffects] = useState(false)
@@ -137,8 +137,11 @@ export function SpitModal() {
 
     // Deduct image cost after successful upload
     if (imageFile) {
-      for (let i = 0; i < IMAGE_COST; i++) {
-        await deductCredit('post')
+      const imageDeducted = await deductAmount(IMAGE_COST, 'post')
+      if (!imageDeducted) {
+        setError('Failed to process image credit.')
+        setIsLoading(false)
+        return
       }
     }
 

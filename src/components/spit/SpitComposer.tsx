@@ -16,7 +16,7 @@ interface SpitComposerProps {
 
 export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happening?" }: SpitComposerProps) {
   const { user } = useAuthStore()
-  const { balance, deductCredit, hasCredits } = useCredits()
+  const { balance, deductCredit, deductAmount, hasCredits } = useCredits()
   const [content, setContent] = useState('')
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
   const [showEffects, setShowEffects] = useState(false)
@@ -126,8 +126,11 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
 
     // Deduct image cost
     if (imageFile) {
-      for (let i = 0; i < IMAGE_COST; i++) {
-        await deductCredit('post')
+      const imageDeducted = await deductAmount(IMAGE_COST, 'post')
+      if (!imageDeducted) {
+        setError('Failed to process image credit.')
+        setIsLoading(false)
+        return
       }
     }
 
