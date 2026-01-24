@@ -24,7 +24,7 @@ SPITr is a modern microblogging platform with a distinctive cyberpunk aesthetic.
 - **Notifications** - Real-time alerts for follows, likes, respits, replies, and mentions
 - **User Profiles** - Customizable profiles with avatars, bios, and activity feeds
 - **Link Previews** - Automatic URL unfurling with Open Graph metadata
-- **OAuth Authentication** - Sign in with GitHub or Google
+- **OAuth Authentication** - Sign in with Google or just normal sign in
 - **Real-time Updates** - Live feed updates powered by Supabase subscriptions
 - **PWA Support** - Installable as a progressive web app
 - **Responsive Design** - Optimized for desktop and mobile devices
