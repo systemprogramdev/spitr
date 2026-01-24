@@ -65,6 +65,9 @@ export default function ConversationPage() {
         .update({ last_read_at: new Date().toISOString() })
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id)
+
+      // Dispatch event to update unread count in nav
+      window.dispatchEvent(new CustomEvent('messages-read'))
     }
 
     fetchConversation()
@@ -252,7 +255,7 @@ export default function ConversationPage() {
           className="btn btn-primary btn-glow"
           disabled={!newMessage.trim() || isSending}
         >
-          <span className="sys-icon sys-icon-send"></span>
+          {isSending ? '...' : 'Spit'}
         </button>
       </form>
     </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useCredits } from '@/hooks/useCredits'
+import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
 import { createClient } from '@/lib/supabase/client'
@@ -29,6 +30,7 @@ export default function MainLayout({
   const pathname = usePathname()
   const { user, signOut } = useAuth()
   const { balance } = useCredits()
+  const unreadMessages = useUnreadMessages()
   const { openSpitModal } = useModalStore()
   const [whoToFollow, setWhoToFollow] = useState<User[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -187,6 +189,9 @@ export default function MainLayout({
                     <span className="sidebar-item-label">{item.label}</span>
                     {item.href === '/credits' && (
                       <span className="sidebar-badge">{balance.toLocaleString()}</span>
+                    )}
+                    {item.href === '/messages' && unreadMessages > 0 && (
+                      <span className="sidebar-badge badge-glow">{unreadMessages}</span>
                     )}
                   </Link>
                 </li>
