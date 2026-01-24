@@ -242,6 +242,12 @@ function CreditsPageContent() {
                   <td style={{ padding: '0.5rem 0', textAlign: 'right', color: 'var(--sys-secondary)' }}>+1 spit</td>
                 </tr>
                 <tr>
+                  <td style={{ padding: '0.5rem 0', color: 'var(--sys-text)' }}>
+                    Add image to spit
+                  </td>
+                  <td style={{ padding: '0.5rem 0', textAlign: 'right', color: 'var(--sys-warning)' }}>+50 spits</td>
+                </tr>
+                <tr>
                   <td style={{ padding: '0.5rem 0', color: 'var(--sys-text)' }}>Like</td>
                   <td style={{ padding: '0.5rem 0', textAlign: 'right', color: 'var(--sys-success)' }}>FREE</td>
                 </tr>
