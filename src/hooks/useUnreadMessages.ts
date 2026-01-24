@@ -31,16 +31,16 @@ export function useUnreadMessages() {
       let count = 0
 
       for (const participation of participations) {
-        // Get the latest message in this conversation
-        const { data: latestMessage } = await supabase
+        // Get the latest message in this conversation from other users
+        const { data: messages } = await supabase
           .from('messages')
           .select('created_at, sender_id')
           .eq('conversation_id', participation.conversation_id)
           .neq('sender_id', user.id)
           .order('created_at', { ascending: false })
           .limit(1)
-          .single()
 
+        const latestMessage = messages?.[0]
         if (latestMessage) {
           const messageTime = new Date(latestMessage.created_at)
           const lastReadTime = new Date(participation.last_read_at || 0)
