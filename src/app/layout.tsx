@@ -23,10 +23,33 @@ const rajdhani = Rajdhani({
 
 export const metadata: Metadata = {
   title: "SPITr",
-  description: "Cyberpunk microblogging platform",
+  description: "The cyberpunk microblogging platform. Spit your thoughts into the void.",
+  metadataBase: new URL("https://spitr.wtf"),
   icons: {
     icon: "/favicon.svg",
     apple: "/favicon.svg",
+  },
+  openGraph: {
+    title: "SPITr",
+    description: "The cyberpunk microblogging platform. Spit your thoughts into the void.",
+    url: "https://spitr.wtf",
+    siteName: "SPITr",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SPITr - Cyberpunk Microblogging",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SPITr",
+    description: "The cyberpunk microblogging platform. Spit your thoughts into the void.",
+    images: ["/og-image.png"],
   },
 };
 
