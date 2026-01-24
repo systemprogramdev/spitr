@@ -62,7 +62,7 @@ export default function SetupPage() {
   }
 
   const checkHandleAvailable = async (value: string) => {
-    if (!value || validateHandle(value)) return
+    if (!value || validateHandle(value) || !userId) return
 
     const { data } = await supabase
       .from('users')
