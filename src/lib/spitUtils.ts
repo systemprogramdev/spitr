@@ -33,7 +33,20 @@ export async function enrichSpitsWithCounts(
     return []
   }
 
-  const spitIds = rawSpits.map(s => s.id)
+  const spitIds = rawSpits.map(s => s.id).filter(Boolean)
+
+  if (spitIds.length === 0) {
+    return rawSpits.map(spit => ({
+      ...spit,
+      author: spit.author,
+      effect: spit.effect,
+      like_count: 0,
+      respit_count: 0,
+      reply_count: 0,
+      is_liked: false,
+      is_respit: false,
+    }))
+  }
 
   // Fetch counts in parallel
   const [likeCounts, respitCounts, replyCounts, userLikes, userRespits] = await Promise.all([
@@ -47,11 +60,12 @@ export async function enrichSpitsWithCounts(
       .from('respits')
       .select('spit_id')
       .in('spit_id', spitIds),
-    // Reply counts
+    // Reply counts - count spits where reply_to_id matches our spit ids
     supabase
       .from('spits')
       .select('reply_to_id')
-      .in('reply_to_id', spitIds),
+      .in('reply_to_id', spitIds)
+      .not('reply_to_id', 'is', null),
     // User's likes (if logged in)
     currentUserId
       ? supabase
@@ -69,6 +83,11 @@ export async function enrichSpitsWithCounts(
           .in('spit_id', spitIds)
       : Promise.resolve({ data: [] }),
   ])
+
+  // Debug logging
+  if (replyCounts.error) {
+    console.error('Error fetching reply counts:', replyCounts.error)
+  }
 
   // Count occurrences
   const likeCountMap: Record<string, number> = {}
