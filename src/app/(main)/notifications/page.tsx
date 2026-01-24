@@ -22,7 +22,7 @@ export default function NotificationsPage() {
         .select(`
           *,
           actor:users!notifications_actor_id_fkey(*),
-          spit:spits(*)
+          spit:spits(*, reply_to_id)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
@@ -101,14 +101,21 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div>
-          {notifications.map((notification) => (
+          {notifications.map((notification) => {
+            // For reply notifications, link to the original spit (not the reply)
+            // The original spit belongs to the current user
+            const getNotificationHref = () => {
+              if (!notification.spit) return `/${notification.actor.handle}`
+              if (notification.type === 'reply' && notification.spit.reply_to_id) {
+                return `/${user!.handle}/status/${notification.spit.reply_to_id}`
+              }
+              return `/${notification.actor.handle}/status/${notification.spit.id}`
+            }
+
+            return (
             <Link
               key={notification.id}
-              href={
-                notification.spit
-                  ? `/${notification.actor.handle}/status/${notification.spit.id}`
-                  : `/${notification.actor.handle}`
-              }
+              href={getNotificationHref()}
               className="spit"
               style={{
                 display: 'flex',
@@ -144,7 +151,7 @@ export default function NotificationsPage() {
                 </p>
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       )}
     </div>
