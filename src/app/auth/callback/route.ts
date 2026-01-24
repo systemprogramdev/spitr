@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -11,8 +12,11 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      // Use admin client for database operations to bypass RLS timing issues
+      const adminClient = createAdminClient()
+
       // Check if user has a profile
-      const { data: profile } = await supabase
+      const { data: profile } = await adminClient
         .from('users')
         .select('handle, avatar_url')
         .eq('id', data.user.id)
@@ -21,17 +25,29 @@ export async function GET(request: Request) {
       // If no profile exists, create one with temporary handle
       if (!profile) {
         const tempHandle = `user_${data.user.id.substring(0, 8)}`
-        await supabase.from('users').insert({
+        const oauthAvatar = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture
+
+        const { error: insertError } = await adminClient.from('users').insert({
           id: data.user.id,
           handle: tempHandle,
-          name: tempHandle,
+          name: data.user.user_metadata?.full_name || tempHandle,
+          avatar_url: oauthAvatar || null,
         })
 
+        if (insertError) {
+          console.error('Failed to create user profile:', insertError)
+          return NextResponse.redirect(`${origin}/login?error=profile_creation_failed`)
+        }
+
         // Create credits for new user
-        await supabase.from('user_credits').insert({
+        const { error: creditsError } = await adminClient.from('user_credits').insert({
           user_id: data.user.id,
           balance: 1000,
         })
+
+        if (creditsError) {
+          console.error('Failed to create user credits:', creditsError)
+        }
 
         // Redirect to setup page for new OAuth users
         return NextResponse.redirect(`${origin}/setup`)
@@ -42,7 +58,7 @@ export async function GET(request: Request) {
         // Update avatar from OAuth if not set
         const oauthAvatar = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture
         if (oauthAvatar && !profile.avatar_url) {
-          await supabase
+          await adminClient
             .from('users')
             .update({ avatar_url: oauthAvatar })
             .eq('id', data.user.id)
@@ -53,7 +69,7 @@ export async function GET(request: Request) {
       // Existing user with proper handle, update avatar if needed
       const oauthAvatar = data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture
       if (oauthAvatar && !profile.avatar_url) {
-        await supabase
+        await adminClient
           .from('users')
           .update({ avatar_url: oauthAvatar })
           .eq('id', data.user.id)
