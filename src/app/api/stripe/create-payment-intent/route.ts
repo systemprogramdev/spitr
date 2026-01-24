@@ -47,11 +47,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get user email from Supabase auth
-    const { data: userData } = await supabase.auth.admin.getUserById(userId)
-    const userEmail = userData?.user?.email
-
     // Create a PaymentIntent with all production requirements
+    // Note: No receipt_email to avoid Stripe sending emails with cardholder name
     const paymentIntent = await stripe.paymentIntents.create({
       amount: pkg.price,
       currency: 'usd',
@@ -66,7 +63,6 @@ export async function POST(request: NextRequest) {
       },
       description: `SPITr ${pkg.name} - ${pkg.credits} Spits`,
       statement_descriptor_suffix: 'SPITR',
-      ...(userEmail && { receipt_email: userEmail }),
     }, {
       // Idempotency key prevents duplicate charges if request is retried
       idempotencyKey: `pi_${userId}_${packageId}_${Date.now()}`,
