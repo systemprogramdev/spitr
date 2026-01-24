@@ -9,6 +9,42 @@ import { useCredits, CREDIT_COSTS } from '@/hooks/useCredits'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitWithAuthor } from '@/types'
 import { getEffectClassName, getEffectById } from '@/lib/effects'
+import { LinkPreview } from '@/components/LinkPreview'
+
+// URL regex pattern
+const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
+
+// Extract first URL from text
+function extractFirstUrl(text: string): string | null {
+  const matches = text.match(URL_REGEX)
+  return matches ? matches[0] : null
+}
+
+// Render text with clickable links
+function renderTextWithLinks(text: string): React.ReactNode {
+  const parts = text.split(URL_REGEX)
+  const urls = text.match(URL_REGEX) || []
+
+  const result: React.ReactNode[] = []
+  parts.forEach((part, i) => {
+    result.push(part)
+    if (urls[i]) {
+      result.push(
+        <a
+          key={i}
+          href={urls[i]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="spit-link"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {urls[i].length > 40 ? urls[i].slice(0, 40) + '...' : urls[i]}
+        </a>
+      )
+    }
+  })
+  return result
+}
 
 interface SpitProps {
   spit: SpitWithAuthor & { _respitBy?: string }
@@ -287,10 +323,15 @@ export function Spit({ spit, showActions = true }: SpitProps) {
           <Link href={`/${spit.author.handle}/status/${spit.id}`} className="spit-text-link">
             <div className={spit.effect ? getEffectClassName(spit.effect) : ''}>
               <p className="spit-text" data-text={spit.content}>
-                {spit.content}
+                {renderTextWithLinks(spit.content)}
               </p>
             </div>
           </Link>
+
+          {/* Link Preview - show for first URL if no image attached */}
+          {!spit.image_url && extractFirstUrl(spit.content) && (
+            <LinkPreview url={extractFirstUrl(spit.content)!} />
+          )}
 
           {spit.image_url && (
             <div className="spit-image">
