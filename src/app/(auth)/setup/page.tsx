@@ -1,19 +1,30 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+
+const DEFAULT_AVATARS = [
+  '/avatars/default-1.svg',
+  '/avatars/default-2.svg',
+  '/avatars/default-3.svg',
+  '/avatars/default-4.svg',
+]
 
 export default function SetupPage() {
   const router = useRouter()
   const supabase = createClient()
   const [name, setName] = useState('')
   const [handle, setHandle] = useState('')
+  const [bio, setBio] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [error, setError] = useState('')
   const [handleError, setHandleError] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -27,7 +38,7 @@ export default function SetupPage() {
       // Check if user already has a proper profile
       const { data: profile } = await supabase
         .from('users')
-        .select('handle, name')
+        .select('handle, name, avatar_url')
         .eq('id', user.id)
         .single()
 
@@ -42,11 +53,51 @@ export default function SetupPage() {
       if (user.user_metadata?.full_name) {
         setName(user.user_metadata.full_name)
       }
+      // Pre-fill avatar from OAuth if available
+      if (profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url)
+      } else if (user.user_metadata?.avatar_url || user.user_metadata?.picture) {
+        setAvatarUrl(user.user_metadata?.avatar_url || user.user_metadata?.picture)
+      }
       setIsChecking(false)
     }
 
     checkUser()
   }, [router, supabase])
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be less than 2MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    setError('')
+
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${userId}-${Date.now()}.${fileExt}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(fileName, file, { upsert: true })
+
+    if (uploadError) {
+      setError('Failed to upload avatar')
+      setIsUploadingAvatar(false)
+      return
+    }
+
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName)
+    setAvatarUrl(data.publicUrl)
+    setIsUploadingAvatar(false)
+  }
 
   const validateHandle = (value: string) => {
     if (value.length < 3) {
@@ -102,6 +153,8 @@ export default function SetupPage() {
       .update({
         handle: handle.toLowerCase(),
         name: name.trim(),
+        bio: bio.trim() || null,
+        avatar_url: avatarUrl || null,
       })
       .eq('id', userId)
 
@@ -150,6 +203,44 @@ export default function SetupPage() {
           </p>
 
           <form onSubmit={handleSubmit}>
+            {/* Avatar Selection */}
+            <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+              <label style={{ display: 'block', marginBottom: '0.75rem', color: 'var(--sys-text-muted)', fontSize: '0.875rem' }}>Profile Picture</label>
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: '100px',
+                  height: '100px',
+                  borderRadius: '50%',
+                  margin: '0 auto',
+                  cursor: 'pointer',
+                  border: '2px dashed var(--sys-border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  transition: 'border-color 0.2s',
+                }}
+              >
+                {!avatarUrl && !isUploadingAvatar && (
+                  <span className="sys-icon sys-icon-camera" style={{ fontSize: '1.5rem', color: 'var(--sys-text-muted)' }}></span>
+                )}
+                {isUploadingAvatar && <div className="loading-spinner"></div>}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                style={{ display: 'none' }}
+              />
+              <p style={{ color: 'var(--sys-text-muted)', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                Click to upload (optional)
+              </p>
+            </div>
+
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--sys-text-muted)', fontSize: '0.875rem' }}>Display Name</label>
               <input
@@ -200,6 +291,22 @@ export default function SetupPage() {
               </p>
             </div>
 
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--sys-text-muted)', fontSize: '0.875rem' }}>Bio (optional)</label>
+              <textarea
+                className="input"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Tell us about yourself..."
+                maxLength={160}
+                rows={3}
+                style={{ width: '100%', resize: 'none', fontFamily: 'var(--sys-font-mono)' }}
+              />
+              <p style={{ color: 'var(--sys-text-muted)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                {bio.length}/160
+              </p>
+            </div>
+
             {error && (
               <div className="alert alert-danger" style={{ marginBottom: '1rem' }}>
                 {error}
@@ -210,7 +317,7 @@ export default function SetupPage() {
               type="submit"
               className="btn btn-primary btn-glow"
               style={{ width: '100%' }}
-              disabled={isLoading || !!handleError || !handle || !name.trim()}
+              disabled={isLoading || !!handleError || !handle || !name.trim() || isUploadingAvatar}
             >
               {isLoading ? 'Setting up...' : 'Complete Setup'}
             </button>

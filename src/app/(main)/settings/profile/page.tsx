@@ -9,6 +9,8 @@ export default function EditProfilePage() {
   const router = useRouter()
   const { user, setUser } = useAuthStore()
   const [name, setName] = useState(user?.name || '')
+  const [handle, setHandle] = useState(user?.handle || '')
+  const [handleError, setHandleError] = useState('')
   const [bio, setBio] = useState(user?.bio || '')
   const [location, setLocation] = useState(user?.location || '')
   const [website, setWebsite] = useState(user?.website || '')
@@ -21,6 +23,34 @@ export default function EditProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+
+  const validateHandle = (value: string) => {
+    if (value.length < 3) return 'Handle must be at least 3 characters'
+    if (value.length > 15) return 'Handle must be 15 characters or less'
+    if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Only letters, numbers, and underscores allowed'
+    return ''
+  }
+
+  const checkHandleAvailable = async (value: string) => {
+    if (!value || validateHandle(value) || !user) return
+    if (value.toLowerCase() === user.handle.toLowerCase()) {
+      setHandleError('')
+      return
+    }
+
+    const { data } = await supabase
+      .from('users')
+      .select('id')
+      .ilike('handle', value)
+      .neq('id', user.id)
+      .single()
+
+    if (data) {
+      setHandleError('Handle is already taken')
+    } else {
+      setHandleError('')
+    }
+  }
 
   const uploadImage = async (file: File, bucket: 'avatars' | 'banners') => {
     const fileExt = file.name.split('.').pop()
@@ -98,6 +128,12 @@ export default function EditProfilePage() {
     e.preventDefault()
     if (!user || isSaving) return
 
+    const validationError = validateHandle(handle)
+    if (validationError) {
+      setHandleError(validationError)
+      return
+    }
+
     setIsSaving(true)
     setError('')
 
@@ -105,6 +141,7 @@ export default function EditProfilePage() {
       .from('users')
       .update({
         name: name.trim(),
+        handle: handle.toLowerCase(),
         bio: bio.trim() || null,
         location: location.trim() || null,
         website: website.trim() || null,
@@ -117,7 +154,11 @@ export default function EditProfilePage() {
       .single()
 
     if (updateError) {
-      setError('Failed to update profile')
+      if (updateError.code === '23505') {
+        setHandleError('Handle is already taken')
+      } else {
+        setError('Failed to update profile')
+      }
       setIsSaving(false)
       return
     }
@@ -238,24 +279,62 @@ export default function EditProfilePage() {
                 <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
                   Display Name
                 </label>
-              <input
-                type="text"
-                className="input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={50}
-                required
-                style={{ width: '100%' }}
-              />
-              <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>
-                {name.length}/50
-              </p>
-            </div>
+                <input
+                  type="text"
+                  className="input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={50}
+                  required
+                  style={{ width: '100%' }}
+                />
+                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>
+                  {name.length}/50
+                </p>
+              </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                Bio
-              </label>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                  Handle
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: '0.75rem',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--sys-text-muted)',
+                    fontFamily: 'var(--sys-font-mono)',
+                  }}>@</span>
+                  <input
+                    type="text"
+                    className="input"
+                    style={{ paddingLeft: '1.75rem', width: '100%' }}
+                    value={handle}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
+                      setHandle(val)
+                      setHandleError(validateHandle(val))
+                    }}
+                    onBlur={() => checkHandleAvailable(handle)}
+                    maxLength={15}
+                    required
+                  />
+                </div>
+                {handleError && (
+                  <p style={{ color: 'var(--sys-danger)', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                    {handleError}
+                  </p>
+                )}
+                <p style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>
+                  3-15 characters. Letters, numbers, underscores only.
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label className="label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                  Bio
+                </label>
               <textarea
                 className="input"
                 value={bio}
@@ -310,7 +389,7 @@ export default function EditProfilePage() {
                 <button
                   type="submit"
                   className="btn btn-primary btn-glow"
-                  disabled={isSaving || !name.trim() || isUploadingAvatar || isUploadingBanner}
+                  disabled={isSaving || !name.trim() || !handle.trim() || !!handleError || isUploadingAvatar || isUploadingBanner}
                 >
                   {isSaving ? (
                     <>

@@ -179,6 +179,30 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
         }
       }
 
+      // Parse @mentions and create notifications
+      if (newSpit) {
+        const mentions = content.match(/@([a-zA-Z0-9_]+)/g)
+        if (mentions) {
+          const handles = [...new Set(mentions.map(m => m.slice(1).toLowerCase()))]
+          for (const handle of handles) {
+            const { data: mentionedUser } = await supabase
+              .from('users')
+              .select('id')
+              .ilike('handle', handle)
+              .single()
+
+            if (mentionedUser && mentionedUser.id !== user.id) {
+              await supabase.from('notifications').insert({
+                user_id: mentionedUser.id,
+                type: 'mention',
+                actor_id: user.id,
+                spit_id: newSpit.id,
+              })
+            }
+          }
+        }
+      }
+
       setContent('')
       setSelectedEffect(null)
       setShowEffects(false)

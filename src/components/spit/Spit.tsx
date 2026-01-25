@@ -13,6 +13,8 @@ import { LinkPreview } from '@/components/LinkPreview'
 
 // URL regex pattern
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
+// Mention regex pattern
+const MENTION_REGEX = /@([a-zA-Z0-9_]+)/g
 
 // Extract first URL from text
 function extractFirstUrl(text: string): string | null {
@@ -20,29 +22,64 @@ function extractFirstUrl(text: string): string | null {
   return matches ? matches[0] : null
 }
 
-// Render text with clickable links
+// Render text with clickable links and @mentions
 function renderTextWithLinks(text: string): React.ReactNode {
-  const parts = text.split(URL_REGEX)
-  const urls = text.match(URL_REGEX) || []
+  // Combined pattern for URLs and mentions
+  const COMBINED_REGEX = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)|(@[a-zA-Z0-9_]+)/gi
 
   const result: React.ReactNode[] = []
-  parts.forEach((part, i) => {
-    result.push(part)
-    if (urls[i]) {
+  let lastIndex = 0
+  let match
+  let keyIndex = 0
+
+  // Reset regex lastIndex
+  COMBINED_REGEX.lastIndex = 0
+
+  while ((match = COMBINED_REGEX.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      result.push(text.slice(lastIndex, match.index))
+    }
+
+    const matchedText = match[0]
+
+    if (matchedText.startsWith('@')) {
+      // It's a mention
+      const handle = matchedText.slice(1)
+      result.push(
+        <Link
+          key={`mention-${keyIndex++}`}
+          href={`/${handle}`}
+          className="spit-mention"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {matchedText}
+        </Link>
+      )
+    } else {
+      // It's a URL
       result.push(
         <a
-          key={i}
-          href={urls[i]}
+          key={`url-${keyIndex++}`}
+          href={matchedText}
           target="_blank"
           rel="noopener noreferrer"
           className="spit-link"
           onClick={(e) => e.stopPropagation()}
         >
-          {urls[i].length > 40 ? urls[i].slice(0, 40) + '...' : urls[i]}
+          {matchedText.length > 40 ? matchedText.slice(0, 40) + '...' : matchedText}
         </a>
       )
     }
-  })
+
+    lastIndex = match.index + matchedText.length
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    result.push(text.slice(lastIndex))
+  }
+
   return result
 }
 

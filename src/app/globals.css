@@ -423,6 +423,18 @@ a:hover {
   text-shadow: 0 0 8px var(--sys-primary);
 }
 
+/* Mentions in spit text */
+.spit-mention {
+  color: var(--sys-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.spit-mention:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 8px var(--sys-primary);
+}
+
 /* Spit image */
 .spit-image {
   margin-top: 0.5rem;
@@ -2830,6 +2842,28 @@ a:hover {
   .mobile-nav-new svg {
     width: 26px;
     height: 26px;
+  }
+
+  .mobile-nav-item {
+    position: relative;
+  }
+
+  .mobile-nav-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--sys-primary);
+    color: var(--sys-bg);
+    font-size: 0.65rem;
+    font-weight: bold;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 0 8px rgba(var(--sys-primary-rgb), 0.6);
   }
 
   .mobile-nav a.active {

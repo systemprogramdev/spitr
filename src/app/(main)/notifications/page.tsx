@@ -37,6 +37,9 @@ export default function NotificationsPage() {
         .update({ read: true })
         .eq('user_id', user.id)
         .eq('read', false)
+
+      // Dispatch event to update unread count in nav
+      window.dispatchEvent(new CustomEvent('notifications-read'))
     }
 
     fetchNotifications()

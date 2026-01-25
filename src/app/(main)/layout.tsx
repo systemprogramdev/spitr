@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useCredits } from '@/hooks/useCredits'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
+import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
 import { createClient } from '@/lib/supabase/client'
@@ -31,6 +32,7 @@ export default function MainLayout({
   const { user, signOut } = useAuth()
   const { balance } = useCredits()
   const unreadMessages = useUnreadMessages()
+  const unreadNotifications = useUnreadNotifications()
   const { openSpitModal } = useModalStore()
   const [whoToFollow, setWhoToFollow] = useState<User[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -189,6 +191,9 @@ export default function MainLayout({
                     <span className="sidebar-item-label">{item.label}</span>
                     {item.href === '/credits' && (
                       <span className="sidebar-badge">{balance.toLocaleString()}</span>
+                    )}
+                    {item.href === '/notifications' && unreadNotifications > 0 && (
+                      <span className="sidebar-badge badge-glow">{unreadNotifications}</span>
                     )}
                     {item.href === '/messages' && unreadMessages > 0 && (
                       <span className="sidebar-badge badge-glow">{unreadMessages}</span>
@@ -351,17 +356,23 @@ export default function MainLayout({
             </svg>
           </button>
 
-          <Link href="/notifications" className={pathname === '/notifications' ? 'active' : ''}>
+          <Link href="/notifications" className={`mobile-nav-item ${pathname === '/notifications' ? 'active' : ''}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname === '/notifications' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
+            {unreadNotifications > 0 && (
+              <span className="mobile-nav-badge">{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>
+            )}
           </Link>
 
-          <Link href="/messages" className={pathname?.startsWith('/messages') ? 'active' : ''}>
+          <Link href="/messages" className={`mobile-nav-item ${pathname?.startsWith('/messages') ? 'active' : ''}`}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname?.startsWith('/messages') ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
+            {unreadMessages > 0 && (
+              <span className="mobile-nav-badge">{unreadMessages > 9 ? '9+' : unreadMessages}</span>
+            )}
           </Link>
         </nav>
 

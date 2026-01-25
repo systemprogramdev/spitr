@@ -106,22 +106,6 @@ export default function SpitDetailPage() {
       {/* Main Spit - expanded view */}
       <div className="spit-detail">
         <Spit spit={spit} showActions={true} />
-
-        {/* Stats bar */}
-        <div className="spit-stats">
-          <div className="spit-stat">
-            <span className="spit-stat-count">{spit.reply_count}</span>
-            <span className="spit-stat-label">Replies</span>
-          </div>
-          <div className="spit-stat">
-            <span className="spit-stat-count">{spit.respit_count}</span>
-            <span className="spit-stat-label">Respits</span>
-          </div>
-          <div className="spit-stat">
-            <span className="spit-stat-count">{spit.like_count}</span>
-            <span className="spit-stat-label">Likes</span>
-          </div>
-        </div>
       </div>
 
       {/* Reply Composer */}
