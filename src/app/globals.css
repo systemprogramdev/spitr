@@ -2885,37 +2885,29 @@ a:hover {
   .mobile-nav button[style*="background: var(--sys-primary)"] {
     background: var(--sys-primary) !important;
     color: var(--sys-bg) !important;
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    box-shadow: 0 0 20px rgba(var(--sys-primary-rgb), 0.5);
-    animation: newSpitPulse 2s ease-in-out infinite;
-  }
-
-  @keyframes newSpitPulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(var(--sys-primary-rgb), 0.5); }
-    50% { box-shadow: 0 0 30px rgba(var(--sys-primary-rgb), 0.8), 0 0 50px rgba(var(--sys-primary-rgb), 0.4); }
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(var(--sys-primary-rgb), 0.5);
   }
 
   .mobile-nav-new {
     background: var(--sys-primary) !important;
     color: var(--sys-bg) !important;
-    width: 52px !important;
-    height: 52px !important;
-    border-radius: 12px !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    box-shadow: 0 0 25px rgba(var(--sys-primary-rgb), 0.6);
-    animation: newSpitPulse 2s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(var(--sys-primary-rgb), 0.5);
     border: none !important;
     cursor: pointer;
-    margin: -10px 0;
   }
 
   .mobile-nav-new svg {
-    width: 26px;
-    height: 26px;
+    width: 20px;
+    height: 20px;
   }
 
   .mobile-nav-item {
