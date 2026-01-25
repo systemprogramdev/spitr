@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useCredits } from '@/hooks/useCredits'
 import { SPIT_EFFECTS, EFFECT_COST } from '@/lib/effects'
+import { MentionAutocomplete } from '@/components/MentionAutocomplete'
 
 const IMAGE_COST = 50
 
@@ -24,9 +25,76 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
   const [error, setError] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [mentionSearch, setMentionSearch] = useState<string | null>(null)
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
+  const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const composerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  // Check for @ mentions while typing
+  const checkForMention = useCallback((text: string, cursorPos: number) => {
+    // Find the @ symbol before cursor
+    const textBeforeCursor = text.slice(0, cursorPos)
+    const atIndex = textBeforeCursor.lastIndexOf('@')
+
+    if (atIndex === -1) {
+      setMentionSearch(null)
+      return
+    }
+
+    // Check if there's a space between @ and cursor (mention ended)
+    const textAfterAt = textBeforeCursor.slice(atIndex + 1)
+    if (textAfterAt.includes(' ')) {
+      setMentionSearch(null)
+      return
+    }
+
+    // Check if @ is at start or preceded by space/newline
+    if (atIndex > 0 && !/[\s]/.test(text[atIndex - 1])) {
+      setMentionSearch(null)
+      return
+    }
+
+    // We're in a mention
+    setMentionSearch(textAfterAt)
+    setMentionStartIndex(atIndex)
+
+    // Position the dropdown
+    if (textareaRef.current && composerRef.current) {
+      const textarea = textareaRef.current
+      const composerRect = composerRef.current.getBoundingClientRect()
+      const textareaRect = textarea.getBoundingClientRect()
+
+      // Rough position calculation
+      setMentionPosition({
+        top: textareaRect.bottom - composerRect.top + 4,
+        left: 50,
+      })
+    }
+  }, [])
+
+  const handleMentionSelect = (handle: string) => {
+    if (mentionStartIndex === null || !textareaRef.current) return
+
+    const textarea = textareaRef.current
+    const cursorPos = textarea.selectionStart
+    const beforeMention = content.slice(0, mentionStartIndex)
+    const afterCursor = content.slice(cursorPos)
+
+    const newContent = `${beforeMention}@${handle} ${afterCursor}`
+    setContent(newContent)
+    setMentionSearch(null)
+    setMentionStartIndex(null)
+
+    // Focus and set cursor position
+    setTimeout(() => {
+      const newCursorPos = mentionStartIndex + handle.length + 2
+      textarea.focus()
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
 
   const charCount = content.length
   const maxChars = 280
@@ -253,13 +321,19 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
             {!user.avatar_url && user.name?.[0]?.toUpperCase()}
           </div>
 
-          <div style={{ flex: 1 }}>
+          <div ref={composerRef} style={{ flex: 1, position: 'relative' }}>
             <textarea
               ref={textareaRef}
               className="composer-textarea"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value)
+                checkForMention(e.target.value, e.target.selectionStart)
+              }}
               onKeyDown={handleKeyDown}
+              onSelect={(e) => {
+                checkForMention(content, (e.target as HTMLTextAreaElement).selectionStart)
+              }}
               placeholder={placeholder}
               rows={3}
               style={{
@@ -274,6 +348,15 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
                 lineHeight: '1.5',
               }}
             />
+
+            {mentionSearch !== null && (
+              <MentionAutocomplete
+                searchTerm={mentionSearch}
+                onSelect={handleMentionSelect}
+                onClose={() => setMentionSearch(null)}
+                position={mentionPosition}
+              />
+            )}
 
             {imagePreview && (
               <div style={{ position: 'relative', marginTop: '0.5rem', display: 'inline-block' }}>

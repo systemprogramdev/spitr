@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useModalStore } from '@/stores/modalStore'
 import { useCredits } from '@/hooks/useCredits'
 import { SPIT_EFFECTS, EFFECT_COST } from '@/lib/effects'
+import { MentionAutocomplete } from '@/components/MentionAutocomplete'
 
 const IMAGE_COST = 50
 
@@ -20,9 +21,67 @@ export function SpitModal() {
   const [error, setError] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [mentionSearch, setMentionSearch] = useState<string | null>(null)
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 })
+  const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const composerRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
+
+  // Check for @ mentions while typing
+  const checkForMention = useCallback((text: string, cursorPos: number) => {
+    const textBeforeCursor = text.slice(0, cursorPos)
+    const atIndex = textBeforeCursor.lastIndexOf('@')
+
+    if (atIndex === -1) {
+      setMentionSearch(null)
+      return
+    }
+
+    const textAfterAt = textBeforeCursor.slice(atIndex + 1)
+    if (textAfterAt.includes(' ')) {
+      setMentionSearch(null)
+      return
+    }
+
+    if (atIndex > 0 && !/[\s]/.test(text[atIndex - 1])) {
+      setMentionSearch(null)
+      return
+    }
+
+    setMentionSearch(textAfterAt)
+    setMentionStartIndex(atIndex)
+
+    if (textareaRef.current && composerRef.current) {
+      const composerRect = composerRef.current.getBoundingClientRect()
+      const textareaRect = textareaRef.current.getBoundingClientRect()
+      setMentionPosition({
+        top: textareaRect.bottom - composerRect.top + 4,
+        left: 0,
+      })
+    }
+  }, [])
+
+  const handleMentionSelect = (handle: string) => {
+    if (mentionStartIndex === null || !textareaRef.current) return
+
+    const textarea = textareaRef.current
+    const cursorPos = textarea.selectionStart
+    const beforeMention = content.slice(0, mentionStartIndex)
+    const afterCursor = content.slice(cursorPos)
+
+    const newContent = `${beforeMention}@${handle} ${afterCursor}`
+    setContent(newContent)
+    setMentionSearch(null)
+    setMentionStartIndex(null)
+
+    setTimeout(() => {
+      const newCursorPos = mentionStartIndex + handle.length + 2
+      textarea.focus()
+      textarea.setSelectionRange(newCursorPos, newCursorPos)
+    }, 0)
+  }
 
   const charCount = content.length
   const maxChars = 280
@@ -303,13 +362,19 @@ export function SpitModal() {
                 flexShrink: 0,
               }}
             />
-            <div style={{ flex: 1 }}>
+            <div ref={composerRef} style={{ flex: 1, position: 'relative' }}>
               <textarea
                 ref={textareaRef}
                 className="composer-textarea"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value)
+                  checkForMention(e.target.value, e.target.selectionStart)
+                }}
                 onKeyDown={handleKeyDown}
+                onSelect={(e) => {
+                  checkForMention(content, (e.target as HTMLTextAreaElement).selectionStart)
+                }}
                 placeholder={replyToId ? `Reply to @${replyToHandle}...` : "What's happening?"}
                 rows={4}
                 style={{
@@ -323,6 +388,15 @@ export function SpitModal() {
                   fontSize: '1rem',
                 }}
               />
+
+              {mentionSearch !== null && (
+                <MentionAutocomplete
+                  searchTerm={mentionSearch}
+                  onSelect={handleMentionSelect}
+                  onClose={() => setMentionSearch(null)}
+                  position={mentionPosition}
+                />
+              )}
 
               {imagePreview && (
                 <div style={{ position: 'relative', marginTop: '0.5rem', display: 'inline-block' }}>
