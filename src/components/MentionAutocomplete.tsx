@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User } from '@/types'
+
+interface MentionUser {
+  id: string
+  handle: string
+  name: string
+  avatar_url: string | null
+}
 
 interface MentionAutocompleteProps {
   searchTerm: string
@@ -12,7 +18,7 @@ interface MentionAutocompleteProps {
 }
 
 export function MentionAutocomplete({ searchTerm, onSelect, onClose, position }: MentionAutocompleteProps) {
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<MentionUser[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const supabase = createClient()

@@ -2896,6 +2896,9 @@ a:hover {
     color: var(--sys-bg) !important;
     width: 38px !important;
     height: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    padding: 0 !important;
     border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
