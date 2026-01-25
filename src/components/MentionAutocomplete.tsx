@@ -19,17 +19,13 @@ export function MentionAutocomplete({ searchTerm, onSelect, onClose, position }:
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!searchTerm || searchTerm.length < 1) {
-      setUsers([])
-      return
-    }
-
     const fetchUsers = async () => {
       setIsLoading(true)
       const { data } = await supabase
         .from('users')
         .select('id, handle, name, avatar_url')
         .ilike('handle', `${searchTerm}%`)
+        .order('created_at', { ascending: false })
         .limit(5)
 
       setUsers(data || [])
@@ -37,7 +33,7 @@ export function MentionAutocomplete({ searchTerm, onSelect, onClose, position }:
       setIsLoading(false)
     }
 
-    const debounce = setTimeout(fetchUsers, 150)
+    const debounce = setTimeout(fetchUsers, 100)
     return () => clearTimeout(debounce)
   }, [searchTerm, supabase])
 
@@ -75,7 +71,7 @@ export function MentionAutocomplete({ searchTerm, onSelect, onClose, position }:
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
 
-  if (!searchTerm || (users.length === 0 && !isLoading)) {
+  if (users.length === 0 && !isLoading) {
     return null
   }
 
