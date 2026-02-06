@@ -25,7 +25,6 @@ const navItems = [
   { href: '/notifications', label: 'Alerts', icon: 'bell' },
   { href: '/bookmarks', label: 'Bookmarks', icon: 'bookmark' },
   { href: '/shop', label: 'Shop', icon: 'shopping-bag' },
-  { href: '/credits', label: 'Credits', icon: 'star' },
   { href: '/guide', label: 'Guide', icon: 'book-open' },
   { href: '/settings', label: 'Settings', icon: 'lock' },
 ]
@@ -93,7 +92,7 @@ export default function MainLayout({
           </Link>
 
           <div className="mobile-header-right">
-            <Link href="/credits" className="mobile-header-credits">
+            <Link href="/shop" className="mobile-header-credits">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
               </svg>
@@ -171,11 +170,13 @@ export default function MainLayout({
                   )}
                 </Link>
 
-                <Link href="/credits" className="mobile-menu-item">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                <Link href="/shop" className="mobile-menu-item">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
                   </svg>
-                  <span>Buy Credits</span>
+                  <span>Shop</span>
                 </Link>
 
                 <Link href="/settings" className="mobile-menu-item">
@@ -228,9 +229,6 @@ export default function MainLayout({
                   >
                     <span className={`sys-icon sys-icon-${item.icon}`}></span>
                     <span className="sidebar-item-label">{item.label}</span>
-                    {item.href === '/credits' && (
-                      <span className="sidebar-badge">{balance.toLocaleString()}</span>
-                    )}
                     {item.href === '/notifications' && unreadNotifications > 0 && (
                       <span className="sidebar-badge badge-glow">{unreadNotifications}</span>
                     )}
@@ -302,7 +300,7 @@ export default function MainLayout({
             <div className="right-panel-card-body">
               <div className="credits-amount">{balance.toLocaleString()}</div>
               <div className="credits-sublabel">available to spend</div>
-              <Link href="/credits" className="btn btn-primary btn-glow" style={{ width: '100%', marginTop: '1rem' }}>
+              <Link href="/shop" className="btn btn-primary btn-glow" style={{ width: '100%', marginTop: '1rem' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.5rem' }}>
                   <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
@@ -359,7 +357,7 @@ export default function MainLayout({
 
           {/* Quick Links */}
           <div className="right-panel-links">
-            <Link href="/credits">Credits</Link>
+            <Link href="/shop">Shop</Link>
             <span>·</span>
             <Link href="/settings">Settings</Link>
             <span>·</span>

@@ -218,7 +218,7 @@ export default function GuidePage() {
             <li><strong>Daily chest</strong> — Open every 24 hours for random rewards</li>
             <li><strong>Like rewards</strong> — Earn 1 credit each time someone likes your spit</li>
             <li><strong>Transfers</strong> — Receive spits from other users</li>
-            <li><strong>Purchase</strong> — Buy credit packages on the <Link href="/credits" className="guide-link">Credits</Link> page</li>
+            <li><strong>Purchase</strong> — Buy credit packages on the <Link href="/shop" className="guide-link">Shop</Link> page</li>
           </ul>
         </section>
 

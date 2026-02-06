@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/stores/authStore'
 import { useGold } from '@/hooks/useGold'
 import { useInventory } from '@/hooks/useInventory'
@@ -9,9 +10,10 @@ import { useModalStore } from '@/stores/modalStore'
 import { ITEMS, WEAPONS, POTIONS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, MAX_HP } from '@/lib/items'
 import { ItemCard } from '@/components/shop/ItemCard'
 import { GoldCheckoutModal } from '@/components/shop/GoldCheckoutModal'
+import { StripeCheckoutModal } from '@/components/StripeCheckoutModal'
 import { HPBar } from '@/components/ui/HPBar'
 import { GameItem } from '@/lib/items'
-import { UserChest } from '@/types'
+import { UserChest, CreditTransaction } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
@@ -19,7 +21,42 @@ import { toast } from '@/stores/toastStore'
 
 const supabase = createClient()
 
-export default function ShopPage() {
+const CREDIT_PACKAGES = [
+  { id: 'starter', credits: 100, price: 199, name: 'Starter Pack', description: 'Perfect for trying things out' },
+  { id: 'popular', credits: 500, price: 799, name: 'Popular Pack', description: 'Best value for active users', popular: true },
+  { id: 'mega', credits: 1500, price: 1999, name: 'Mega Pack', description: 'For power users' },
+  { id: 'whale', credits: 5000, price: 4999, name: 'Whale Pack', description: 'Ultimate spitting power', whale: true },
+]
+
+const TXN_TYPE_LABELS: Record<string, string> = {
+  purchase: 'Purchased Spits',
+  post: 'Posted Spit',
+  reply: 'Replied',
+  respit: 'Respit',
+  like: 'Liked',
+  pin_purchase: 'Promoted Spit',
+  convert: 'Converted to Gold',
+  like_reward: 'Like Reward',
+  transfer_sent: 'Sent Transfer',
+  transfer_received: 'Received Transfer',
+  free_monthly: 'Monthly Bonus',
+  chest_purchase: 'Bought Chest',
+}
+
+function timeAgo(dateStr: string) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString()
+}
+
+function ShopPageContent() {
+  const searchParams = useSearchParams()
   const { user } = useAuthStore()
   const { balance: goldBalance, addGold, deductGold, hasGold, refreshBalance: refreshGold } = useGold()
   const { balance: creditBalance, deductAmount, refreshBalance: refreshCredits } = useCredits()
@@ -37,7 +74,34 @@ export default function ShopPage() {
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
   const [buyingChest, setBuyingChest] = useState(false)
 
-  // Sync HP when user loads (useState initial value only runs once)
+  // Credit purchase state
+  const [selectedCreditPkg, setSelectedCreditPkg] = useState<typeof CREDIT_PACKAGES[0] | null>(null)
+  const [isCreditCheckoutOpen, setIsCreditCheckoutOpen] = useState(false)
+
+  // Transaction history state
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([])
+  const [loadingTxns, setLoadingTxns] = useState(true)
+  const [showAllTxns, setShowAllTxns] = useState(false)
+
+  // Handle Stripe redirect URL params
+  useEffect(() => {
+    const success = searchParams.get('success')
+    const canceled = searchParams.get('canceled')
+    const credits = searchParams.get('credits')
+
+    if (success === 'true' && credits) {
+      toast.success(`Successfully purchased ${parseInt(credits).toLocaleString()} spits!`)
+      playSound('gold')
+      refreshCredits()
+      fetchTransactions()
+      window.history.replaceState({}, '', '/shop')
+    } else if (canceled === 'true') {
+      toast.warning('Purchase canceled. No charges were made.')
+      window.history.replaceState({}, '', '/shop')
+    }
+  }, [searchParams])
+
+  // Sync HP when user loads
   useEffect(() => {
     if (user?.hp !== undefined) setUserHp(user.hp)
   }, [user?.hp])
@@ -67,6 +131,23 @@ export default function ShopPage() {
       window.removeEventListener('chest-opened', handleChestEvent)
     }
   }, [fetchChests])
+
+  // Fetch transaction history
+  const fetchTransactions = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('credit_transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (data) setTransactions(data)
+    setLoadingTxns(false)
+  }, [user])
+
+  useEffect(() => {
+    fetchTransactions()
+  }, [fetchTransactions])
 
   // Refresh HP from user store
   const refreshHp = async () => {
@@ -225,7 +306,27 @@ export default function ShopPage() {
     setBuyingChest(false)
   }
 
+  const handleCreditPurchase = (pkg: typeof CREDIT_PACKAGES[0]) => {
+    if (!user) {
+      toast.error('Please sign in to purchase credits')
+      return
+    }
+    setSelectedCreditPkg(pkg)
+    setIsCreditCheckoutOpen(true)
+  }
+
+  const handleCreditPurchaseSuccess = async (credits: number) => {
+    setIsCreditCheckoutOpen(false)
+    setSelectedCreditPkg(null)
+    playSound('gold')
+    await refreshCredits()
+    await fetchTransactions()
+    toast.success(`${credits.toLocaleString()} spits added to your balance!`)
+  }
+
   const goldFromSpits = convertAmount ? Math.floor(parseInt(convertAmount, 10) / SPIT_TO_GOLD_RATIO) || 0 : 0
+  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`
+  const visibleTxns = showAllTxns ? transactions : transactions.slice(0, 5)
 
   return (
     <div>
@@ -236,12 +337,19 @@ export default function ShopPage() {
         </h1>
       </header>
 
-      {/* Gold Balance + HP */}
+      {/* Balance Panel */}
       <div className="shop-balance-panel">
-        <div className="shop-gold-display">
-          <span className="shop-gold-icon">🪙</span>
-          <span className="shop-gold-amount">{goldBalance.toLocaleString()}</span>
-          <span className="shop-gold-label">Gold</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div className="shop-gold-display">
+            <span className="shop-gold-icon">🪙</span>
+            <span className="shop-gold-amount">{goldBalance.toLocaleString()}</span>
+            <span className="shop-gold-label">Gold</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>⭐</span>
+            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--sys-text)' }}>{creditBalance.toLocaleString()}</span>
+            <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.85rem' }}>Spits</span>
+          </div>
         </div>
         <div style={{ marginTop: '0.75rem' }}>
           <HPBar hp={userHp} maxHp={MAX_HP} size="md" />
@@ -348,6 +456,76 @@ export default function ShopPage() {
         </div>
       </div>
 
+      {/* Buy Spits with Stripe */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>⭐</span> Buy Spits
+        </h2>
+        <p className="shop-section-desc">Spits never expire. Secure checkout powered by Stripe.</p>
+        <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
+          {CREDIT_PACKAGES.map((pkg) => (
+            <div
+              key={pkg.id}
+              className="panel"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '1rem',
+                border: pkg.popular ? '2px solid var(--sys-primary)' : pkg.whale ? '2px solid var(--sys-warning)' : '1px solid var(--sys-border)',
+                background: pkg.whale ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.05), rgba(255, 136, 0, 0.05))' : undefined,
+                position: 'relative',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+              }}
+              onClick={() => handleCreditPurchase(pkg)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = pkg.whale
+                  ? '0 4px 20px rgba(255, 204, 0, 0.3)'
+                  : '0 4px 20px rgba(0, 255, 136, 0.2)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              {pkg.whale && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '-100%',
+                    width: '200%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.1), transparent)',
+                    animation: 'shimmer 3s infinite',
+                    pointerEvents: 'none',
+                  }}
+                />
+              )}
+
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--sys-text)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {pkg.credits.toLocaleString()} Spits
+                  {pkg.popular && <span className="badge badge-glow">Popular</span>}
+                  {pkg.whale && <span className="badge" style={{ background: 'var(--sys-warning)', color: '#000' }}>Best Deal</span>}
+                </div>
+                <div style={{ color: 'var(--sys-text-muted)', marginTop: '0.15rem', fontSize: '0.85rem' }}>{pkg.description}</div>
+              </div>
+
+              <button
+                className={`btn ${pkg.whale ? 'btn-warning' : 'btn-primary'} btn-glow`}
+                style={{ minWidth: '70px', position: 'relative', zIndex: 1 }}
+              >
+                {formatPrice(pkg.price)}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Weapons */}
       <div className="shop-section">
         <h2 className="shop-section-title">
@@ -425,6 +603,72 @@ export default function ShopPage() {
         </div>
       </div>
 
+      {/* Transaction History */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>📜</span> Transaction History
+        </h2>
+        {loadingTxns ? (
+          <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1.5rem' }}>
+            Loading...
+          </p>
+        ) : transactions.length === 0 ? (
+          <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1.5rem' }}>
+            No transactions yet.
+          </p>
+        ) : (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {visibleTxns.map((txn) => (
+                <div
+                  key={txn.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.6rem 0.75rem',
+                    borderBottom: '1px solid var(--sys-border)',
+                    fontFamily: 'var(--sys-font-mono)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                    <span style={{
+                      color: txn.amount >= 0 ? 'var(--sys-success)' : 'var(--sys-error)',
+                      fontWeight: 'bold',
+                      minWidth: '60px',
+                      textAlign: 'right',
+                    }}>
+                      {txn.amount >= 0 ? '+' : ''}{txn.amount}
+                    </span>
+                    <span style={{ color: 'var(--sys-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {TXN_TYPE_LABELS[txn.type] || txn.type}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                    <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.8rem' }}>
+                      bal: {txn.balance_after}
+                    </span>
+                    <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.75rem', minWidth: '50px', textAlign: 'right' }}>
+                      {timeAgo(txn.created_at)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {transactions.length > 5 && !showAllTxns && (
+              <button
+                className="btn btn-outline"
+                style={{ width: '100%', marginTop: '0.75rem' }}
+                onClick={() => setShowAllTxns(true)}
+              >
+                Show More ({transactions.length - 5} more)
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
       {/* Gold Checkout Modal */}
       {user && (
         <GoldCheckoutModal
@@ -435,6 +679,30 @@ export default function ShopPage() {
           onSuccess={handleGoldPurchaseSuccess}
         />
       )}
+
+      {/* Spit Credit Checkout Modal */}
+      <StripeCheckoutModal
+        isOpen={isCreditCheckoutOpen}
+        onClose={() => {
+          setIsCreditCheckoutOpen(false)
+          setSelectedCreditPkg(null)
+        }}
+        package={selectedCreditPkg}
+        userId={user?.id || ''}
+        onSuccess={handleCreditPurchaseSuccess}
+      />
     </div>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <span className="text-glow">Loading...</span>
+      </div>
+    }>
+      <ShopPageContent />
+    </Suspense>
   )
 }

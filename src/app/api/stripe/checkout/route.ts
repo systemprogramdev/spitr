@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/credits?success=true&credits=${pkg.credits}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/credits?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/shop?success=true&credits=${pkg.credits}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/shop?canceled=true`,
       metadata: {
         userId,
         packageId,
