@@ -30,6 +30,7 @@ export default function ShopPage() {
   const [checkoutPkg, setCheckoutPkg] = useState<typeof GOLD_PACKAGES[number] | null>(null)
   const [userHp, setUserHp] = useState(user?.hp ?? MAX_HP)
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
+  const [buyingChest, setBuyingChest] = useState(false)
 
   // Sync HP when user loads (useState initial value only runs once)
   useEffect(() => {
@@ -181,6 +182,37 @@ export default function ShopPage() {
     alert(`${gold} Gold added to your balance!`)
   }
 
+  const handleBuyChest = async () => {
+    if (!user || buyingChest) return
+    if (creditBalance < 100) {
+      alert('Insufficient spits! Chests cost 100 spits.')
+      return
+    }
+
+    setBuyingChest(true)
+
+    try {
+      const res = await fetch('/api/buy-chest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        await refreshCredits()
+        await fetchChests()
+        window.dispatchEvent(new CustomEvent('chest-claimed'))
+      } else {
+        alert(data.error || 'Failed to buy chest')
+      }
+    } catch {
+      alert('Network error')
+    }
+
+    setBuyingChest(false)
+  }
+
   const goldFromSpits = convertAmount ? Math.floor(parseInt(convertAmount, 10) / SPIT_TO_GOLD_RATIO) || 0 : 0
 
   return (
@@ -229,6 +261,31 @@ export default function ShopPage() {
           </div>
         </div>
       )}
+
+      {/* Buy Chest */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>🎁</span> Buy Treasure Chest
+        </h2>
+        <p className="shop-section-desc">Purchase a treasure chest for 100 spits. Contains 2-3 random rewards!</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '2rem' }}>🎁</span>
+            <div>
+              <div style={{ fontWeight: 600, color: 'var(--sys-text)' }}>Treasure Chest</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--sys-text-muted)' }}>100 spits</div>
+            </div>
+          </div>
+          <button
+            className="btn btn-primary btn-glow"
+            onClick={handleBuyChest}
+            disabled={buyingChest || creditBalance < 100}
+            style={{ marginLeft: 'auto' }}
+          >
+            {buyingChest ? 'Buying...' : 'Buy Chest'}
+          </button>
+        </div>
+      </div>
 
       {/* Convert Spits → Gold */}
       <div className="shop-section">

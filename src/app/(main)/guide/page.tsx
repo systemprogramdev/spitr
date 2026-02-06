@@ -181,6 +181,10 @@ export default function GuidePage() {
               <span className="guide-table-value">+50 credits</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">Buy treasure chest</span>
+              <span className="guide-table-value">100 credits</span>
+            </div>
+            <div className="guide-table-row">
               <span className="guide-table-label">Promote spit</span>
               <span className="guide-table-value">500 credits</span>
             </div>
@@ -286,11 +290,12 @@ export default function GuidePage() {
         {/* Treasure Chests */}
         <section id="chests" className="guide-section">
           <h2 className="guide-heading">Treasure Chests</h2>
-          <p>Every 24 hours you earn a free treasure chest containing random loot.</p>
+          <p>Treasure chests contain random loot. You can earn one free daily or buy them in the Shop.</p>
 
-          <h3 className="guide-subheading">How It Works</h3>
+          <h3 className="guide-subheading">Getting Chests</h3>
           <ul className="guide-list">
-            <li>A popup appears when you log in after 24 hours</li>
+            <li><strong>Daily free chest</strong> — A popup appears when you log in after 24 hours</li>
+            <li><strong>Buy in Shop</strong> — Purchase additional chests for 100 spits each</li>
             <li>Choose <strong>Claim & Open</strong> to see your loot immediately</li>
             <li>Or <strong>Save for Later</strong> — unopened chests appear in the Shop</li>
             <li>Each chest contains 2-3 random rewards</li>
@@ -385,13 +390,39 @@ export default function GuidePage() {
             </div>
           </div>
 
+          <h3 className="guide-subheading">Daily Limits</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">Send limit</span>
+              <span className="guide-table-value">100 spits per 24 hours</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Receive limit</span>
+              <span className="guide-table-value">100 spits per 24 hours</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Over-limit penalty</span>
+              <span className="guide-table-value">-100 HP per spit over the limit</span>
+            </div>
+          </div>
+
           <h3 className="guide-subheading">Rules</h3>
           <ul className="guide-list">
             <li>Transfers are instant and cannot be reversed</li>
             <li>The minimum transfer amount is 1 spit</li>
             <li>You cannot send more spits than your current balance</li>
             <li>The recipient receives a notification about the transfer</li>
+            <li>Exceeding the daily limit is allowed but costs <strong>100 HP per spit</strong> over the limit</li>
+            <li>You will see a warning before confirming an over-limit transfer</li>
           </ul>
+
+          <div className="guide-callout guide-callout-warning">
+            <span className="guide-callout-icon">&#x2620;&#xFE0F;</span>
+            <div>
+              <strong>Warning:</strong> The HP penalty for exceeding daily limits is severe.
+              Sending 10 spits over the limit costs 1,000 HP. Abuse will get your account destroyed!
+            </div>
+          </div>
         </section>
 
         {/* Profiles */}

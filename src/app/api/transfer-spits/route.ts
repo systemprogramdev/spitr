@@ -36,7 +36,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const result = data as { success: boolean; error?: string; new_sender_balance?: number }
+    const result = data as {
+      success: boolean
+      error?: string
+      new_sender_balance?: number
+      hp_penalty?: number
+      new_hp?: number
+      sent_today?: number
+      received_today?: number
+    }
 
     if (!result.success) {
       return NextResponse.json({ error: result.error || 'Transfer failed' }, { status: 400 })
@@ -53,6 +61,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       newBalance: result.new_sender_balance,
+      hpPenalty: result.hp_penalty || 0,
+      newHp: result.new_hp,
     })
   } catch (error) {
     console.error('Transfer error:', error)
