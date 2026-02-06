@@ -530,138 +530,141 @@ export function Spit({ spit, showActions = true }: SpitProps) {
             </div>
           )}
 
-          {/* Pin Modal */}
-          {showPinModal && (
-            <div
-              className="pin-modal-overlay"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setShowPinModal(false)
-              }}
-            >
-              <div
-                className="pin-modal"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="pin-modal-header">
-                  <svg className="pin-modal-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                  </svg>
-                  <span>Promote Spit</span>
-                </div>
-                <div className="pin-modal-body">
-                  {existingPin && existingPin.spit_id === spit.id ? (
-                    <>
-                      <p style={{ color: 'var(--sys-accent)' }}>This spit is already promoted!</p>
-                      <p className="pin-modal-info">
-                        Expires: {new Date(existingPin.expires_at).toLocaleString()}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p>Promote your spit to appear at the top of everyone&apos;s feed!</p>
-                      {existingPin && (
-                        <p style={{ color: 'var(--sys-warning, #f59e0b)', marginBottom: '0.5rem' }}>
-                          ⚠️ You have an active promotion. This will replace it.
-                        </p>
-                      )}
-                      <div className="pin-modal-cost">
-                        <span className="pin-cost-amount">{CREDIT_COSTS.pin_purchase}</span>
-                        <span className="pin-cost-label">spits</span>
-                      </div>
-                      <p className="pin-modal-info">
-                        Your spit will be shown for 60 seconds to each user who views the feed.
-                        Pin expires after 24 hours.
-                      </p>
-                      <p className="pin-modal-balance">
-                        Your balance: <strong>{balance.toLocaleString()}</strong> spits
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className="pin-modal-actions">
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => setShowPinModal(false)}
-                  >
-                    {existingPin && existingPin.spit_id === spit.id ? 'Close' : 'Cancel'}
-                  </button>
-                  {!(existingPin && existingPin.spit_id === spit.id) && (
-                    <button
-                      className="btn btn-primary btn-glow"
-                      onClick={handlePinToFeed}
-                      disabled={isPinning || !hasCredits(CREDIT_COSTS.pin_purchase)}
-                    >
-                      {isPinning ? 'Pinning...' : existingPin ? 'Replace Pin' : 'Pin Now'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Attack Modal */}
-          {showAttackModal && (
-            <AttackModal
-              targetType="spit"
-              targetId={spit.id}
-              targetName={`@${spit.author.handle}'s spit`}
-              onClose={() => setShowAttackModal(false)}
-              onAttackComplete={(result) => {
-                setSpitHp(result.newHp)
-              }}
-            />
-          )}
-
-          {/* Delete Confirmation Modal */}
-          {showDeleteConfirm && (
-            <div
-              className="pin-modal-overlay"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setShowDeleteConfirm(false)
-              }}
-            >
-              <div
-                className="pin-modal"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="pin-modal-header" style={{ color: 'var(--sys-danger)' }}>
-                  <svg className="pin-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                  </svg>
-                  <span>Delete Spit</span>
-                </div>
-                <div className="pin-modal-body">
-                  <p>Are you sure you want to delete this spit?</p>
-                  <p style={{ color: 'var(--sys-text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                    This action cannot be undone.
-                  </p>
-                </div>
-                <div className="pin-modal-actions">
-                  <button
-                    className="btn btn-outline"
-                    onClick={() => setShowDeleteConfirm(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="btn"
-                    style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Modals rendered outside .spit-content to avoid opacity/pointer-events issues */}
+
+      {/* Pin Modal */}
+      {showPinModal && (
+        <div
+          className="pin-modal-overlay"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setShowPinModal(false)
+          }}
+        >
+          <div
+            className="pin-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="pin-modal-header">
+              <svg className="pin-modal-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <span>Promote Spit</span>
+            </div>
+            <div className="pin-modal-body">
+              {existingPin && existingPin.spit_id === spit.id ? (
+                <>
+                  <p style={{ color: 'var(--sys-accent)' }}>This spit is already promoted!</p>
+                  <p className="pin-modal-info">
+                    Expires: {new Date(existingPin.expires_at).toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>Promote your spit to appear at the top of everyone&apos;s feed!</p>
+                  {existingPin && (
+                    <p style={{ color: 'var(--sys-warning, #f59e0b)', marginBottom: '0.5rem' }}>
+                      ⚠️ You have an active promotion. This will replace it.
+                    </p>
+                  )}
+                  <div className="pin-modal-cost">
+                    <span className="pin-cost-amount">{CREDIT_COSTS.pin_purchase}</span>
+                    <span className="pin-cost-label">spits</span>
+                  </div>
+                  <p className="pin-modal-info">
+                    Your spit will be shown for 60 seconds to each user who views the feed.
+                    Pin expires after 24 hours.
+                  </p>
+                  <p className="pin-modal-balance">
+                    Your balance: <strong>{balance.toLocaleString()}</strong> spits
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="pin-modal-actions">
+              <button
+                className="btn btn-outline"
+                onClick={() => setShowPinModal(false)}
+              >
+                {existingPin && existingPin.spit_id === spit.id ? 'Close' : 'Cancel'}
+              </button>
+              {!(existingPin && existingPin.spit_id === spit.id) && (
+                <button
+                  className="btn btn-primary btn-glow"
+                  onClick={handlePinToFeed}
+                  disabled={isPinning || !hasCredits(CREDIT_COSTS.pin_purchase)}
+                >
+                  {isPinning ? 'Pinning...' : existingPin ? 'Replace Pin' : 'Pin Now'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attack Modal */}
+      {showAttackModal && (
+        <AttackModal
+          targetType="spit"
+          targetId={spit.id}
+          targetName={`@${spit.author.handle}'s spit`}
+          onClose={() => setShowAttackModal(false)}
+          onAttackComplete={(result) => {
+            setSpitHp(result.newHp)
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          className="pin-modal-overlay"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setShowDeleteConfirm(false)
+          }}
+        >
+          <div
+            className="pin-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="pin-modal-header" style={{ color: 'var(--sys-danger)' }}>
+              <svg className="pin-modal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              <span>Delete Spit</span>
+            </div>
+            <div className="pin-modal-body">
+              <p>Are you sure you want to delete this spit?</p>
+              <p style={{ color: 'var(--sys-text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="pin-modal-actions">
+              <button
+                className="btn btn-outline"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn"
+                style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </article>
   )
 }

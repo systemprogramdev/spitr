@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useGold } from '@/hooks/useGold'
 import { useInventory } from '@/hooks/useInventory'
 import { useCredits } from '@/hooks/useCredits'
+import { useModalStore } from '@/stores/modalStore'
 import { ITEMS, WEAPONS, POTIONS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, MAX_HP } from '@/lib/items'
 import { ItemCard } from '@/components/shop/ItemCard'
 import { GoldCheckoutModal } from '@/components/shop/GoldCheckoutModal'
 import { HPBar } from '@/components/ui/HPBar'
 import { GameItem } from '@/lib/items'
+import { UserChest } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 
 const supabase = createClient()
@@ -20,12 +22,40 @@ export default function ShopPage() {
   const { balance: creditBalance, deductAmount, refreshBalance: refreshCredits } = useCredits()
   const { items, refreshInventory, getQuantity } = useInventory()
 
+  const { openChestOpenModal } = useModalStore()
   const [convertAmount, setConvertAmount] = useState('')
   const [isConverting, setIsConverting] = useState(false)
   const [buyingItem, setBuyingItem] = useState<string | null>(null)
   const [usingPotion, setUsingPotion] = useState<string | null>(null)
   const [checkoutPkg, setCheckoutPkg] = useState<typeof GOLD_PACKAGES[number] | null>(null)
   const [userHp, setUserHp] = useState(user?.hp ?? MAX_HP)
+  const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
+
+  const fetchChests = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('user_chests')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('opened', false)
+      .order('claimed_at', { ascending: false })
+    if (data) setUnopenedChests(data)
+  }, [user])
+
+  useEffect(() => {
+    fetchChests()
+  }, [fetchChests])
+
+  // Listen for chest events to refresh
+  useEffect(() => {
+    const handleChestEvent = () => { fetchChests() }
+    window.addEventListener('chest-claimed', handleChestEvent)
+    window.addEventListener('chest-opened', handleChestEvent)
+    return () => {
+      window.removeEventListener('chest-claimed', handleChestEvent)
+      window.removeEventListener('chest-opened', handleChestEvent)
+    }
+  }, [fetchChests])
 
   // Refresh HP from user store
   const refreshHp = async () => {
@@ -169,6 +199,32 @@ export default function ShopPage() {
           <HPBar hp={userHp} maxHp={MAX_HP} size="md" />
         </div>
       </div>
+
+      {/* My Chests */}
+      {unopenedChests.length > 0 && (
+        <div className="shop-section">
+          <h2 className="shop-section-title">
+            <span>🎁</span> My Chests ({unopenedChests.length})
+          </h2>
+          <div className="shop-chests-grid">
+            {unopenedChests.map((chest) => (
+              <div key={chest.id} className="shop-chest-card">
+                <span className="shop-chest-emoji">🎁</span>
+                <span className="shop-chest-date">
+                  {new Date(chest.claimed_at).toLocaleDateString()}
+                </span>
+                <button
+                  className="btn btn-primary"
+                  style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+                  onClick={() => openChestOpenModal(chest.id)}
+                >
+                  Open
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Convert Spits → Gold */}
       <div className="shop-section">

@@ -38,3 +38,94 @@ export const GOLD_PACKAGES = [
 export const SPIT_TO_GOLD_RATIO = 10 // 10 spit = 1 gold
 export const MAX_HP = 5000
 export const SPIT_MAX_HP = 10
+
+// Treasure Chest Loot System
+export interface LootReward {
+  type: 'credits' | 'gold' | 'item'
+  amount: number
+  itemType?: ItemType
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic'
+  label: string
+  emoji: string
+}
+
+interface LootPool {
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic'
+  weight: number
+  rewards: Array<() => LootReward>
+}
+
+function randInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+export const CHEST_LOOT_POOLS: LootPool[] = [
+  {
+    rarity: 'common',
+    weight: 70,
+    rewards: [
+      () => { const n = randInt(5, 15); return { type: 'credits', amount: n, rarity: 'common', label: `${n} Spits`, emoji: '⭐' } },
+      () => { const n = randInt(1, 3); return { type: 'gold', amount: n, rarity: 'common', label: `${n} Gold`, emoji: '🪙' } },
+      () => ({ type: 'item', amount: 1, itemType: 'knife' as ItemType, rarity: 'common', label: '1 Knife', emoji: '🔪' }),
+    ],
+  },
+  {
+    rarity: 'uncommon',
+    weight: 22,
+    rewards: [
+      () => { const n = randInt(20, 50); return { type: 'credits', amount: n, rarity: 'uncommon', label: `${n} Spits`, emoji: '⭐' } },
+      () => { const n = randInt(3, 8); return { type: 'gold', amount: n, rarity: 'uncommon', label: `${n} Gold`, emoji: '🪙' } },
+      () => ({ type: 'item', amount: 1, itemType: 'small_potion' as ItemType, rarity: 'uncommon', label: '1 Small Potion', emoji: '🧪' }),
+    ],
+  },
+  {
+    rarity: 'rare',
+    weight: 7,
+    rewards: [
+      () => { const n = randInt(50, 100); return { type: 'credits', amount: n, rarity: 'rare', label: `${n} Spits`, emoji: '⭐' } },
+      () => { const n = randInt(8, 15); return { type: 'gold', amount: n, rarity: 'rare', label: `${n} Gold`, emoji: '🪙' } },
+      () => ({ type: 'item', amount: 1, itemType: 'gun' as ItemType, rarity: 'rare', label: '1 Gun', emoji: '🔫' }),
+      () => ({ type: 'item', amount: 1, itemType: 'medium_potion' as ItemType, rarity: 'rare', label: '1 Medium Potion', emoji: '⚗️' }),
+    ],
+  },
+  {
+    rarity: 'epic',
+    weight: 1,
+    rewards: [
+      () => { const n = randInt(100, 200); return { type: 'credits', amount: n, rarity: 'epic', label: `${n} Spits`, emoji: '⭐' } },
+      () => { const n = randInt(15, 30); return { type: 'gold', amount: n, rarity: 'epic', label: `${n} Gold`, emoji: '🪙' } },
+      () => ({ type: 'item', amount: 1, itemType: 'soldier' as ItemType, rarity: 'epic', label: '1 Soldier', emoji: '💂' }),
+      () => ({ type: 'item', amount: 1, itemType: 'drone' as ItemType, rarity: 'epic', label: '1 Drone', emoji: '🛩️' }),
+      () => ({ type: 'item', amount: 1, itemType: 'large_potion' as ItemType, rarity: 'epic', label: '1 Large Potion', emoji: '🏺' }),
+    ],
+  },
+]
+
+export const RARITY_COLORS: Record<string, string> = {
+  common: '#ffffff',
+  uncommon: '#22c55e',
+  rare: '#3b82f6',
+  epic: '#a855f7',
+}
+
+export function rollChestLoot(): LootReward[] {
+  const totalWeight = CHEST_LOOT_POOLS.reduce((s, p) => s + p.weight, 0)
+  const numRewards = randInt(2, 3)
+  const results: LootReward[] = []
+
+  for (let i = 0; i < numRewards; i++) {
+    let roll = Math.random() * totalWeight
+    let selectedPool = CHEST_LOOT_POOLS[0]
+    for (const pool of CHEST_LOOT_POOLS) {
+      roll -= pool.weight
+      if (roll <= 0) {
+        selectedPool = pool
+        break
+      }
+    }
+    const rewardFn = selectedPool.rewards[Math.floor(Math.random() * selectedPool.rewards.length)]
+    results.push(rewardFn())
+  }
+
+  return results
+}

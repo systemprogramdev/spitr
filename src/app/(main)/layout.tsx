@@ -10,6 +10,9 @@ import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { useGold } from '@/hooks/useGold'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
+import { ChestClaimModal } from '@/components/chest/ChestClaimModal'
+import { ChestOpenModal } from '@/components/chest/ChestOpenModal'
+import { useDailyChest } from '@/hooks/useDailyChest'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@/types'
 
@@ -38,6 +41,7 @@ export default function MainLayout({
   const { openSpitModal } = useModalStore()
   const [whoToFollow, setWhoToFollow] = useState<User[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  useDailyChest()
 
   // Close menu on route change
   useEffect(() => {
@@ -389,6 +393,8 @@ export default function MainLayout({
 
         {/* Spit Modal */}
         <SpitModal />
+        <ChestClaimModal />
+        <ChestOpenModal />
       </div>
     </div>
   )

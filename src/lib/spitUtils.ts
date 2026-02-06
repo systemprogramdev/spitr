@@ -23,6 +23,7 @@ interface RawSpit {
     website: string | null
     hp: number
     is_destroyed: boolean
+    last_chest_claimed_at: string | null
     created_at: string
     updated_at: string
   }

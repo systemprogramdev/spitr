@@ -21,6 +21,7 @@ export type Database = {
           website: string | null
           hp: number
           is_destroyed: boolean
+          last_chest_claimed_at: string | null
           created_at: string
           updated_at: string
         }
@@ -35,6 +36,7 @@ export type Database = {
           website?: string | null
           hp?: number
           is_destroyed?: boolean
+          last_chest_claimed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +51,7 @@ export type Database = {
           website?: string | null
           hp?: number
           is_destroyed?: boolean
+          last_chest_claimed_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -609,6 +612,40 @@ export type Database = {
           }
         ]
       }
+      user_chests: {
+        Row: {
+          id: string
+          user_id: string
+          claimed_at: string
+          opened: boolean
+          loot: Json | null
+          opened_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          claimed_at?: string
+          opened?: boolean
+          loot?: Json | null
+          opened_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          claimed_at?: string
+          opened?: boolean
+          loot?: Json | null
+          opened_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_chests_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -644,6 +681,7 @@ export type UserGold = Database['public']['Tables']['user_gold']['Row']
 export type GoldTransaction = Database['public']['Tables']['gold_transactions']['Row']
 export type UserInventory = Database['public']['Tables']['user_inventory']['Row']
 export type AttackLog = Database['public']['Tables']['attack_log']['Row']
+export type UserChest = Database['public']['Tables']['user_chests']['Row']
 export type ItemType = Database['public']['Enums']['item_type']
 
 // Extended types for UI
