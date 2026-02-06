@@ -17,7 +17,7 @@ interface SpitComposerProps {
 
 export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happening?" }: SpitComposerProps) {
   const { user } = useAuthStore()
-  const { balance, deductCredit, deductAmount, hasCredits } = useCredits()
+  const { balance, deductAmount, hasCredits } = useCredits()
   const [content, setContent] = useState('')
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
   const [showEffects, setShowEffects] = useState(false)
@@ -175,31 +175,12 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
       }
     }
 
-    // Now deduct credits after image upload succeeds
-    const creditDeducted = await deductCredit(replyTo ? 'reply' : 'post')
+    // Deduct total cost in a single atomic operation
+    const creditDeducted = await deductAmount(totalCost, replyTo ? 'reply' : 'post')
     if (!creditDeducted) {
-      setError('Failed to process credit. Please try again.')
+      setError(`Failed to process credits (${totalCost} spits). Please try again.`)
       setIsLoading(false)
       return
-    }
-
-    if (selectedEffect) {
-      const effectDeducted = await deductCredit('post')
-      if (!effectDeducted) {
-        setError('Failed to process effect credit.')
-        setIsLoading(false)
-        return
-      }
-    }
-
-    // Deduct image cost
-    if (imageFile) {
-      const imageDeducted = await deductAmount(IMAGE_COST, 'post')
-      if (!imageDeducted) {
-        setError('Failed to process image credit.')
-        setIsLoading(false)
-        return
-      }
     }
 
     const insertData: {

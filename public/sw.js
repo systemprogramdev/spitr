@@ -1,5 +1,5 @@
 // SPITr Service Worker
-const CACHE_NAME = 'spitr-v1';
+const CACHE_NAME = 'spitr-v2';
 
 // Install event
 self.addEventListener('install', (event) => {
@@ -8,7 +8,13 @@ self.addEventListener('install', (event) => {
 
 // Activate event
 self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
+  event.waitUntil(
+    caches.keys().then((names) => {
+      return Promise.all(
+        names.filter((name) => name !== CACHE_NAME).map((name) => caches.delete(name))
+      );
+    }).then(() => clients.claim())
+  );
 });
 
 // Fetch event - network first, fallback to cache
@@ -32,5 +38,51 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         return caches.match(event.request);
       })
+  );
+});
+
+// Handle messages from the client (for badge updates and notifications)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SET_BADGE') {
+    const count = event.data.count;
+    if (navigator.setAppBadge) {
+      if (count > 0) {
+        navigator.setAppBadge(count);
+      } else {
+        navigator.clearAppBadge();
+      }
+    }
+  }
+
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, body, tag, url } = event.data;
+    self.registration.showNotification(title, {
+      body,
+      tag,
+      icon: '/applogo-192.png',
+      badge: '/applogo-192.png',
+      data: { url },
+    });
+  }
+});
+
+// Handle notification click - open the app to the relevant page
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const url = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Focus existing window if available
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      return clients.openWindow(url);
+    })
   );
 });

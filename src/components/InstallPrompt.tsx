@@ -77,10 +77,7 @@ export function InstallPrompt() {
       <div className="install-prompt">
         <div className="install-prompt-header">
           <div className="install-prompt-icon">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="#0a0a0f"/>
-              <text x="16" y="22" fontFamily="Arial Black" fontSize="16" fontWeight="900" fill="#00ff88" textAnchor="middle">S</text>
-            </svg>
+            <img src="/applogo-192.png" alt="SPITr" width="32" height="32" style={{ borderRadius: '8px' }} />
           </div>
           <div className="install-prompt-title">
             <span className="text-glow">Install SPITr</span>

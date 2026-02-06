@@ -97,9 +97,11 @@ export function useCredits() {
     referenceId?: string
   ) => {
     const cost = CREDIT_COSTS[type]
-    if (!user || balance < cost) return false
+    // Get real-time balance from store to avoid stale state in sequential calls
+    const currentBalance = useCreditsStore.getState().balance
+    if (!user || currentBalance < cost) return false
 
-    const newBalance = balance - cost
+    const newBalance = currentBalance - cost
 
     const { error } = await supabase
       .from('user_credits')
@@ -126,9 +128,11 @@ export function useCredits() {
     type: 'post' | 'reply' | 'respit' | 'pin_purchase',
     referenceId?: string
   ) => {
-    if (!user || balance < amount) return false
+    // Get real-time balance from store to avoid stale state in sequential calls
+    const currentBalance = useCreditsStore.getState().balance
+    if (!user || currentBalance < amount) return false
 
-    const newBalance = balance - amount
+    const newBalance = currentBalance - amount
 
     const { error } = await supabase
       .from('user_credits')
