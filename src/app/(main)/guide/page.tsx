@@ -237,6 +237,18 @@ export default function GuidePage() {
             <li><strong>Daily chests</strong> — Can contain gold rewards</li>
           </ul>
 
+          <h3 className="guide-subheading">Buy Spits</h3>
+          <p>
+            Need more spits? Buy credit packages directly in the <Link href="/shop" className="guide-link">Shop</Link> via
+            Stripe. Packages range from 100 to 5,000 spits. Spits never expire.
+          </p>
+
+          <h3 className="guide-subheading">Transaction History</h3>
+          <p>
+            Scroll to the bottom of the <Link href="/shop" className="guide-link">Shop</Link> to see your
+            recent transaction history — every purchase, post, like, transfer, and conversion is logged.
+          </p>
+
           <h3 className="guide-subheading">Items</h3>
           <div className="guide-table">
             <div className="guide-table-row guide-table-header">
@@ -687,6 +699,7 @@ export default function GuidePage() {
             <li><strong>Bio</strong> — 160 characters to describe yourself</li>
             <li><strong>Handle</strong> — Your unique @username (can be changed in settings)</li>
             <li><strong>Stats</strong> — Follower/following counts, spit count, HP bar, XP bar, level badge</li>
+            <li><strong>Gunshot Wounds</strong> — Bullet holes appear on damaged profiles (1 wound per 500 HP lost)</li>
           </ul>
         </section>
 

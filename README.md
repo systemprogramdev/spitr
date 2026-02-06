@@ -19,8 +19,8 @@ SPITr is a modern microblogging platform with a distinctive cyberpunk aesthetic.
 
 - **Microblogging** - Post spits up to 280 characters with optional image attachments and visual effects
 - **Social Interactions** - Like, respit (repost), quote respit, reply, bookmark, and follow other users
+- **Unified Shop** - One-stop shop for gold, spits, weapons, potions, chests, and transaction history
 - **Credit Economy** - Gamified posting system where actions cost credits
-- **Gold & Shop** - Earn or buy gold to purchase weapons and potions from the in-app shop
 - **Combat System** - Attack other users and their spits with weapons (knife, gun, soldier, drone)
 - **HP System** - Users have 5,000 HP, spits have 10 HP — reach 0 and get destroyed
 - **XP & Levels** - Every interaction earns XP. Level up with a progressive difficulty curve. Level badges show your rank
@@ -29,7 +29,10 @@ SPITr is a modern microblogging platform with a distinctive cyberpunk aesthetic.
 - **Quote Respits** - Share someone's spit with your own commentary embedded
 - **Leaderboard** - Compete across 4 categories: Most Kills, Highest Level, Richest, Most Liked
 - **Kill Feed** - Live feed of recent attacks across the platform with auto-refresh
+- **Toast Notifications** - Cyberpunk-styled toast notifications for all user feedback
+- **Gunshot Wounds** - Bullet hole overlays appear on damaged profiles (1 wound per 500 HP lost)
 - **Sound Effects** - Audio feedback on likes, attacks, chest opens, potions, transfers, and more
+- **Transaction History** - View your last 20 spit transactions directly in the shop
 - **Spit Transfers** - Send credits directly to other users with daily limits and HP penalties for exceeding them
 - **Potions** - Heal yourself with small, medium, or large potions
 - **Promoted Spits** - Pay to pin your spit to the top of everyone's feed for 24 hours
@@ -61,7 +64,7 @@ SPITr uses a credit-based economy to gamify user engagement:
 | Buy treasure chest | 100 credits | — |
 | Promote spit | 500 credits | — |
 
-New users start with **1,000 credits** and receive **1,000 free credits every 30 days**. Additional credits can be purchased through the integrated Stripe payment system.
+New users start with **1,000 credits** and receive **1,000 free credits every 30 days**. Additional credits can be purchased through the integrated Stripe payment system in the Shop.
 
 ### Like Rewards
 
@@ -247,24 +250,24 @@ spitr/
 │   │   ├── (main)/      # Main app pages
 │   │   │   ├── [handle]/ # User profiles + spit detail pages
 │   │   │   ├── bookmarks/ # Saved spits
-│   │   │   ├── credits/  # Credit purchase page
 │   │   │   ├── guide/    # In-app user guide
 │   │   │   ├── messages/ # Direct messages
 │   │   │   ├── notifications/ # Notification center
 │   │   │   ├── search/   # Explore (discover, leaderboard, kill feed)
 │   │   │   ├── settings/ # Settings + profile editing
-│   │   │   └── shop/     # Gold shop, weapons, potions, chests
+│   │   │   └── shop/     # Unified shop: gold, spits, weapons, potions, chests, transaction history
 │   │   └── api/          # API routes (attack, award-xp, transfer, chest, etc.)
 │   ├── components/
 │   │   ├── chest/        # Chest open modal + daily chest popup
 │   │   ├── explore/      # LeaderboardTab, KillFeedTab
+│   │   ├── profile/      # GunshotWounds overlay
 │   │   ├── shop/         # Item cards, gold checkout
 │   │   ├── spit/         # Spit, SpitModal, AttackModal
 │   │   ├── transfer/     # TransferModal
-│   │   └── ui/           # HPBar, XPBar, LevelBadge, LinkPreview
+│   │   └── ui/           # HPBar, XPBar, LevelBadge, LinkPreview, ToastContainer
 │   ├── hooks/            # useAuth, useCredits, useGold, useInventory, useFeed, useSound, useXP
 │   ├── lib/              # Utilities (spitUtils, xp, items, effects, supabase client)
-│   ├── stores/           # Zustand stores (auth, modal, ui)
+│   ├── stores/           # Zustand stores (auth, modal, ui, toast)
 │   └── types/            # TypeScript type definitions
 ├── supabase/
 │   └── migrations/       # SQL migrations (001-011)
