@@ -4,6 +4,17 @@
 -- ============================================
 
 -- ============================================
+-- EXTEND ENUMS
+-- ============================================
+ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'convert';
+ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'like_reward';
+ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'transfer_sent';
+ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'transfer_received';
+
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'like_reward';
+ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'transfer';
+
+-- ============================================
 -- LIKE REWARDS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS like_rewards (
