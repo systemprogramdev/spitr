@@ -3134,18 +3134,13 @@ a:hover {
   }
 
   .spit-modal-overlay {
-    padding-top: 0;
-    align-items: stretch;
+    padding-top: 3vh;
   }
 
   .spit-modal-panel {
-    max-width: 100%;
-    margin: 0;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-    max-height: 100vh;
-    max-height: 100dvh;
+    margin: 0 0.5rem;
+    max-height: 90vh;
+    max-height: 90dvh;
     overflow-y: auto;
   }
 
@@ -3233,17 +3228,13 @@ a:hover {
     font-size: 0.75rem;
   }
 
-  .spit-modal-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .spit-modal-toolbar-left {
-    justify-content: center;
-  }
-
   .spit-modal-toolbar-right {
-    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .spit-modal-toolbar-right .btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
   }
 }
 

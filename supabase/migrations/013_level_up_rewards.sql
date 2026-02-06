@@ -1,6 +1,10 @@
 -- 013: Level-up rewards (1 chest, 100 spits, 10 gold, HP increase)
 -- Also updates use_potion to use dynamic max HP based on level
 
+-- Add 'level_up' to transaction type enums
+ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'level_up';
+ALTER TYPE gold_transaction_type ADD VALUE IF NOT EXISTS 'level_up';
+
 -- Replace award_xp to grant rewards on level-up
 CREATE OR REPLACE FUNCTION award_xp(
   p_user_id UUID,
