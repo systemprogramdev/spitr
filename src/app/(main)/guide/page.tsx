@@ -129,7 +129,7 @@ export default function GuidePage() {
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">❤️ Like</span>
-              <span className="guide-table-value">Show appreciation (free) — gives +5 HP and +1 credit to author</span>
+              <span className="guide-table-value">Show appreciation (1 credit) — gives +5 HP and +1 credit to author</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">🔗 Share</span>
@@ -169,6 +169,10 @@ export default function GuidePage() {
               <span className="guide-table-value">1 credit</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">Like</span>
+              <span className="guide-table-value">1 credit (rewards author +1 credit &amp; +5 HP)</span>
+            </div>
+            <div className="guide-table-row">
               <span className="guide-table-label">Add visual effect</span>
               <span className="guide-table-value">+1 credit</span>
             </div>
@@ -183,7 +187,7 @@ export default function GuidePage() {
           </div>
 
           <h3 className="guide-subheading">Free Actions</h3>
-          <p>Likes, follows, and direct messages are always free. Likes also reward the author with +1 credit and +5 HP to the spit.</p>
+          <p>Follows and direct messages are always free.</p>
 
           <h3 className="guide-subheading">Earning Credits</h3>
           <ul className="guide-list">

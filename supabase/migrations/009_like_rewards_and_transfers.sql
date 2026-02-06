@@ -7,6 +7,7 @@
 -- EXTEND ENUMS
 -- ============================================
 ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'convert';
+ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'like';
 ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'like_reward';
 ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'transfer_sent';
 ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'transfer_received';
@@ -95,7 +96,7 @@ BEGIN
 
   -- Log the credit transaction
   INSERT INTO credit_transactions (user_id, type, amount, balance_after, reference_id)
-  VALUES (v_spit_author_id, 'like_reward', 1, v_new_balance, p_spit_id::TEXT);
+  VALUES (v_spit_author_id, 'like_reward', 1, v_new_balance, p_spit_id);
 
   RETURN jsonb_build_object(
     'success', true,
@@ -169,8 +170,8 @@ BEGIN
   -- Log transactions for both parties
   INSERT INTO credit_transactions (user_id, type, amount, balance_after, reference_id)
   VALUES
-    (p_sender_id, 'transfer_sent', -p_amount, v_new_sender_balance, p_recipient_id::TEXT),
-    (p_recipient_id, 'transfer_received', p_amount, v_new_recipient_balance, p_sender_id::TEXT);
+    (p_sender_id, 'transfer_sent', -p_amount, v_new_sender_balance, p_recipient_id),
+    (p_recipient_id, 'transfer_received', p_amount, v_new_recipient_balance, p_sender_id);
 
   RETURN jsonb_build_object(
     'success', true,

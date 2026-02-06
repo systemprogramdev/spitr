@@ -372,7 +372,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
+          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
           amount: number
           balance_after: number
           reference_id: string | null
@@ -381,7 +381,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
+          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
           amount: number
           balance_after: number
           reference_id?: string | null
@@ -390,7 +390,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
+          type?: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
           amount?: number
           balance_after?: number
           reference_id?: string | null
@@ -685,8 +685,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'like_reward' | 'transfer'
-      transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received' | 'like_reward' | 'transfer_sent' | 'transfer_received'
+      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
+      transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
       gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
       item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
     }

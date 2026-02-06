@@ -185,6 +185,17 @@ export function Spit({ spit, showActions = true }: SpitProps) {
         setLikeCount(c => c + 1)
       }
     } else {
+      // Deduct 1 credit for liking
+      const credited = await deductCredit('like', spit.id)
+      if (!credited) {
+        // Revert optimistic update
+        setIsLiked(false)
+        setLikeCount(c => c - 1)
+        setIsLoading(false)
+        alert('Insufficient spits! You need 1 credit to like.')
+        return
+      }
+
       const { error } = await supabase.from('likes').insert({
         user_id: user.id,
         spit_id: spit.id,

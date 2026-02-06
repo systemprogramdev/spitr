@@ -12,6 +12,7 @@ export const CREDIT_COSTS = {
   post: 1,
   reply: 1,
   respit: 1,
+  like: 1,
   pin_purchase: 500,
 } as const
 
@@ -93,7 +94,7 @@ export function useCredits() {
   }, [user, setBalance])
 
   const deductCredit = async (
-    type: 'post' | 'reply' | 'respit' | 'pin_purchase',
+    type: 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase',
     referenceId?: string
   ) => {
     const cost = CREDIT_COSTS[type]
