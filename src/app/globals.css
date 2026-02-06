@@ -3567,11 +3567,12 @@ a:hover {
 .spit-destroyed::before {
   content: '';
   position: absolute;
-  inset: -10%;
+  inset: 0;
   z-index: 2;
   background: url('/destroyed.png') center / cover no-repeat;
-  opacity: 0.7;
+  opacity: 1;
   pointer-events: none;
+  mix-blend-mode: screen;
 }
 
 .spit-destroyed::after {
