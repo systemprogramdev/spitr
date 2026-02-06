@@ -3556,10 +3556,21 @@ a:hover {
 /* Spit destroyed overlay */
 .spit-destroyed {
   position: relative;
+  overflow: hidden;
 }
 
 .spit-destroyed .spit-content {
-  opacity: 0.6;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.spit-destroyed::before {
+  content: '';
+  position: absolute;
+  inset: -10%;
+  z-index: 2;
+  background: url('/destroyed.png') center / cover no-repeat;
+  opacity: 0.7;
   pointer-events: none;
 }
 
