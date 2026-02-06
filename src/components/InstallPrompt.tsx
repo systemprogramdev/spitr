@@ -27,8 +27,8 @@ export function InstallPrompt() {
     const dismissed = localStorage.getItem('spitr-install-dismissed')
     if (dismissed) {
       const dismissedTime = parseInt(dismissed)
-      // Don't show for 7 days after dismissal
-      if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) {
+      // Don't show for 1 day after dismissal
+      if (Date.now() - dismissedTime < 1 * 24 * 60 * 60 * 1000) {
         return
       }
     }
