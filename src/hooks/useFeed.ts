@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { SpitWithAuthor } from '@/types'
 import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 
 const supabase = createClient()
+const PAGE_SIZE = 20
 
 interface PinnedSpitData {
   id: string
@@ -21,11 +22,13 @@ export function useFeed() {
   const [spits, setSpits] = useState<SpitWithAuthor[]>([])
   const [pinnedSpits, setPinnedSpits] = useState<PinnedSpitData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasMore, setHasMore] = useState(true)
+  const loadingMore = useRef(false)
 
   const fetchFeed = useCallback(async () => {
     setIsLoading(true)
 
-    // Fetch regular spits
+    // Fetch first page of spits
     const { data, error } = await supabase
       .from('spits')
       .select(`
@@ -34,7 +37,7 @@ export function useFeed() {
       `)
       .is('reply_to_id', null)
       .order('created_at', { ascending: false })
-      .limit(50)
+      .limit(PAGE_SIZE)
 
     if (error) {
       console.error('Feed error:', error)
@@ -44,6 +47,7 @@ export function useFeed() {
 
     const enriched = await enrichSpitsWithCounts(data || [], user?.id)
     setSpits(enriched)
+    setHasMore((data || []).length >= PAGE_SIZE)
 
     // Fetch active pinned spits (not expired)
     const { data: pinnedData, error: pinnedError } = await supabase
@@ -97,6 +101,46 @@ export function useFeed() {
 
     setIsLoading(false)
   }, [user])
+
+  // Load more spits (cursor-based using created_at of last spit)
+  const loadMore = useCallback(async () => {
+    if (loadingMore.current || !hasMore) return
+    loadingMore.current = true
+    setIsLoading(true)
+
+    // Get the oldest spit's timestamp as cursor
+    const lastSpit = spits[spits.length - 1]
+    if (!lastSpit) {
+      loadingMore.current = false
+      setIsLoading(false)
+      return
+    }
+
+    const { data, error } = await supabase
+      .from('spits')
+      .select(`
+        *,
+        author:users!spits_user_id_fkey(*)
+      `)
+      .is('reply_to_id', null)
+      .lt('created_at', lastSpit.created_at)
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE)
+
+    if (error) {
+      console.error('Load more error:', error)
+      loadingMore.current = false
+      setIsLoading(false)
+      return
+    }
+
+    const enriched = await enrichSpitsWithCounts(data || [], user?.id)
+    setSpits((prev) => [...prev, ...enriched])
+    setHasMore((data || []).length >= PAGE_SIZE)
+
+    loadingMore.current = false
+    setIsLoading(false)
+  }, [spits, hasMore, user])
 
   // Dismiss a pinned spit
   const dismissPin = useCallback(async (pinId: string) => {
@@ -187,7 +231,7 @@ export function useFeed() {
     isLoading,
     refresh: fetchFeed,
     dismissPin,
-    hasMore: false,
-    loadMore: () => {},
+    hasMore,
+    loadMore,
   }
 }

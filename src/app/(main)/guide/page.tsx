@@ -218,6 +218,7 @@ export default function GuidePage() {
             <li><strong>Daily chest</strong> — Open every 24 hours for random rewards</li>
             <li><strong>Like rewards</strong> — Earn 1 credit each time someone likes your spit</li>
             <li><strong>Transfers</strong> — Receive spits from other users</li>
+            <li><strong>Level-up rewards</strong> — Earn 100 spits every time you level up</li>
             <li><strong>Purchase</strong> — Buy credit packages on the <Link href="/shop" className="guide-link">Shop</Link> page</li>
           </ul>
         </section>
@@ -235,6 +236,7 @@ export default function GuidePage() {
             <li><strong>Convert spits</strong> — 10 spits = 1 gold (in Shop)</li>
             <li><strong>Buy with Stripe</strong> — Purchase gold packages directly</li>
             <li><strong>Daily chests</strong> — Can contain gold rewards</li>
+            <li><strong>Level-up rewards</strong> — Earn 10 gold every time you level up</li>
           </ul>
 
           <h3 className="guide-subheading">Buy Spits</h3>
@@ -289,7 +291,7 @@ export default function GuidePage() {
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">🏺 Large Potion</span>
-              <span className="guide-table-value">75g — Full heal (5,000 HP)</span>
+              <span className="guide-table-value">75g — Heal 5,000 HP</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">🛡️ Firewall</span>
@@ -310,8 +312,8 @@ export default function GuidePage() {
         <section id="combat" className="guide-section">
           <h2 className="guide-heading">Combat System</h2>
           <p>
-            Every user and every spit has HP (Health Points). Users start with 5,000 HP.
-            Spits have 10 HP. When HP hits 0, you&apos;re &quot;destroyed.&quot;
+            Every user and every spit has HP (Health Points). Users start with 5,000 HP
+            and gain +100 max HP per level. Spits have 10 HP. When HP hits 0, you&apos;re &quot;destroyed.&quot;
           </p>
 
           <h3 className="guide-subheading">How to Attack</h3>
@@ -360,6 +362,7 @@ export default function GuidePage() {
           <h3 className="guide-subheading">Getting Chests</h3>
           <ul className="guide-list">
             <li><strong>Daily free chest</strong> — A popup appears when you log in after 24 hours</li>
+            <li><strong>Level-up reward</strong> — Earn 1 chest every time you level up</li>
             <li><strong>Buy in Shop</strong> — Purchase additional chests for 100 spits each</li>
             <li>Choose <strong>Claim & Open</strong> to see your loot immediately</li>
             <li>Or <strong>Save for Later</strong> — unopened chests appear in the Shop</li>
@@ -543,6 +546,31 @@ export default function GuidePage() {
             Each level requires more XP than the last. Level 2 needs 100 XP, Level 3 needs 300 XP,
             and it keeps growing. Your level badge and XP bar appear on your profile.
           </p>
+
+          <h3 className="guide-subheading">Level-Up Rewards</h3>
+          <p>Every time you level up, you receive:</p>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">💰 +100 Spits</span>
+              <span className="guide-table-value">Free credits added to your balance</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🪙 +10 Gold</span>
+              <span className="guide-table-value">Premium currency for the Shop</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">📦 +1 Chest</span>
+              <span className="guide-table-value">A treasure chest with random loot</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">❤️ +100 Max HP</span>
+              <span className="guide-table-value">Your max HP increases permanently (base 5,000 + 100 per level)</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">✨ Full HP Restore</span>
+              <span className="guide-table-value">HP is fully healed to your new maximum</span>
+            </div>
+          </div>
 
           <h3 className="guide-subheading">Level Badge Colors</h3>
           <div className="guide-table">
