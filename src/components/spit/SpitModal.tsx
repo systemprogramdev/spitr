@@ -315,29 +315,13 @@ export function SpitModal() {
 
   return (
     <div
-      className="modal-overlay"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingTop: '10vh',
-        zIndex: 1000,
-      }}
+      className="modal-overlay spit-modal-overlay"
       onClick={(e) => {
         if (e.target === e.currentTarget) closeSpitModal()
       }}
     >
       <div
-        className="panel-bash glow"
-        style={{
-          width: '100%',
-          maxWidth: '600px',
-          margin: '0 1rem',
-          animation: 'slideDown 0.2s ease-out',
-        }}
+        className="panel-bash glow spit-modal-panel"
       >
         <div className="panel-bash-header">
           <div className="panel-bash-dots">
@@ -526,17 +510,8 @@ export function SpitModal() {
                 </div>
               )}
 
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: '1rem',
-                  paddingTop: '1rem',
-                  borderTop: '1px solid var(--sys-border)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="spit-modal-toolbar">
+                <div className="spit-modal-toolbar-left">
                   <span
                     style={{
                       fontSize: '0.875rem',
@@ -547,7 +522,7 @@ export function SpitModal() {
                   </span>
                   {imageFile && (
                     <span className="badge badge-secondary" style={{ fontSize: '0.65rem' }}>
-                      +IMG ({IMAGE_COST})
+                      +IMG
                     </span>
                   )}
                   {selectedEffect && (
@@ -555,10 +530,10 @@ export function SpitModal() {
                       +FX
                     </span>
                   )}
-                  {!hasCredits(totalCost) && <span className="badge badge-danger">Need {totalCost} spits!</span>}
+                  {!hasCredits(totalCost) && <span className="badge badge-danger" style={{ fontSize: '0.65rem' }}>Need {totalCost}</span>}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div className="spit-modal-toolbar-right">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -588,11 +563,11 @@ export function SpitModal() {
                       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                     </svg>
                   </button>
-                  <button className="btn btn-outline" onClick={closeSpitModal}>
+                  <button className="btn btn-outline btn-sm" onClick={closeSpitModal}>
                     Cancel
                   </button>
                   <button
-                    className="btn btn-primary btn-glow"
+                    className="btn btn-primary btn-glow btn-sm"
                     onClick={handleSubmit}
                     disabled={!content.trim() || isOverLimit || isLoading || !hasCredits(totalCost)}
                   >
@@ -605,18 +580,6 @@ export function SpitModal() {
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   )
 }

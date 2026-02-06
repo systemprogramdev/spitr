@@ -2771,6 +2771,58 @@ a:hover {
 }
 
 /* ============================================ */
+/* SPIT MODAL */
+/* ============================================ */
+
+.spit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  z-index: 1000;
+}
+
+.spit-modal-panel {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 1rem;
+  animation: spitModalSlideDown 0.2s ease-out;
+}
+
+@keyframes spitModalSlideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.spit-modal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--sys-border);
+  gap: 0.5rem;
+}
+
+.spit-modal-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.spit-modal-toolbar-right {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ============================================ */
 /* MOBILE RESPONSIVE OVERHAUL */
 /* ============================================ */
 
@@ -3081,6 +3133,31 @@ a:hover {
     border-radius: 0;
   }
 
+  .spit-modal-overlay {
+    padding-top: 0;
+    align-items: stretch;
+  }
+
+  .spit-modal-panel {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .spit-modal-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .spit-modal-toolbar-right {
+    gap: 0.35rem;
+  }
+
   /* Search mobile */
   .search-input-wrapper {
     padding: 0.75rem;
@@ -3154,6 +3231,19 @@ a:hover {
   .profile-tab {
     padding: 0.625rem 0.75rem;
     font-size: 0.75rem;
+  }
+
+  .spit-modal-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .spit-modal-toolbar-left {
+    justify-content: center;
+  }
+
+  .spit-modal-toolbar-right {
+    justify-content: center;
   }
 }
 
