@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
+import { ToastContainer } from "@/components/ui/ToastContainer";
 
 const shareTechMono = Share_Tech_Mono({
   weight: "400",
@@ -98,6 +99,7 @@ export default function RootLayout({
           {children}
           <InstallPrompt />
           <NotificationPrompt />
+          <ToastContainer />
         </ThemeProvider>
         <script
           dangerouslySetInnerHTML={{

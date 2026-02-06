@@ -6,6 +6,7 @@ import { useInventory } from '@/hooks/useInventory'
 import { WEAPONS, ITEM_MAP, GameItem } from '@/lib/items'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
+import { toast } from '@/stores/toastStore'
 
 const WEAPON_SOUNDS: Record<string, 'knife' | 'gunshot' | 'drone'> = {
   knife: 'knife',
@@ -35,7 +36,7 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
 
     const qty = getQuantity(weapon.type)
     if (qty < 1) {
-      alert(`You don't have any ${weapon.name}s! Buy some from the shop.`)
+      toast.warning(`You don't have any ${weapon.name}s! Buy some from the shop.`)
       return
     }
 
@@ -61,7 +62,7 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
       await refreshInventory()
       onAttackComplete({ newHp: data.newHp, destroyed: data.destroyed, damage: data.damage })
     } else {
-      alert(data.error || 'Attack failed')
+      toast.error(data.error || 'Attack failed')
     }
 
     setAttacking(false)

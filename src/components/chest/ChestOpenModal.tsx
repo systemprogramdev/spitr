@@ -6,6 +6,7 @@ import { useModalStore } from '@/stores/modalStore'
 import { LootReward, RARITY_COLORS } from '@/lib/items'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
+import { toast } from '@/stores/toastStore'
 
 type Phase = 'closed' | 'shaking' | 'opening' | 'revealed'
 
@@ -45,7 +46,7 @@ export function ChestOpenModal() {
       setPhase('revealed')
       window.dispatchEvent(new CustomEvent('chest-opened'))
     } else {
-      alert(data.error || 'Failed to open chest')
+      toast.error(data.error || 'Failed to open chest')
       handleClose()
     }
   }

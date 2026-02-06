@@ -14,6 +14,7 @@ import { AttackModal } from './AttackModal'
 import { SPIT_MAX_HP } from '@/lib/items'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
+import { toast } from '@/stores/toastStore'
 
 // URL regex pattern
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
@@ -147,7 +148,7 @@ export function Spit({ spit, showActions = true }: SpitProps) {
 
     if (error) {
       console.error('Delete error:', error.message)
-      alert('Failed to delete spit')
+      toast.error('Failed to delete spit')
     } else {
       setIsDeleted(true)
       // Dispatch event to refresh feed
@@ -198,7 +199,7 @@ export function Spit({ spit, showActions = true }: SpitProps) {
         setIsLiked(false)
         setLikeCount(c => c - 1)
         setIsLoading(false)
-        alert('Insufficient spits! You need 1 credit to like.')
+        toast.warning('Insufficient spits! You need 1 credit to like.')
         return
       }
 
@@ -267,7 +268,7 @@ export function Spit({ spit, showActions = true }: SpitProps) {
       setIsLoading(false)
     } else {
       if (!hasCredits()) {
-        alert('Insufficient spits! Get more credits to respit.')
+        toast.warning('Insufficient spits! Get more credits to respit.')
         return
       }
 
@@ -342,7 +343,7 @@ export function Spit({ spit, showActions = true }: SpitProps) {
     if (!user || isPinning) return
 
     if (!hasCredits(CREDIT_COSTS.pin_purchase)) {
-      alert(`Insufficient spits! Pin to Feed costs ${CREDIT_COSTS.pin_purchase} spits.`)
+      toast.warning(`Insufficient spits! Pin to Feed costs ${CREDIT_COSTS.pin_purchase} spits.`)
       return
     }
 
@@ -352,7 +353,7 @@ export function Spit({ spit, showActions = true }: SpitProps) {
     const credited = await deductCredit('pin_purchase', spit.id)
     if (!credited) {
       setIsPinning(false)
-      alert('Failed to deduct credits. Please try again.')
+      toast.error('Failed to deduct credits. Please try again.')
       return
     }
 
@@ -375,9 +376,9 @@ export function Spit({ spit, showActions = true }: SpitProps) {
 
     if (error) {
       console.error('Pin error:', error.message, error.code, error.details)
-      alert(`Failed to pin spit: ${error.message}`)
+      toast.error(`Failed to pin spit: ${error.message}`)
     } else {
-      alert('Your spit is now promoted! It will appear at the top of the feed for all users.')
+      toast.success('Your spit is now promoted! It will appear at the top of the feed for all users.')
       // Dispatch event to refresh the feed
       window.dispatchEvent(new CustomEvent('spit-pinned'))
     }

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useUIStore } from '@/stores/uiStore'
+import { toast } from '@/stores/toastStore'
 
 const themes = [
   { id: 'terminal', name: 'Terminal', description: 'Classic green phosphor' },
@@ -191,7 +192,7 @@ export default function SettingsPage() {
               onClick={() => {
                 if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
                   if (window.confirm('This will permanently delete all your data. Type confirm to proceed.')) {
-                    alert('Account deletion is not yet available. Please contact support.')
+                    toast.info('Account deletion is not yet available. Please contact support.')
                   }
                 }
               }}

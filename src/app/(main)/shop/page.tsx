@@ -15,6 +15,7 @@ import { UserChest } from '@/types'
 import { createClient } from '@/lib/supabase/client'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
+import { toast } from '@/stores/toastStore'
 
 const supabase = createClient()
 
@@ -91,7 +92,7 @@ export default function ShopPage() {
     // Deduct spits
     const credited = await deductAmount(actualSpitCost, 'convert', 'gold_convert')
     if (!credited) {
-      alert('Insufficient spits!')
+      toast.warning('Insufficient spits!')
       setIsConverting(false)
       return
     }
@@ -99,7 +100,7 @@ export default function ShopPage() {
     // Add gold
     const added = await addGold(goldToGet, 'convert')
     if (!added) {
-      alert('Failed to add gold. Your spits were deducted — contact support.')
+      toast.error('Failed to add gold. Your spits were deducted — contact support.')
     } else {
       playSound('gold')
     }
@@ -111,7 +112,7 @@ export default function ShopPage() {
   const handleBuyItem = async (item: GameItem) => {
     if (!user || buyingItem) return
     if (!hasGold(item.goldCost)) {
-      alert('Insufficient gold!')
+      toast.warning('Insufficient gold!')
       return
     }
 
@@ -120,7 +121,7 @@ export default function ShopPage() {
     // Deduct gold
     const deducted = await deductGold(item.goldCost, 'item_purchase', item.type)
     if (!deducted) {
-      alert('Failed to purchase item.')
+      toast.error('Failed to purchase item.')
       setBuyingItem(null)
       return
     }
@@ -147,7 +148,7 @@ export default function ShopPage() {
 
     if (error) {
       console.error('Inventory error:', error)
-      alert('Failed to add item to inventory.')
+      toast.error('Failed to add item to inventory.')
     } else {
       playSound('gold')
       await refreshInventory()
@@ -177,9 +178,9 @@ export default function ShopPage() {
       awardXP('potion_use')
       setUserHp(data.newHp)
       await refreshInventory()
-      alert(`Healed for ${data.healed} HP! New HP: ${data.newHp}`)
+      toast.success(`Healed for ${data.healed} HP! New HP: ${data.newHp}`)
     } else {
-      alert(data.error || 'Failed to use potion.')
+      toast.error(data.error || 'Failed to use potion.')
     }
 
     setUsingPotion(null)
@@ -189,13 +190,13 @@ export default function ShopPage() {
     playSound('gold')
     await refreshGold()
     setCheckoutPkg(null)
-    alert(`${gold} Gold added to your balance!`)
+    toast.success(`${gold} Gold added to your balance!`)
   }
 
   const handleBuyChest = async () => {
     if (!user || buyingChest) return
     if (creditBalance < 100) {
-      alert('Insufficient spits! Chests cost 100 spits.')
+      toast.warning('Insufficient spits! Chests cost 100 spits.')
       return
     }
 
@@ -215,10 +216,10 @@ export default function ShopPage() {
         await fetchChests()
         window.dispatchEvent(new CustomEvent('chest-claimed'))
       } else {
-        alert(data.error || 'Failed to buy chest')
+        toast.error(data.error || 'Failed to buy chest')
       }
     } catch {
-      alert('Network error')
+      toast.error('Network error')
     }
 
     setBuyingChest(false)

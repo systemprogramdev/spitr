@@ -13,6 +13,7 @@ import { HPBar } from '@/components/ui/HPBar'
 import { XPBar } from '@/components/ui/XPBar'
 import { LevelBadge } from '@/components/ui/LevelBadge'
 import { MAX_HP } from '@/lib/items'
+import { GunshotWounds } from '@/components/profile/GunshotWounds'
 
 const supabase = createClient()
 
@@ -306,6 +307,8 @@ export default function ProfilePage() {
 
   return (
     <div>
+      {/* Profile Header with wound overlays */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
       {/* Banner */}
       <div className="profile-banner" style={{
         height: '150px',
@@ -459,6 +462,12 @@ export default function ProfilePage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Gunshot Wounds */}
+      {!profileDestroyed && profileHp < MAX_HP && (
+        <GunshotWounds hp={profileHp} maxHp={MAX_HP} userId={profile.id} />
+      )}
       </div>
 
       {/* Tabs */}
