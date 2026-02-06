@@ -3564,15 +3564,19 @@ a:hover {
   pointer-events: none;
 }
 
-.spit-destroyed::before {
-  content: '';
+.spit-destroyed-overlay {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: url('/destroyed.png') center / 100% 100% no-repeat;
-  opacity: 1;
   pointer-events: none;
-  mix-blend-mode: screen;
+  overflow: hidden;
+}
+
+.spit-destroyed-overlay img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  opacity: 0.85;
 }
 
 .spit-destroyed::after {

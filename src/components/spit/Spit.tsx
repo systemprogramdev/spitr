@@ -351,6 +351,11 @@ export function Spit({ spit, showActions = true }: SpitProps) {
 
   return (
     <article className={`spit ${isSpitDestroyed ? 'spit-destroyed' : ''}`}>
+      {isSpitDestroyed && (
+        <div className="spit-destroyed-overlay">
+          <img src="/destroyed.png" alt="" draggable={false} />
+        </div>
+      )}
       {spit._respitBy && (
         <div className="spit-respit-indicator">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
