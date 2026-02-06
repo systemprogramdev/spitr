@@ -89,18 +89,34 @@ Gold is the premium currency used for combat items. Earn gold by converting spit
 | Gun | 5 | 25 |
 | Soldier | 25 | 100 |
 | Drone | 100 | 500 |
+| Nuke | 250 | 2,500 |
 
 **Potions:**
 
 | Potion | Gold Cost | Heal Amount |
 |--------|-----------|-------------|
+| Can of Soda | 1 | +50 HP |
 | Small Potion | 10 | +500 HP |
 | Medium Potion | 25 | +1,500 HP |
 | Large Potion | 75 | +5,000 HP (full) |
 
+**Defense:**
+
+| Item | Gold Cost | Effect |
+|------|-----------|--------|
+| Firewall | 15 | Blocks the next attack completely |
+| Kevlar Vest | 30 | Blocks next 3 attacks (not drones/nukes) |
+
+**Utility:**
+
+| Item | Gold Cost | Effect |
+|------|-----------|--------|
+| Spray Paint | 5 | Tags someone's profile for 24 hours |
+
 - **User HP**: 5,000 max. At 0 HP your account is "destroyed."
 - **Spit HP**: 10 (likes add +5 HP each). At 0 HP a spit gets a destroyed overlay.
 - Attack other users' profiles or individual spits using weapons from your inventory.
+- Activate defensive items from the Shop to block incoming attacks.
 
 ---
 
@@ -134,9 +150,9 @@ Chests contain 2-3 random rewards with rarity tiers:
 
 | Rarity | Chance | Example Loot |
 |--------|--------|--------------|
-| Common | 70% | 5-15 credits, 1-3 gold, knife |
+| Common | 70% | 5-15 credits, 1-3 gold, knife, soda |
 | Uncommon | 22% | 20-50 credits, 3-8 gold, small potion |
-| Rare | 7% | 50-100 credits, 8-15 gold, gun, medium potion |
+| Rare | 7% | 50-100 credits, 8-15 gold, gun, medium potion, firewall |
 | Epic | 1% | 100-200 credits, 15-30 gold, soldier, drone, large potion |
 
 Earn a free chest every 24 hours or buy additional chests for 100 credits each.
@@ -305,8 +321,10 @@ spitr/
 
 ### Combat & Progression
 
-- **user_inventory** - Weapons and potions owned by each user
+- **user_inventory** - Weapons, potions, defense, and utility items owned by each user
 - **attack_log** - Record of all attacks (attacker, target user/spit, weapon, damage)
+- **user_buffs** - Active defensive buffs (firewall, kevlar) with remaining charges
+- **spray_paints** - Active spray paint tags on user profiles with expiration
 - **user_xp** - XP and level per user
 - **xp_transactions** - XP award history
 

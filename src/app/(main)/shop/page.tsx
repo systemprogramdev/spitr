@@ -7,7 +7,7 @@ import { useGold } from '@/hooks/useGold'
 import { useInventory } from '@/hooks/useInventory'
 import { useCredits } from '@/hooks/useCredits'
 import { useModalStore } from '@/stores/modalStore'
-import { ITEMS, WEAPONS, POTIONS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, MAX_HP } from '@/lib/items'
+import { ITEMS, WEAPONS, POTIONS, DEFENSE_ITEMS, UTILITY_ITEMS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, MAX_HP } from '@/lib/items'
 import { ItemCard } from '@/components/shop/ItemCard'
 import { GoldCheckoutModal } from '@/components/shop/GoldCheckoutModal'
 import { StripeCheckoutModal } from '@/components/StripeCheckoutModal'
@@ -69,6 +69,7 @@ function ShopPageContent() {
   const [isConverting, setIsConverting] = useState(false)
   const [buyingItem, setBuyingItem] = useState<string | null>(null)
   const [usingPotion, setUsingPotion] = useState<string | null>(null)
+  const [activatingDefense, setActivatingDefense] = useState<string | null>(null)
   const [checkoutPkg, setCheckoutPkg] = useState<typeof GOLD_PACKAGES[number] | null>(null)
   const [userHp, setUserHp] = useState(user?.hp ?? MAX_HP)
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
@@ -265,6 +266,38 @@ function ShopPageContent() {
     }
 
     setUsingPotion(null)
+  }
+
+  const handleActivateDefense = async (item: GameItem) => {
+    if (!user || activatingDefense) return
+
+    setActivatingDefense(item.type)
+
+    const res = await fetch('/api/use-defense', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemType: item.type }),
+    })
+
+    const data = await res.json()
+
+    if (data.success) {
+      playSound('gold')
+      await refreshInventory()
+      toast.success(`${item.name} activated! ${data.charges} charge${data.charges > 1 ? 's' : ''} remaining.`)
+    } else {
+      toast.error(data.error || 'Failed to activate defense.')
+    }
+
+    setActivatingDefense(null)
+  }
+
+  const handleUseItem = async (item: GameItem) => {
+    if (item.category === 'potion') {
+      handleUsePotion(item)
+    } else if (item.category === 'defense') {
+      handleActivateDefense(item)
+    }
   }
 
   const handleGoldPurchaseSuccess = async (gold: number) => {
@@ -565,6 +598,45 @@ function ShopPageContent() {
         </div>
       </div>
 
+      {/* Defense */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>🛡️</span> Defense
+        </h2>
+        <div className="shop-items-grid">
+          {DEFENSE_ITEMS.map((item) => (
+            <ItemCard
+              key={item.type}
+              item={item}
+              quantity={getQuantity(item.type)}
+              goldBalance={goldBalance}
+              onBuy={handleBuyItem}
+              onUse={handleActivateDefense}
+              buying={buyingItem === item.type}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Utility */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>🎨</span> Utility
+        </h2>
+        <div className="shop-items-grid">
+          {UTILITY_ITEMS.map((item) => (
+            <ItemCard
+              key={item.type}
+              item={item}
+              quantity={getQuantity(item.type)}
+              goldBalance={goldBalance}
+              onBuy={handleBuyItem}
+              buying={buyingItem === item.type}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Inventory */}
       <div className="shop-section">
         <h2 className="shop-section-title">
@@ -594,6 +666,16 @@ function ShopPageContent() {
                         disabled={usingPotion === itemDef.type}
                       >
                         Use
+                      </button>
+                    )}
+                    {itemDef.category === 'defense' && (
+                      <button
+                        className="btn btn-primary"
+                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+                        onClick={() => handleActivateDefense(itemDef)}
+                        disabled={activatingDefense === itemDef.type}
+                      >
+                        Activate
                       </button>
                     )}
                   </div>

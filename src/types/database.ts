@@ -542,19 +542,19 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
           quantity: number
         }
         Insert: {
           id?: string
           user_id: string
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
           quantity?: number
         }
         Update: {
           id?: string
           user_id?: string
-          item_type?: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          item_type?: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
           quantity?: number
         }
         Relationships: [
@@ -572,7 +572,7 @@ export type Database = {
           attacker_id: string
           target_user_id: string | null
           target_spit_id: string | null
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
           damage: number
           created_at: string
         }
@@ -581,7 +581,7 @@ export type Database = {
           attacker_id: string
           target_user_id?: string | null
           target_spit_id?: string | null
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
           damage: number
           created_at?: string
         }
@@ -590,7 +590,7 @@ export type Database = {
           attacker_id?: string
           target_user_id?: string | null
           target_spit_id?: string | null
-          item_type?: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          item_type?: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
           damage?: number
           created_at?: string
         }
@@ -773,6 +773,74 @@ export type Database = {
           }
         ]
       }
+      user_buffs: {
+        Row: {
+          id: string
+          user_id: string
+          buff_type: string
+          charges_remaining: number
+          activated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          buff_type: string
+          charges_remaining?: number
+          activated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          buff_type?: string
+          charges_remaining?: number
+          activated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_buffs_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      spray_paints: {
+        Row: {
+          id: string
+          sprayer_id: string
+          target_user_id: string
+          sprayed_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          sprayer_id: string
+          target_user_id: string
+          sprayed_at?: string
+          expires_at: string
+        }
+        Update: {
+          id?: string
+          sprayer_id?: string
+          target_user_id?: string
+          sprayed_at?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spray_paints_sprayer_id_fkey"
+            columns: ["sprayer_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "spray_paints_target_user_id_fkey"
+            columns: ["target_user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -781,10 +849,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
+      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray'
       transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received' | 'chest_purchase'
       gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
-      item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+      item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -814,6 +882,8 @@ export type LikeReward = Database['public']['Tables']['like_rewards']['Row']
 export type UserXP = Database['public']['Tables']['user_xp']['Row']
 export type XPTransaction = Database['public']['Tables']['xp_transactions']['Row']
 export type UserBookmark = Database['public']['Tables']['user_bookmarks']['Row']
+export type UserBuff = Database['public']['Tables']['user_buffs']['Row']
+export type SprayPaint = Database['public']['Tables']['spray_paints']['Row']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {

@@ -14,6 +14,7 @@ import { XPBar } from '@/components/ui/XPBar'
 import { LevelBadge } from '@/components/ui/LevelBadge'
 import { MAX_HP } from '@/lib/items'
 import { GunshotWounds } from '@/components/profile/GunshotWounds'
+import { SprayPaintOverlay } from '@/components/profile/SprayPaintOverlay'
 
 const supabase = createClient()
 
@@ -468,6 +469,8 @@ export default function ProfilePage() {
       {!profileDestroyed && profileHp < MAX_HP && (
         <GunshotWounds hp={profileHp} maxHp={MAX_HP} userId={profile.id} />
       )}
+      {/* Spray Paint Overlay */}
+      <SprayPaintOverlay targetUserId={profile.id} />
       </div>
 
       {/* Tabs */}

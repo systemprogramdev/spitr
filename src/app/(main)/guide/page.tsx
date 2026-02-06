@@ -272,6 +272,14 @@ export default function GuidePage() {
               <span className="guide-table-value">100g — 500 damage</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">☢️ Nuke</span>
+              <span className="guide-table-value">250g — 2,500 damage</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🥤 Can of Soda</span>
+              <span className="guide-table-value">1g — Heal 50 HP</span>
+            </div>
+            <div className="guide-table-row">
               <span className="guide-table-label">🧪 Small Potion</span>
               <span className="guide-table-value">10g — Heal 500 HP</span>
             </div>
@@ -282,6 +290,18 @@ export default function GuidePage() {
             <div className="guide-table-row">
               <span className="guide-table-label">🏺 Large Potion</span>
               <span className="guide-table-value">75g — Full heal (5,000 HP)</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🛡️ Firewall</span>
+              <span className="guide-table-value">15g — Blocks the next attack completely</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🦺 Kevlar Vest</span>
+              <span className="guide-table-value">30g — Blocks next 3 attacks (not drones/nukes)</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🎨 Spray Paint</span>
+              <span className="guide-table-value">5g — Tag someone&apos;s profile for 24 hours</span>
             </div>
           </div>
         </section>
@@ -308,10 +328,25 @@ export default function GuidePage() {
             <li><strong>Destroyed users</strong> — Redirected to a &quot;destroyed&quot; screen. Use potions to heal!</li>
           </ul>
 
+          <h3 className="guide-subheading">Defense</h3>
+          <p>
+            Protect yourself with defensive items. Activate them from the Shop&apos;s inventory.
+          </p>
+          <ul className="guide-list">
+            <li><strong>🛡️ Firewall</strong> — Blocks the next attack completely. Any weapon, any damage. One-time use.</li>
+            <li><strong>🦺 Kevlar Vest</strong> — Blocks the next 3 attacks from knives, guns, and soldiers. Drones and nukes bypass kevlar.</li>
+          </ul>
+
+          <h3 className="guide-subheading">Spray Paint</h3>
+          <p>
+            Tag someone&apos;s profile with spray paint! The overlay lasts for 24 hours and everyone can see it.
+            Use the spray paint option from the attack menu on any user&apos;s profile.
+          </p>
+
           <div className="guide-callout guide-callout-warning">
             <span className="guide-callout-icon">⚔️</span>
             <div>
-              <strong>Pro tip:</strong> Stock up on potions before you get into fights.
+              <strong>Pro tip:</strong> Stock up on potions and defensive items before you get into fights.
               Once you&apos;re destroyed, you can still use potions from the Shop to recover.
             </div>
           </div>
@@ -335,7 +370,7 @@ export default function GuidePage() {
           <div className="guide-table">
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#ffffff' }}>Common (70%)</span>
-              <span className="guide-table-value">5-15 credits, 1-3 gold, or a knife</span>
+              <span className="guide-table-value">5-15 credits, 1-3 gold, knife, or soda</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#22c55e' }}>Uncommon (22%)</span>
@@ -343,7 +378,7 @@ export default function GuidePage() {
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#3b82f6' }}>Rare (7%)</span>
-              <span className="guide-table-value">50-100 credits, 8-15 gold, gun, or medium potion</span>
+              <span className="guide-table-value">50-100 credits, 8-15 gold, gun, medium potion, or firewall</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#a855f7' }}>Epic (1%)</span>
@@ -700,6 +735,7 @@ export default function GuidePage() {
             <li><strong>Handle</strong> — Your unique @username (can be changed in settings)</li>
             <li><strong>Stats</strong> — Follower/following counts, spit count, HP bar, XP bar, level badge</li>
             <li><strong>Gunshot Wounds</strong> — Bullet holes appear on damaged profiles (1 wound per 500 HP lost)</li>
+            <li><strong>Spray Paint</strong> — Tagged profiles show spray paint overlays for 24 hours</li>
           </ul>
         </section>
 
@@ -783,6 +819,14 @@ export default function GuidePage() {
             <div className="guide-tip">
               <span className="guide-tip-emoji">💬</span>
               <p>Use Quote Respits to add your own take when sharing someone&apos;s spit.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">🦺</span>
+              <p>Activate a Kevlar Vest to block 3 attacks — but beware, drones and nukes bypass it.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">🎨</span>
+              <p>Spray paint is the cheapest way to troll someone. 5 gold for 24 hours of visible tags on their profile.</p>
             </div>
           </div>
         </section>

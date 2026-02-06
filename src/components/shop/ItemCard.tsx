@@ -26,6 +26,12 @@ export function ItemCard({ item, quantity = 0, goldBalance, onBuy, onUse, buying
         {item.healAmount && (
           <div className="shop-item-stat shop-item-stat-heal">+{item.healAmount} HP</div>
         )}
+        {item.category === 'defense' && (
+          <div className="shop-item-stat" style={{ color: 'var(--sys-primary)' }}>Blocks attacks</div>
+        )}
+        {item.category === 'utility' && (
+          <div className="shop-item-stat" style={{ color: 'var(--sys-success)' }}>Use on profiles</div>
+        )}
       </div>
       <div className="shop-item-actions">
         <div className="shop-item-cost">{item.goldCost}g</div>
@@ -39,12 +45,12 @@ export function ItemCard({ item, quantity = 0, goldBalance, onBuy, onUse, buying
         >
           {buying ? '...' : 'Buy'}
         </button>
-        {onUse && quantity > 0 && item.category === 'potion' && (
+        {onUse && quantity > 0 && (item.category === 'potion' || item.category === 'defense') && (
           <button
             className="btn btn-primary shop-item-use"
             onClick={() => onUse(item)}
           >
-            Use
+            {item.category === 'defense' ? 'Activate' : 'Use'}
           </button>
         )}
       </div>
