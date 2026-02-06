@@ -100,6 +100,8 @@ export default function ShopPage() {
     const added = await addGold(goldToGet, 'convert')
     if (!added) {
       alert('Failed to add gold. Your spits were deducted — contact support.')
+    } else {
+      playSound('gold')
     }
 
     setConvertAmount('')
@@ -147,6 +149,7 @@ export default function ShopPage() {
       console.error('Inventory error:', error)
       alert('Failed to add item to inventory.')
     } else {
+      playSound('gold')
       await refreshInventory()
     }
 
