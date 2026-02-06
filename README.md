@@ -20,11 +20,14 @@ SPITr is a modern microblogging platform with a distinctive cyberpunk aesthetic.
 - **Microblogging** - Post spits up to 280 characters with optional image attachments
 - **Social Interactions** - Like, respit (repost), reply, and follow other users
 - **Credit Economy** - Gamified posting system where actions cost credits
+- **Gold & Shop** - Earn or buy gold to purchase weapons and potions from the in-app shop
+- **Combat System** - Attack other users and their spits with weapons (knife, gun, soldier, drone)
+- **HP System** - Users have 5000 HP, spits have 10 HP — reach 0 and get destroyed
+- **Potions** - Heal yourself with small, medium, or large potions
 - **Direct Messages** - Real-time private conversations with other users
-- **Notifications** - Real-time alerts for follows, likes, respits, replies, and mentions
-- **User Profiles** - Customizable profiles with avatars, bios, and activity feeds
+- **Notifications** - Real-time alerts for follows, likes, respits, replies, mentions, messages, and attacks
+- **User Profiles** - Customizable profiles with avatars, bios, HP bars, and activity feeds
 - **Link Previews** - Automatic URL unfurling with Open Graph metadata
-- **OAuth Authentication** - Sign in with Google or just normal sign in
 - **Real-time Updates** - Live feed updates powered by Supabase subscriptions
 - **PWA Support** - Installable as a progressive web app
 - **Responsive Design** - Optimized for desktop and mobile devices
@@ -42,6 +45,31 @@ SPITr uses a credit-based economy to gamify user engagement:
 | Pin purchase | 500 credits |
 
 New users start with **1,000 credits** and receive **1,000 free credits every 30 days**. Additional credits can be purchased through the integrated Stripe payment system. (test mode for now)
+
+### Gold & Combat System
+
+Gold is the premium currency used for combat items. Earn gold by converting spit credits (10 credits = 1 gold) or purchase gold packages via Stripe.
+
+**Weapons:**
+
+| Weapon | Gold Cost | Damage |
+|--------|-----------|--------|
+| Knife | 1 | 5 |
+| Gun | 5 | 25 |
+| Soldier | 25 | 100 |
+| Drone | 100 | 500 |
+
+**Potions:**
+
+| Potion | Gold Cost | Heal Amount |
+|--------|-----------|-------------|
+| Small Potion | 10 | +500 HP |
+| Medium Potion | 25 | +1,500 HP |
+| Large Potion | 75 | +5,000 HP (full) |
+
+- **User HP**: 5,000 max. At 0 HP your account is destroyed.
+- **Spit HP**: 10. At 0 HP a spit gets a glitch/destroyed effect.
+- Attack other users' profiles or individual spits using weapons from your inventory.
 
 ---
 
@@ -101,14 +129,17 @@ New users start with **1,000 credits** and receive **1,000 free credits every 30
 4. **Set up Supabase database**
 
    Run the SQL migrations in your Supabase SQL editor to create the required tables:
-   - `users` - User profiles
-   - `spits` - Posts/tweets
+   - `users` - User profiles (with HP and destroyed state)
+   - `spits` - Posts/tweets (with HP)
    - `likes` - Post likes
    - `follows` - User follow relationships
-   - `notifications` - User notifications
+   - `notifications` - User notifications (follows, likes, messages, attacks, etc.)
    - `conversations` & `messages` - Direct messaging
    - `conversation_participants` - DM participants
    - `user_credits` & `credit_transactions` - Credit system
+   - `user_gold` & `gold_transactions` - Gold economy
+   - `user_inventory` - Weapons and potions
+   - `attack_log` - Combat history
 
 5. **Run the development server**
    ```bash
@@ -146,6 +177,8 @@ spitr/
 │   │   └── layout.tsx   # Root layout
 │   ├── components/      # React components
 │   │   ├── spit/        # Spit-related components
+│   │   ├── shop/        # Shop and gold checkout components
+│   │   ├── ui/          # Reusable UI components (HPBar, etc.)
 │   │   └── ...          # Other UI components
 │   ├── hooks/           # Custom React hooks
 │   ├── lib/             # Utility functions and configurations
@@ -179,6 +212,13 @@ spitr/
 
 - **user_credits** - Current credit balance per user
 - **credit_transactions** - Credit transaction history/audit log
+- **user_gold** - Gold balance per user
+- **gold_transactions** - Gold transaction history (purchases, conversions, item buys)
+
+### Combat
+
+- **user_inventory** - Weapons and potions owned by each user
+- **attack_log** - Record of all attacks (attacker, target user/spit, weapon, damage)
 
 ---
 
