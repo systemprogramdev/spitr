@@ -6,11 +6,17 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { User, SpitWithAuthor } from '@/types'
 import { Spit } from '@/components/spit'
+import { enrichSpitsWithCounts } from '@/lib/spitUtils'
+import { LeaderboardTab } from '@/components/explore/LeaderboardTab'
+import { KillFeedTab } from '@/components/explore/KillFeedTab'
+
+type ExploreTab = 'discover' | 'leaderboard' | 'killfeed'
 
 export default function SearchPage() {
   const { user } = useAuthStore()
   const [query, setQuery] = useState('')
-  const [tab, setTab] = useState<'users' | 'spits'>('users')
+  const [searchTab, setSearchTab] = useState<'users' | 'spits'>('users')
+  const [exploreTab, setExploreTab] = useState<ExploreTab>('discover')
   const [users, setUsers] = useState<User[]>([])
   const [spits, setSpits] = useState<SpitWithAuthor[]>([])
   const [discoverSpits, setDiscoverSpits] = useState<SpitWithAuthor[]>([])
@@ -22,7 +28,6 @@ export default function SearchPage() {
   // Fetch discover spits on mount
   useEffect(() => {
     const fetchDiscoverSpits = async () => {
-      // Get users the current user follows
       let followingIds: string[] = []
       if (user) {
         const { data: following } = await supabase
@@ -30,16 +35,12 @@ export default function SearchPage() {
           .select('following_id')
           .eq('follower_id', user.id)
         followingIds = following?.map(f => f.following_id) || []
-        followingIds.push(user.id) // Also exclude own spits
+        followingIds.push(user.id)
       }
 
-      // Get random spits from people not followed
       let query = supabase
         .from('spits')
-        .select(`
-          *,
-          author:users!spits_user_id_fkey(*)
-        `)
+        .select(`*, author:users!spits_user_id_fkey(*)`)
         .is('reply_to_id', null)
         .order('created_at', { ascending: false })
         .limit(20)
@@ -51,37 +52,8 @@ export default function SearchPage() {
       const { data } = await query
 
       if (data) {
-        // Add counts and interaction state
-        const spitsWithCounts = await Promise.all(
-          data.map(async (spit) => {
-            const [likesResult, respitsResult, repliesResult] = await Promise.all([
-              supabase.from('likes').select('*', { count: 'exact', head: true }).eq('spit_id', spit.id),
-              supabase.from('respits').select('*', { count: 'exact', head: true }).eq('spit_id', spit.id),
-              supabase.from('spits').select('*', { count: 'exact', head: true }).eq('reply_to_id', spit.id),
-            ])
-
-            let isLiked = false
-            let isRespit = false
-            if (user) {
-              const [likeCheck, respitCheck] = await Promise.all([
-                supabase.from('likes').select('*').eq('spit_id', spit.id).eq('user_id', user.id).single(),
-                supabase.from('respits').select('*').eq('spit_id', spit.id).eq('user_id', user.id).single(),
-              ])
-              isLiked = !!likeCheck.data
-              isRespit = !!respitCheck.data
-            }
-
-            return {
-              ...spit,
-              like_count: likesResult.count || 0,
-              respit_count: respitsResult.count || 0,
-              reply_count: repliesResult.count || 0,
-              is_liked: isLiked,
-              is_respit: isRespit,
-            } as SpitWithAuthor
-          })
-        )
-        setDiscoverSpits(spitsWithCounts)
+        const enriched = await enrichSpitsWithCounts(data, user?.id)
+        setDiscoverSpits(enriched)
       }
       setIsLoadingDiscover(false)
     }
@@ -96,7 +68,7 @@ export default function SearchPage() {
     setIsLoading(true)
     setHasSearched(true)
 
-    if (tab === 'users') {
+    if (searchTab === 'users') {
       const { data } = await supabase
         .from('users')
         .select('*')
@@ -114,36 +86,8 @@ export default function SearchPage() {
         .limit(20)
 
       if (data) {
-        const spitsWithCounts = await Promise.all(
-          data.map(async (spit) => {
-            const [likesResult, respitsResult, repliesResult] = await Promise.all([
-              supabase.from('likes').select('*', { count: 'exact', head: true }).eq('spit_id', spit.id),
-              supabase.from('respits').select('*', { count: 'exact', head: true }).eq('spit_id', spit.id),
-              supabase.from('spits').select('*', { count: 'exact', head: true }).eq('reply_to_id', spit.id),
-            ])
-
-            let isLiked = false
-            let isRespit = false
-            if (user) {
-              const [likeCheck, respitCheck] = await Promise.all([
-                supabase.from('likes').select('*').eq('spit_id', spit.id).eq('user_id', user.id).single(),
-                supabase.from('respits').select('*').eq('spit_id', spit.id).eq('user_id', user.id).single(),
-              ])
-              isLiked = !!likeCheck.data
-              isRespit = !!respitCheck.data
-            }
-
-            return {
-              ...spit,
-              like_count: likesResult.count || 0,
-              respit_count: respitsResult.count || 0,
-              reply_count: repliesResult.count || 0,
-              is_liked: isLiked,
-              is_respit: isRespit,
-            } as SpitWithAuthor
-          })
-        )
-        setSpits(spitsWithCounts)
+        const enriched = await enrichSpitsWithCounts(data, user?.id)
+        setSpits(enriched)
       }
     }
 
@@ -156,6 +100,12 @@ export default function SearchPage() {
     setUsers([])
     setSpits([])
   }
+
+  const exploreTabs: { key: ExploreTab; label: string; icon: string }[] = [
+    { key: 'discover', label: 'Discover', icon: '🔍' },
+    { key: 'leaderboard', label: 'Leaderboard', icon: '🏆' },
+    { key: 'killfeed', label: 'Kill Feed', icon: '⚔️' },
+  ]
 
   return (
     <div>
@@ -188,36 +138,57 @@ export default function SearchPage() {
           </div>
         </form>
 
-        {hasSearched && (
+        {hasSearched ? (
           <div className="tabs" style={{ display: 'flex', gap: '0', marginTop: '1rem' }}>
             <button
-              onClick={() => setTab('users')}
+              onClick={() => setSearchTab('users')}
               style={{
                 padding: '0.75rem 1.5rem',
                 border: 'none',
                 background: 'none',
                 cursor: 'pointer',
-                borderBottom: tab === 'users' ? '2px solid var(--sys-primary)' : '2px solid transparent',
-                color: tab === 'users' ? 'var(--sys-primary)' : 'var(--sys-text-muted)',
+                borderBottom: searchTab === 'users' ? '2px solid var(--sys-primary)' : '2px solid transparent',
+                color: searchTab === 'users' ? 'var(--sys-primary)' : 'var(--sys-text-muted)',
                 fontFamily: 'var(--sys-font-mono)',
               }}
             >
               Users
             </button>
             <button
-              onClick={() => setTab('spits')}
+              onClick={() => setSearchTab('spits')}
               style={{
                 padding: '0.75rem 1.5rem',
                 border: 'none',
                 background: 'none',
                 cursor: 'pointer',
-                borderBottom: tab === 'spits' ? '2px solid var(--sys-primary)' : '2px solid transparent',
-                color: tab === 'spits' ? 'var(--sys-primary)' : 'var(--sys-text-muted)',
+                borderBottom: searchTab === 'spits' ? '2px solid var(--sys-primary)' : '2px solid transparent',
+                color: searchTab === 'spits' ? 'var(--sys-primary)' : 'var(--sys-text-muted)',
                 fontFamily: 'var(--sys-font-mono)',
               }}
             >
               Spits
             </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '0', marginTop: '1rem' }}>
+            {exploreTabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setExploreTab(t.key)}
+                style={{
+                  padding: '0.75rem 1rem',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  borderBottom: exploreTab === t.key ? '2px solid var(--sys-primary)' : '2px solid transparent',
+                  color: exploreTab === t.key ? 'var(--sys-primary)' : 'var(--sys-text-muted)',
+                  fontFamily: 'var(--sys-font-mono)',
+                  fontSize: '0.85rem',
+                }}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
           </div>
         )}
       </div>
@@ -229,7 +200,7 @@ export default function SearchPage() {
         </div>
       ) : hasSearched ? (
         // Search results
-        tab === 'users' ? (
+        searchTab === 'users' ? (
           users.length === 0 ? (
             <div style={{ padding: '2rem', textAlign: 'center' }}>
               <p style={{ color: 'var(--sys-text-muted)' }}>No users found for &quot;{query}&quot;</p>
@@ -277,30 +248,34 @@ export default function SearchPage() {
           </div>
         )
       ) : (
-        // Discover feed
-        <div>
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--sys-border)' }}>
-            <h2 style={{ fontSize: '1rem', fontFamily: 'var(--sys-font-display)', color: 'var(--sys-primary)' }}>
-              Discover
-            </h2>
-            <p style={{ fontSize: '0.875rem', color: 'var(--sys-text-muted)', marginTop: '0.25rem' }}>
-              Spits from people you don&apos;t follow
-            </p>
+        // Explore tabs
+        exploreTab === 'leaderboard' ? (
+          <LeaderboardTab />
+        ) : exploreTab === 'killfeed' ? (
+          <KillFeedTab />
+        ) : (
+          // Discover feed
+          <div>
+            <div style={{ padding: '1rem', borderBottom: '1px solid var(--sys-border)' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--sys-text-muted)' }}>
+                Spits from people you don&apos;t follow
+              </p>
+            </div>
+            {isLoadingDiscover ? (
+              <div style={{ padding: '2rem', textAlign: 'center' }}>
+                <div className="loading-spinner"></div>
+              </div>
+            ) : discoverSpits.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center' }}>
+                <p style={{ color: 'var(--sys-text-muted)' }}>No new spits to discover</p>
+              </div>
+            ) : (
+              discoverSpits.map((spit) => (
+                <Spit key={spit.id} spit={spit} />
+              ))
+            )}
           </div>
-          {isLoadingDiscover ? (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              <div className="loading-spinner"></div>
-            </div>
-          ) : discoverSpits.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-              <p style={{ color: 'var(--sys-text-muted)' }}>No new spits to discover</p>
-            </div>
-          ) : (
-            discoverSpits.map((spit) => (
-              <Spit key={spit.id} spit={spit} />
-            ))
-          )}
-        </div>
+        )
       )}
     </div>
   )

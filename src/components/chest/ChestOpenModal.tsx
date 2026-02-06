@@ -4,12 +4,16 @@ import { useState } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useModalStore } from '@/stores/modalStore'
 import { LootReward, RARITY_COLORS } from '@/lib/items'
+import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 
 type Phase = 'closed' | 'shaking' | 'opening' | 'revealed'
 
 export function ChestOpenModal() {
   const { user } = useAuthStore()
   const { isChestOpenModalOpen, openingChestId, closeChestOpenModal } = useModalStore()
+  const { playSound } = useSound()
+  const { awardXP } = useXP()
   const [phase, setPhase] = useState<Phase>('closed')
   const [loot, setLoot] = useState<LootReward[]>([])
 
@@ -35,6 +39,8 @@ export function ChestOpenModal() {
     const data = await res.json()
 
     if (data.success && data.loot) {
+      playSound('chest')
+      awardXP('chest_open', openingChestId)
       setLoot(data.loot)
       setPhase('revealed')
       window.dispatchEvent(new CustomEvent('chest-opened'))

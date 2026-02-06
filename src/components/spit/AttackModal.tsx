@@ -4,6 +4,15 @@ import { useState } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useInventory } from '@/hooks/useInventory'
 import { WEAPONS, ITEM_MAP, GameItem } from '@/lib/items'
+import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
+
+const WEAPON_SOUNDS: Record<string, 'knife' | 'gunshot' | 'drone'> = {
+  knife: 'knife',
+  gun: 'gunshot',
+  soldier: 'gunshot',
+  drone: 'drone',
+}
 
 interface AttackModalProps {
   targetType: 'user' | 'spit'
@@ -16,6 +25,8 @@ interface AttackModalProps {
 export function AttackModal({ targetType, targetId, targetName, onClose, onAttackComplete }: AttackModalProps) {
   const { user } = useAuthStore()
   const { getQuantity, refreshInventory } = useInventory()
+  const { playSound } = useSound()
+  const { awardXP } = useXP()
   const [attacking, setAttacking] = useState(false)
   const [result, setResult] = useState<{ damage: number; newHp: number; destroyed: boolean } | null>(null)
 
@@ -44,6 +55,8 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
     const data = await res.json()
 
     if (data.success) {
+      playSound(WEAPON_SOUNDS[weapon.type] || 'knife')
+      awardXP('attack', targetId)
       setResult({ damage: data.damage, newHp: data.newHp, destroyed: data.destroyed })
       await refreshInventory()
       onAttackComplete({ newHp: data.newHp, destroyed: data.destroyed, damage: data.damage })

@@ -9,6 +9,7 @@ interface RawSpit {
   content: string
   image_url: string | null
   reply_to_id: string | null
+  quote_spit_id?: string | null
   effect: string | null
   hp: number
   created_at: string
@@ -42,6 +43,7 @@ export async function enrichSpitsWithCounts(
   if (spitIds.length === 0) {
     return rawSpits.map(spit => ({
       ...spit,
+      quote_spit_id: spit.quote_spit_id ?? null,
       author: spit.author,
       effect: spit.effect,
       like_count: 0,
@@ -53,7 +55,7 @@ export async function enrichSpitsWithCounts(
   }
 
   // Fetch counts in parallel
-  const [likeCounts, respitCounts, replyCounts, userLikes, userRespits] = await Promise.all([
+  const [likeCounts, respitCounts, replyCounts, userLikes, userRespits, userBookmarks] = await Promise.all([
     // Like counts
     supabase
       .from('likes')
@@ -86,6 +88,14 @@ export async function enrichSpitsWithCounts(
           .eq('user_id', currentUserId)
           .in('spit_id', spitIds)
       : Promise.resolve({ data: [] }),
+    // User's bookmarks (if logged in)
+    currentUserId
+      ? supabase
+          .from('user_bookmarks')
+          .select('spit_id')
+          .eq('user_id', currentUserId)
+          .in('spit_id', spitIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   // Debug logging
@@ -99,6 +109,7 @@ export async function enrichSpitsWithCounts(
   const replyCountMap: Record<string, number> = {}
   const userLikedSet = new Set((userLikes.data || []).map(l => l.spit_id))
   const userRespitSet = new Set((userRespits.data || []).map(r => r.spit_id))
+  const userBookmarkSet = new Set((userBookmarks.data || []).map(b => b.spit_id))
 
   ;(likeCounts.data || []).forEach(l => {
     likeCountMap[l.spit_id] = (likeCountMap[l.spit_id] || 0) + 1
@@ -112,14 +123,48 @@ export async function enrichSpitsWithCounts(
     }
   })
 
-  return rawSpits.map((spit) => ({
-    ...spit,
-    author: spit.author,
-    effect: spit.effect,
-    like_count: likeCountMap[spit.id] || 0,
-    respit_count: respitCountMap[spit.id] || 0,
-    reply_count: replyCountMap[spit.id] || 0,
-    is_liked: userLikedSet.has(spit.id),
-    is_respit: userRespitSet.has(spit.id),
-  }))
+  // Fetch quoted spits
+  const quoteIds = rawSpits
+    .map(s => (s as any).quote_spit_id)
+    .filter(Boolean) as string[]
+
+  let quotedSpitMap: Record<string, any> = {}
+  if (quoteIds.length > 0) {
+    const uniqueQuoteIds = [...new Set(quoteIds)]
+    const { data: quotedSpits } = await supabase
+      .from('spits')
+      .select('*, author:users!spits_user_id_fkey(*)')
+      .in('id', uniqueQuoteIds)
+
+    if (quotedSpits) {
+      quotedSpitMap = Object.fromEntries(quotedSpits.map(s => [s.id, s]))
+    }
+  }
+
+  return rawSpits.map((spit) => {
+    const qid = (spit as any).quote_spit_id
+    const quotedRaw = qid ? quotedSpitMap[qid] : null
+
+    return {
+      ...spit,
+      quote_spit_id: spit.quote_spit_id ?? null,
+      author: spit.author,
+      effect: spit.effect,
+      like_count: likeCountMap[spit.id] || 0,
+      respit_count: respitCountMap[spit.id] || 0,
+      reply_count: replyCountMap[spit.id] || 0,
+      is_liked: userLikedSet.has(spit.id),
+      is_respit: userRespitSet.has(spit.id),
+      is_bookmarked: userBookmarkSet.has(spit.id),
+      quoted_spit: quotedRaw ? {
+        ...quotedRaw,
+        author: quotedRaw.author,
+        like_count: 0,
+        respit_count: 0,
+        reply_count: 0,
+        is_liked: false,
+        is_respit: false,
+      } : null,
+    }
+  })
 }

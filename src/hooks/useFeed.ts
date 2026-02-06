@@ -126,6 +126,7 @@ export function useFeed() {
         reply_to_id: null,
         effect: null,
         hp: 10,
+        quote_spit_id: null,
         created_at: new Date().toISOString(),
         author: user,
         like_count: 0,

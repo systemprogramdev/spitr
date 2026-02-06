@@ -13,6 +13,8 @@ import { HPBar } from '@/components/ui/HPBar'
 import { GameItem } from '@/lib/items'
 import { UserChest } from '@/types'
 import { createClient } from '@/lib/supabase/client'
+import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 
 const supabase = createClient()
 
@@ -23,6 +25,8 @@ export default function ShopPage() {
   const { items, refreshInventory, getQuantity } = useInventory()
 
   const { openChestOpenModal } = useModalStore()
+  const { playSound } = useSound()
+  const { awardXP } = useXP()
   const [convertAmount, setConvertAmount] = useState('')
   const [isConverting, setIsConverting] = useState(false)
   const [buyingItem, setBuyingItem] = useState<string | null>(null)
@@ -166,6 +170,8 @@ export default function ShopPage() {
     const data = await res.json()
 
     if (data.success) {
+      playSound('potion')
+      awardXP('potion_use')
       setUserHp(data.newHp)
       await refreshInventory()
       alert(`Healed for ${data.healed} HP! New HP: ${data.newHp}`)
@@ -177,6 +183,7 @@ export default function ShopPage() {
   }
 
   const handleGoldPurchaseSuccess = async (gold: number) => {
+    playSound('gold')
     await refreshGold()
     setCheckoutPkg(null)
     alert(`${gold} Gold added to your balance!`)
@@ -200,6 +207,7 @@ export default function ShopPage() {
       const data = await res.json()
 
       if (data.success) {
+        playSound('chest')
         await refreshCredits()
         await fetchChests()
         window.dispatchEvent(new CustomEvent('chest-claimed'))

@@ -14,7 +14,7 @@ const themes = [
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
-  const { theme, scanlines, setTheme, toggleScanlines } = useUIStore()
+  const { theme, scanlines, soundEnabled, setTheme, toggleScanlines, toggleSound } = useUIStore()
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme)
@@ -91,6 +91,20 @@ export default function SettingsPage() {
                 />
                 <span style={{ color: 'var(--sys-text)' }}>Enable scanlines effect</span>
               </label>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={soundEnabled}
+                  onChange={toggleSound}
+                />
+                <span style={{ color: 'var(--sys-text)' }}>Sound effects</span>
+              </label>
+              <p style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginTop: '0.25rem', marginLeft: '2rem' }}>
+                Play sounds on likes, attacks, chest opens, and more
+              </p>
             </div>
 
             <div>

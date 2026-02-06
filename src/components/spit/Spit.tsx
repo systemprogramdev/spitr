@@ -12,6 +12,8 @@ import { getEffectClassName, getEffectById } from '@/lib/effects'
 import { LinkPreview } from '@/components/LinkPreview'
 import { AttackModal } from './AttackModal'
 import { SPIT_MAX_HP } from '@/lib/items'
+import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 
 // URL regex pattern
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
@@ -93,7 +95,9 @@ interface SpitProps {
 export function Spit({ spit, showActions = true }: SpitProps) {
   const { user } = useAuthStore()
   const { deductCredit, hasCredits, balance } = useCredits()
-  const { openSpitModal } = useModalStore()
+  const { openSpitModal, openQuoteModal } = useModalStore()
+  const { playSound } = useSound()
+  const { awardXP } = useXP()
   const [isLiked, setIsLiked] = useState(spit.is_liked)
   const [isRespit, setIsRespit] = useState(spit.is_respit)
   const [likeCount, setLikeCount] = useState(spit.like_count)
@@ -123,6 +127,8 @@ export function Spit({ spit, showActions = true }: SpitProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isDeleted, setIsDeleted] = useState(false)
   const [showAttackModal, setShowAttackModal] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(spit.is_bookmarked ?? false)
+  const [showRespitMenu, setShowRespitMenu] = useState(false)
   const [spitHp, setSpitHp] = useState(spit.hp ?? SPIT_MAX_HP)
   const isSpitDestroyed = spitHp <= 0
   const supabase = createClient()
@@ -216,6 +222,10 @@ export function Spit({ spit, showActions = true }: SpitProps) {
           })
         }
 
+        // Sound + XP
+        playSound('spit')
+        awardXP('like', spit.id)
+
         // Trigger like reward (+5 HP to spit, +1 credit to author)
         // Fire-and-forget: reward is idempotent and anti-gaming safe
         fetch('/api/like-reward', {
@@ -282,14 +292,18 @@ export function Spit({ spit, showActions = true }: SpitProps) {
       if (error) {
         setIsRespit(false)
         setRespitCount(c => c - 1)
-      } else if (spit.user_id !== user.id) {
-        // Create notification for spit owner
-        await supabase.from('notifications').insert({
-          user_id: spit.user_id,
-          type: 'respit',
-          actor_id: user.id,
-          spit_id: spit.id,
-        })
+      } else {
+        playSound('spit')
+        awardXP('respit', spit.id)
+        if (spit.user_id !== user.id) {
+          // Create notification for spit owner
+          await supabase.from('notifications').insert({
+            user_id: spit.user_id,
+            type: 'respit',
+            actor_id: user.id,
+            spit_id: spit.id,
+          })
+        }
       }
       setIsLoading(false)
     }
@@ -299,6 +313,29 @@ export function Spit({ spit, showActions = true }: SpitProps) {
     e.preventDefault()
     e.stopPropagation()
     openSpitModal({ id: spit.id, handle: spit.author.handle })
+  }
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!user) return
+
+    const wasBookmarked = isBookmarked
+    setIsBookmarked(!wasBookmarked)
+
+    if (wasBookmarked) {
+      const { error } = await supabase
+        .from('user_bookmarks')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('spit_id', spit.id)
+      if (error) setIsBookmarked(true)
+    } else {
+      const { error } = await supabase
+        .from('user_bookmarks')
+        .insert({ user_id: user.id, spit_id: spit.id })
+      if (error) setIsBookmarked(false)
+    }
   }
 
   const handlePinToFeed = async () => {
@@ -428,6 +465,36 @@ export function Spit({ spit, showActions = true }: SpitProps) {
             </div>
           )}
 
+          {/* Quoted Spit */}
+          {spit.quoted_spit && (
+            <Link
+              href={`/${spit.quoted_spit.author.handle}/status/${spit.quoted_spit.id}`}
+              className="quoted-spit-card"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="quoted-spit-header">
+                <div
+                  className="avatar"
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    backgroundImage: spit.quoted_spit.author.avatar_url
+                      ? `url(${spit.quoted_spit.author.avatar_url})`
+                      : undefined,
+                    flexShrink: 0,
+                  }}
+                >
+                  {!spit.quoted_spit.author.avatar_url && (
+                    <span style={{ fontSize: '0.55rem' }}>{spit.quoted_spit.author.name[0]?.toUpperCase()}</span>
+                  )}
+                </div>
+                <span className="quoted-spit-name">{spit.quoted_spit.author.name}</span>
+                <span className="quoted-spit-handle">@{spit.quoted_spit.author.handle}</span>
+              </div>
+              <p className="quoted-spit-text">{spit.quoted_spit.content}</p>
+            </Link>
+          )}
+
           {showActions && (
             <div className="spit-actions">
               {/* Reply */}
@@ -442,21 +509,51 @@ export function Spit({ spit, showActions = true }: SpitProps) {
                 <span className="spit-action-count">{replyCount || ''}</span>
               </button>
 
-              {/* Respit */}
-              <button
-                className={`spit-action spit-action-respit ${isRespit ? 'active' : ''}`}
-                onClick={handleRespit}
-                disabled={isLoading}
-                title="Respit"
-              >
-                <svg className="spit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 1l4 4-4 4"/>
-                  <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-                  <path d="M7 23l-4-4 4-4"/>
-                  <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-                </svg>
-                <span className="spit-action-count">{respitCount || ''}</span>
-              </button>
+              {/* Respit (dropdown) */}
+              <div className="spit-action-dropdown" style={{ position: 'relative' }}>
+                <button
+                  className={`spit-action spit-action-respit ${isRespit ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowRespitMenu(!showRespitMenu)
+                  }}
+                  disabled={isLoading}
+                  title="Respit"
+                >
+                  <svg className="spit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 1l4 4-4 4"/>
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                    <path d="M7 23l-4-4 4-4"/>
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                  </svg>
+                  <span className="spit-action-count">{respitCount || ''}</span>
+                </button>
+                {showRespitMenu && (
+                  <div className="spit-dropdown-menu" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className="spit-dropdown-item"
+                      onClick={(e) => {
+                        setShowRespitMenu(false)
+                        handleRespit(e)
+                      }}
+                    >
+                      {isRespit ? 'Undo Respit' : 'Respit'}
+                    </button>
+                    <button
+                      className="spit-dropdown-item"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        setShowRespitMenu(false)
+                        openQuoteModal(spit)
+                      }}
+                    >
+                      Quote Respit
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Like */}
               <button
@@ -469,6 +566,17 @@ export function Spit({ spit, showActions = true }: SpitProps) {
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                 </svg>
                 <span className="spit-action-count">{likeCount || ''}</span>
+              </button>
+
+              {/* Bookmark */}
+              <button
+                className={`spit-action spit-action-bookmark ${isBookmarked ? 'active' : ''}`}
+                onClick={handleBookmark}
+                title={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
+              >
+                <svg className="spit-icon" viewBox="0 0 24 24" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
               </button>
 
               {/* Share */}

@@ -13,6 +13,12 @@ const sections = [
   { id: 'chests', label: 'Treasure Chests' },
   { id: 'like-rewards', label: 'Like Rewards' },
   { id: 'transfers', label: 'Sending Spits' },
+  { id: 'xp-levels', label: 'XP & Levels' },
+  { id: 'bookmarks', label: 'Bookmarks' },
+  { id: 'quote-respits', label: 'Quote Respits' },
+  { id: 'leaderboard', label: 'Leaderboard' },
+  { id: 'kill-feed', label: 'Kill Feed' },
+  { id: 'sound-effects', label: 'Sound Effects' },
   { id: 'profiles', label: 'Profiles' },
   { id: 'messages', label: 'Messages' },
   { id: 'promoted', label: 'Promoted Spits' },
@@ -132,6 +138,14 @@ export default function GuidePage() {
               <span className="guide-table-value">Show appreciation (1 credit) — gives +5 HP and +1 credit to author</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">💬 Quote Respit</span>
+              <span className="guide-table-value">Share with your own comment (1 credit)</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🔖 Bookmark</span>
+              <span className="guide-table-value">Save for later (free)</span>
+            </div>
+            <div className="guide-table-row">
               <span className="guide-table-label">🔗 Share</span>
               <span className="guide-table-value">Copy link to clipboard (free)</span>
             </div>
@@ -154,23 +168,27 @@ export default function GuidePage() {
             You need them to post, reply, respit, and more.
           </p>
 
-          <h3 className="guide-subheading">Costs</h3>
+          <h3 className="guide-subheading">Costs & XP</h3>
           <div className="guide-table">
+            <div className="guide-table-row guide-table-header">
+              <span className="guide-table-label">Action</span>
+              <span className="guide-table-value">Cost → XP</span>
+            </div>
             <div className="guide-table-row">
               <span className="guide-table-label">Post a spit</span>
-              <span className="guide-table-value">1 credit</span>
+              <span className="guide-table-value">1 credit → +10 XP</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">Reply</span>
-              <span className="guide-table-value">1 credit</span>
+              <span className="guide-table-value">1 credit → +5 XP</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">Respit</span>
-              <span className="guide-table-value">1 credit</span>
+              <span className="guide-table-value">1 credit → +3 XP</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">Like</span>
-              <span className="guide-table-value">1 credit (rewards author +1 credit &amp; +5 HP)</span>
+              <span className="guide-table-value">1 credit → +2 XP (rewards author +1 credit &amp; +5 HP)</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">Add visual effect</span>
@@ -425,6 +443,241 @@ export default function GuidePage() {
           </div>
         </section>
 
+        {/* XP & Levels */}
+        <section id="xp-levels" className="guide-section">
+          <h2 className="guide-heading">XP & Levels</h2>
+          <p>
+            Every interaction on SPITr earns you XP (Experience Points). Accumulate enough XP
+            and you&apos;ll level up. Higher levels are harder to reach — grind to prove your worth.
+          </p>
+
+          <h3 className="guide-subheading">XP Rewards</h3>
+          <div className="guide-table">
+            <div className="guide-table-row guide-table-header">
+              <span className="guide-table-label">Action</span>
+              <span className="guide-table-value">XP Earned</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Post a spit</span>
+              <span className="guide-table-value">+10 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Reply</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Respit</span>
+              <span className="guide-table-value">+3 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Like</span>
+              <span className="guide-table-value">+2 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Attack</span>
+              <span className="guide-table-value">+8 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Transfer spits</span>
+              <span className="guide-table-value">+3 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Open chest</span>
+              <span className="guide-table-value">+15 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Use potion</span>
+              <span className="guide-table-value">+2 XP</span>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Leveling Up</h3>
+          <p>
+            Each level requires more XP than the last. Level 2 needs 100 XP, Level 3 needs 300 XP,
+            and it keeps growing. Your level badge and XP bar appear on your profile.
+          </p>
+
+          <h3 className="guide-subheading">Level Badge Colors</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label" style={{ color: '#888' }}>Lv. 1-5</span>
+              <span className="guide-table-value">Gray — Newcomer</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label" style={{ color: '#22c55e' }}>Lv. 6-10</span>
+              <span className="guide-table-value">Green — Regular</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label" style={{ color: '#3b82f6' }}>Lv. 11-20</span>
+              <span className="guide-table-value">Blue — Veteran</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label" style={{ color: '#a855f7' }}>Lv. 21-50</span>
+              <span className="guide-table-value">Purple — Elite</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label" style={{ color: '#f59e0b' }}>Lv. 51+</span>
+              <span className="guide-table-value">Gold — Legendary</span>
+            </div>
+          </div>
+
+          <div className="guide-callout">
+            <span className="guide-callout-icon">💡</span>
+            <div>
+              <strong>Tip:</strong> The more you use the app, the faster you level up.
+              Post, like, attack, and open chests to maximize your XP gain.
+            </div>
+          </div>
+        </section>
+
+        {/* Bookmarks */}
+        <section id="bookmarks" className="guide-section">
+          <h2 className="guide-heading">Bookmarks</h2>
+          <p>
+            Save spits for later by bookmarking them. Bookmarked spits appear on your
+            personal <Link href="/bookmarks" className="guide-link">Bookmarks</Link> page.
+          </p>
+          <ul className="guide-list">
+            <li>Click the bookmark icon on any spit to save it</li>
+            <li>Click again to remove the bookmark</li>
+            <li>Bookmarks are private — only you can see them</li>
+            <li>Access your bookmarks from the sidebar navigation</li>
+          </ul>
+        </section>
+
+        {/* Quote Respits */}
+        <section id="quote-respits" className="guide-section">
+          <h2 className="guide-heading">Quote Respits</h2>
+          <p>
+            Want to share someone&apos;s spit with your own commentary? Use a Quote Respit.
+          </p>
+
+          <h3 className="guide-subheading">How to Quote Respit</h3>
+          <div className="guide-steps">
+            <div className="guide-step">
+              <span className="guide-step-num">1</span>
+              <div>
+                <strong>Click the respit button</strong>
+                <p>A dropdown menu appears with two options.</p>
+              </div>
+            </div>
+            <div className="guide-step">
+              <span className="guide-step-num">2</span>
+              <div>
+                <strong>Select &quot;Quote Respit&quot;</strong>
+                <p>The spit composer opens with the original spit embedded below.</p>
+              </div>
+            </div>
+            <div className="guide-step">
+              <span className="guide-step-num">3</span>
+              <div>
+                <strong>Add your comment</strong>
+                <p>Write your take on the spit and post it. Costs 1 spit credit.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="guide-callout">
+            <span className="guide-callout-icon">💡</span>
+            <div>
+              <strong>Tip:</strong> Quote Respits are great for adding context, reactions,
+              or starting discussions around someone else&apos;s spit.
+            </div>
+          </div>
+        </section>
+
+        {/* Leaderboard */}
+        <section id="leaderboard" className="guide-section">
+          <h2 className="guide-heading">Leaderboard</h2>
+          <p>
+            See who&apos;s dominating SPITr on the <Link href="/search" className="guide-link">Explore</Link> page&apos;s
+            Leaderboard tab.
+          </p>
+
+          <h3 className="guide-subheading">Categories</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">⚔️ Most Kills</span>
+              <span className="guide-table-value">Users with the most attacks (destroying spits & profiles)</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🏆 Highest Level</span>
+              <span className="guide-table-value">Users with the most XP and highest levels</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">💰 Richest</span>
+              <span className="guide-table-value">Users with the most spit credits</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">❤️ Most Liked</span>
+              <span className="guide-table-value">Users whose spits have the most total likes</span>
+            </div>
+          </div>
+          <p style={{ marginTop: '0.75rem', color: 'var(--sys-text-muted)', fontSize: '0.9rem' }}>
+            Top 25 users are shown per category. Compete to climb the ranks!
+          </p>
+        </section>
+
+        {/* Kill Feed */}
+        <section id="kill-feed" className="guide-section">
+          <h2 className="guide-heading">Kill Feed</h2>
+          <p>
+            The Kill Feed shows a live log of recent attacks across SPITr.
+            Find it on the <Link href="/search" className="guide-link">Explore</Link> page&apos;s Kill Feed tab.
+          </p>
+          <ul className="guide-list">
+            <li>See who attacked whom, with what weapon, and how much damage was dealt</li>
+            <li>The feed auto-refreshes every 30 seconds</li>
+            <li>Shows the 50 most recent attacks</li>
+            <li>Great for tracking rivalries and finding targets</li>
+          </ul>
+        </section>
+
+        {/* Sound Effects */}
+        <section id="sound-effects" className="guide-section">
+          <h2 className="guide-heading">Sound Effects</h2>
+          <p>
+            SPITr has sound effects for various actions to enhance the experience.
+          </p>
+
+          <h3 className="guide-subheading">Sounds</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">Likes & Respits</span>
+              <span className="guide-table-value">Quick spit sound</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Knife attack</span>
+              <span className="guide-table-value">Knife slash</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Gun / Soldier attack</span>
+              <span className="guide-table-value">Gunshot</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Drone attack</span>
+              <span className="guide-table-value">Drone buzz</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Open chest</span>
+              <span className="guide-table-value">Chest opening</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Use potion</span>
+              <span className="guide-table-value">Potion gulp</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Gold / Transfers</span>
+              <span className="guide-table-value">Gold coin clink</span>
+            </div>
+          </div>
+
+          <p style={{ marginTop: '0.75rem' }}>
+            Toggle sound effects on or off in <Link href="/settings" className="guide-link">Settings</Link> under
+            the Appearance section.
+          </p>
+        </section>
+
         {/* Profiles */}
         <section id="profiles" className="guide-section">
           <h2 className="guide-heading">Profiles</h2>
@@ -433,7 +686,7 @@ export default function GuidePage() {
             <li><strong>Avatar & Banner</strong> — Upload custom images</li>
             <li><strong>Bio</strong> — 160 characters to describe yourself</li>
             <li><strong>Handle</strong> — Your unique @username (can be changed in settings)</li>
-            <li><strong>Stats</strong> — Follower/following counts, spit count, HP bar</li>
+            <li><strong>Stats</strong> — Follower/following counts, spit count, HP bar, XP bar, level badge</li>
           </ul>
         </section>
 
@@ -469,6 +722,7 @@ export default function GuidePage() {
             <li><strong>Profile</strong> — Edit name, handle, bio, avatar, banner</li>
             <li><strong>Theme</strong> — Choose from Terminal, Neon, Hologram, Amber, Military</li>
             <li><strong>Scanlines</strong> — Toggle the retro CRT scanline effect</li>
+            <li><strong>Sound Effects</strong> — Toggle sound effects on/off</li>
             <li><strong>Account</strong> — Manage your account</li>
           </ul>
         </section>
@@ -504,6 +758,18 @@ export default function GuidePage() {
             <div className="guide-tip">
               <span className="guide-tip-emoji">💸</span>
               <p>Send spits to friends who are running low. Visit their profile and hit the send button.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">📈</span>
+              <p>Every action earns XP. Post, like, attack, and open chests to level up fast.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">🔖</span>
+              <p>Bookmark spits you want to come back to. They&apos;re private — only you can see them.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">💬</span>
+              <p>Use Quote Respits to add your own take when sharing someone&apos;s spit.</p>
             </div>
           </div>
         </section>

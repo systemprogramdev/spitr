@@ -7,13 +7,17 @@ import { useModalStore } from '@/stores/modalStore'
 import { useCredits } from '@/hooks/useCredits'
 import { SPIT_EFFECTS, EFFECT_COST } from '@/lib/effects'
 import { MentionAutocomplete } from '@/components/MentionAutocomplete'
+import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 
 const IMAGE_COST = 50
 
 export function SpitModal() {
   const { user } = useAuthStore()
-  const { isSpitModalOpen, replyToId, replyToHandle, closeSpitModal } = useModalStore()
+  const { isSpitModalOpen, replyToId, replyToHandle, quoteSpit, closeSpitModal } = useModalStore()
   const { balance, deductCredit, deductAmount, hasCredits } = useCredits()
+  const { playSound } = useSound()
+  const { awardXP } = useXP()
   const [content, setContent] = useState('')
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
   const [showEffects, setShowEffects] = useState(false)
@@ -208,12 +212,16 @@ export function SpitModal() {
       user_id: string
       content: string
       reply_to_id: string | null
+      quote_spit_id?: string
       effect?: string
       image_url?: string
     } = {
       user_id: user.id,
       content: content.trim(),
       reply_to_id: replyToId || null,
+    }
+    if (quoteSpit) {
+      insertData.quote_spit_id = quoteSpit.id
     }
     if (selectedEffect) {
       insertData.effect = selectedEffect
@@ -273,6 +281,10 @@ export function SpitModal() {
           }
         }
       }
+
+      // Sound + XP
+      playSound('spit')
+      awardXP(replyToId ? 'reply' : 'post', newSpit?.id)
 
       const postedContent = content.trim()
       setContent('')
@@ -334,7 +346,7 @@ export function SpitModal() {
             <span className="panel-bash-dot"></span>
           </div>
           <span className="panel-bash-title">
-            {replyToId ? `reply_to_@${replyToHandle}` : 'new_spit'} [{balance} spits]
+            {replyToId ? `reply_to_@${replyToHandle}` : quoteSpit ? 'quote_respit' : 'new_spit'} [{balance} spits]
           </span>
           <button
             onClick={closeSpitModal}
@@ -375,7 +387,7 @@ export function SpitModal() {
                 onSelect={(e) => {
                   checkForMention(content, (e.target as HTMLTextAreaElement).selectionStart)
                 }}
-                placeholder={replyToId ? `Reply to @${replyToHandle}...` : "What's happening?"}
+                placeholder={replyToId ? `Reply to @${replyToHandle}...` : quoteSpit ? 'Add your comment...' : "What's happening?"}
                 rows={4}
                 style={{
                   width: '100%',
@@ -396,6 +408,31 @@ export function SpitModal() {
                   onClose={() => setMentionSearch(null)}
                   position={mentionPosition}
                 />
+              )}
+
+              {quoteSpit && (
+                <div className="quoted-spit-card" style={{ marginTop: '0.5rem' }}>
+                  <div className="quoted-spit-header">
+                    <div
+                      className="avatar"
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        backgroundImage: quoteSpit.author.avatar_url
+                          ? `url(${quoteSpit.author.avatar_url})`
+                          : undefined,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {!quoteSpit.author.avatar_url && (
+                        <span style={{ fontSize: '0.55rem' }}>{quoteSpit.author.name[0]?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <span className="quoted-spit-name">{quoteSpit.author.name}</span>
+                    <span className="quoted-spit-handle">@{quoteSpit.author.handle}</span>
+                  </div>
+                  <p className="quoted-spit-text">{quoteSpit.content}</p>
+                </div>
               )}
 
               {imagePreview && (

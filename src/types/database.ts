@@ -64,6 +64,7 @@ export type Database = {
           content: string
           image_url: string | null
           reply_to_id: string | null
+          quote_spit_id: string | null
           effect: string | null
           hp: number
           created_at: string
@@ -74,6 +75,7 @@ export type Database = {
           content: string
           image_url?: string | null
           reply_to_id?: string | null
+          quote_spit_id?: string | null
           effect?: string | null
           hp?: number
           created_at?: string
@@ -84,6 +86,7 @@ export type Database = {
           content?: string
           image_url?: string | null
           reply_to_id?: string | null
+          quote_spit_id?: string | null
           effect?: string | null
           hp?: number
           created_at?: string
@@ -677,6 +680,99 @@ export type Database = {
           }
         ]
       }
+      user_xp: {
+        Row: {
+          user_id: string
+          xp: number
+          level: number
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          xp?: number
+          level?: number
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          xp?: number
+          level?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_xp_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      xp_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          action: string
+          reference_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          action: string
+          reference_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          action?: string
+          reference_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_transactions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_bookmarks: {
+        Row: {
+          user_id: string
+          spit_id: string
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          spit_id: string
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          spit_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_bookmarks_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_bookmarks_spit_id_fkey"
+            columns: ["spit_id"]
+            referencedRelation: "spits"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -715,6 +811,9 @@ export type AttackLog = Database['public']['Tables']['attack_log']['Row']
 export type UserChest = Database['public']['Tables']['user_chests']['Row']
 export type ItemType = Database['public']['Enums']['item_type']
 export type LikeReward = Database['public']['Tables']['like_rewards']['Row']
+export type UserXP = Database['public']['Tables']['user_xp']['Row']
+export type XPTransaction = Database['public']['Tables']['xp_transactions']['Row']
+export type UserBookmark = Database['public']['Tables']['user_bookmarks']['Row']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {
@@ -725,6 +824,8 @@ export interface SpitWithAuthor extends Spit {
   is_liked: boolean
   is_respit: boolean
   is_pinned?: boolean
+  is_bookmarked?: boolean
+  quoted_spit?: SpitWithAuthor | null
 }
 
 export interface ConversationWithParticipants extends Conversation {

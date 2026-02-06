@@ -10,6 +10,8 @@ import { Spit, AttackModal } from '@/components/spit'
 import { TransferModal } from '@/components/transfer/TransferModal'
 import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 import { HPBar } from '@/components/ui/HPBar'
+import { XPBar } from '@/components/ui/XPBar'
+import { LevelBadge } from '@/components/ui/LevelBadge'
 import { MAX_HP } from '@/lib/items'
 
 const supabase = createClient()
@@ -34,6 +36,8 @@ export default function ProfilePage() {
   const [profileDestroyed, setProfileDestroyed] = useState(false)
   const [showAttackModal, setShowAttackModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
+  const [userXp, setUserXp] = useState(0)
+  const [userLevel, setUserLevel] = useState(1)
 
   const fetchTabContent = useCallback(async (profileId: string, selectedTab: TabType) => {
     setIsTabLoading(true)
@@ -158,7 +162,7 @@ export default function ProfilePage() {
       setProfileHp(profileData.hp ?? MAX_HP)
       setProfileDestroyed(profileData.is_destroyed ?? false)
 
-      const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes] = await Promise.all([
+      const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes, xpRes] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         supabase.from('spits').select('*', { count: 'exact', head: true }).eq('user_id', profileData.id).is('reply_to_id', null),
@@ -168,7 +172,13 @@ export default function ProfilePage() {
           .eq('user_id', profileData.id)
           .gt('expires_at', new Date().toISOString())
           .single(),
+        supabase.from('user_xp').select('xp, level').eq('user_id', profileData.id).single(),
       ])
+
+      if (xpRes.data) {
+        setUserXp(xpRes.data.xp)
+        setUserLevel(xpRes.data.level)
+      }
 
       setStats({
         followers: followersRes.count || 0,
@@ -372,8 +382,9 @@ export default function ProfilePage() {
         </div>
 
         <div style={{ marginTop: '1rem' }}>
-          <h1 className="text-glow" style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'var(--sys-font-display)' }}>
+          <h1 className="text-glow" style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'var(--sys-font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {profile.name}
+            <LevelBadge level={userLevel} />
           </h1>
           <p style={{ color: 'var(--sys-text-muted)' }}>@{profile.handle}</p>
 
@@ -406,6 +417,11 @@ export default function ProfilePage() {
           {/* HP Bar */}
           <div style={{ marginTop: '0.75rem' }}>
             <HPBar hp={profileHp} maxHp={MAX_HP} size="md" />
+          </div>
+
+          {/* XP Bar */}
+          <div style={{ marginTop: '0.5rem' }}>
+            <XPBar xp={userXp} level={userLevel} />
           </div>
 
           {profileDestroyed && (

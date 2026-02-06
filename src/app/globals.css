@@ -3643,33 +3643,218 @@ a:hover {
   }
 }
 
-/* HP Bar */
-.hp-bar-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* ==================== HP Bar (Cyberpunk) ==================== */
+.hp-bar-wrap {
+  width: 100%;
 }
+.hp-bar-wrap-sm .hp-bar-track { height: 6px; }
+.hp-bar-wrap-md .hp-bar-track { height: 12px; }
+.hp-bar-wrap-lg .hp-bar-track { height: 18px; }
 
-.hp-bar-label {
+.hp-bar-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.hp-bar-label-text {
+  font-size: 0.7rem;
+  font-family: var(--sys-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--sys-text-muted);
+}
+.hp-bar-value {
   font-size: 0.75rem;
   font-family: var(--sys-font-mono);
-  font-weight: 600;
-  white-space: nowrap;
-  min-width: 80px;
+  font-weight: 700;
 }
+.hp-high { color: #22c55e; }
+.hp-mid  { color: #eab308; }
+.hp-low  { color: #ef4444; }
 
-.hp-bar {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.05);
+.hp-bar-track {
+  position: relative;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--sys-border);
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.hp-bar-fill-inner {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease-out;
+  position: relative;
+}
+.hp-fill-high {
+  background: linear-gradient(90deg, #16a34a, #22c55e, #4ade80);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.hp-fill-mid {
+  background: linear-gradient(90deg, #ca8a04, #eab308, #facc15);
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.hp-fill-low {
+  background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-.hp-bar-fill {
-  height: 100%;
+/* Pulse animation when low HP */
+.hp-pulse {
+  animation: hpPulse 1.5s ease-in-out infinite;
+}
+@keyframes hpPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Subtle scanlines on bar */
+.hp-bar-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+}
+
+/* ==================== XP Bar ==================== */
+.xp-bar-wrap {
+  width: 100%;
+}
+.xp-bar-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.xp-bar-level {
+  font-size: 0.75rem;
+  font-family: var(--sys-font-mono);
+  font-weight: 700;
+  color: var(--sys-accent, #a855f7);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.xp-bar-value {
+  font-size: 0.7rem;
+  font-family: var(--sys-font-mono);
+  color: var(--sys-text-muted);
+}
+.xp-bar-track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--sys-border);
   border-radius: 3px;
-  transition: width 0.5s ease-out, background 0.3s;
+  overflow: hidden;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.xp-bar-fill-inner {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease-out;
+  background: linear-gradient(90deg, #7c3aed, #a855f7, #c084fc);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ==================== Level Badge ==================== */
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-family: var(--sys-font-mono);
+  font-weight: 700;
+  padding: 1px 5px;
+  border: 1px solid;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* ==================== Respit Dropdown ==================== */
+.spit-dropdown-menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 8px;
+  padding: 4px 0;
+  min-width: 140px;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.spit-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--sys-text);
+  font-family: var(--sys-font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.spit-dropdown-item:hover {
+  background: rgba(var(--sys-primary-rgb), 0.1);
+  color: var(--sys-primary);
+}
+
+/* ==================== Quoted Spit Card ==================== */
+.quoted-spit-card {
+  border: 1px solid var(--sys-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+.quoted-spit-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.quoted-spit-header {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+.quoted-spit-name {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--sys-text);
+}
+.quoted-spit-handle {
+  font-size: 0.75rem;
+  color: var(--sys-text-muted);
+}
+.quoted-spit-text {
+  font-size: 0.85rem;
+  color: var(--sys-text);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Bookmark active color */
+.spit-action-bookmark.active {
+  color: var(--sys-accent, #a855f7);
 }
 
 /* Sidebar gold badge */

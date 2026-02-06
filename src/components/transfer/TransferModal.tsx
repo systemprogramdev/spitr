@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useCredits } from '@/hooks/useCredits'
+import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 
 interface TransferModalProps {
   recipientId: string
@@ -24,6 +26,8 @@ export function TransferModal({
 }: TransferModalProps) {
   const { user } = useAuthStore()
   const { balance, refreshBalance } = useCredits()
+  const { playSound } = useSound()
+  const { awardXP } = useXP()
   const [amount, setAmount] = useState('')
   const [step, setStep] = useState<'input' | 'warning' | 'sending' | 'result'>('input')
   const [result, setResult] = useState<{
@@ -89,6 +93,8 @@ export function TransferModal({
       const data = await res.json()
 
       if (data.success) {
+        playSound('gold')
+        awardXP('transfer', recipientId)
         setResult({
           success: true,
           newBalance: data.newBalance,
