@@ -7,7 +7,7 @@ import { useGold } from '@/hooks/useGold'
 import { useInventory } from '@/hooks/useInventory'
 import { useCredits } from '@/hooks/useCredits'
 import { useModalStore } from '@/stores/modalStore'
-import { ITEMS, WEAPONS, POTIONS, DEFENSE_ITEMS, UTILITY_ITEMS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, MAX_HP } from '@/lib/items'
+import { ITEMS, WEAPONS, POTIONS, DEFENSE_ITEMS, UTILITY_ITEMS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, getMaxHp } from '@/lib/items'
 import { ItemCard } from '@/components/shop/ItemCard'
 import { GoldCheckoutModal } from '@/components/shop/GoldCheckoutModal'
 import { StripeCheckoutModal } from '@/components/StripeCheckoutModal'
@@ -41,6 +41,7 @@ const TXN_TYPE_LABELS: Record<string, string> = {
   transfer_received: 'Received Transfer',
   free_monthly: 'Monthly Bonus',
   chest_purchase: 'Bought Chest',
+  level_up: 'Level Up Reward',
 }
 
 function timeAgo(dateStr: string) {
@@ -64,14 +65,14 @@ function ShopPageContent() {
 
   const { openChestOpenModal } = useModalStore()
   const { playSound } = useSound()
-  const { awardXP } = useXP()
+  const { awardXP, level: userLevel } = useXP()
   const [convertAmount, setConvertAmount] = useState('')
   const [isConverting, setIsConverting] = useState(false)
   const [buyingItem, setBuyingItem] = useState<string | null>(null)
   const [usingPotion, setUsingPotion] = useState<string | null>(null)
   const [activatingDefense, setActivatingDefense] = useState<string | null>(null)
   const [checkoutPkg, setCheckoutPkg] = useState<typeof GOLD_PACKAGES[number] | null>(null)
-  const [userHp, setUserHp] = useState(user?.hp ?? MAX_HP)
+  const [userHp, setUserHp] = useState(user?.hp ?? getMaxHp(userLevel))
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
   const [buyingChest, setBuyingChest] = useState(false)
 
@@ -385,7 +386,7 @@ function ShopPageContent() {
           </div>
         </div>
         <div style={{ marginTop: '0.75rem' }}>
-          <HPBar hp={userHp} maxHp={MAX_HP} size="md" />
+          <HPBar hp={userHp} maxHp={getMaxHp(userLevel)} size="md" />
         </div>
       </div>
 

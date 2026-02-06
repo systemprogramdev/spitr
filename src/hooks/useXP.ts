@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import { XP_AMOUNTS } from '@/lib/xp'
+import { toast } from '@/stores/toastStore'
 
 const supabase = createClient()
 
@@ -48,6 +49,9 @@ export function useXP() {
         .then((data) => {
           if (data.success) {
             setXp(data.xp)
+            if (data.leveled_up) {
+              toast.success(`LEVEL UP! You're now Level ${data.level}! +100 Spits, +10 Gold, +1 Chest, HP fully restored!`)
+            }
             setLevel(data.level)
           }
         })

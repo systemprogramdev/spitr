@@ -65,7 +65,7 @@ export function SprayPaintOverlay({ targetUserId }: SprayPaintOverlayProps) {
               top,
               left,
               transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-              width: '120px',
+              width: '220px',
               height: 'auto',
               pointerEvents: 'none',
               opacity: 0.8,

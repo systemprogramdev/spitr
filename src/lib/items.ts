@@ -45,7 +45,12 @@ export const GOLD_PACKAGES = [
 ]
 
 export const SPIT_TO_GOLD_RATIO = 10 // 10 spit = 1 gold
-export const MAX_HP = 5000
+export const BASE_HP = 5000
+export const HP_PER_LEVEL = 100
+export const MAX_HP = 5000 // legacy default, use getMaxHp(level) for dynamic
+export function getMaxHp(level: number): number {
+  return BASE_HP + (level - 1) * HP_PER_LEVEL
+}
 export const SPIT_MAX_HP = 10
 
 // Treasure Chest Loot System

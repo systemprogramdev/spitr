@@ -12,7 +12,7 @@ import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 import { HPBar } from '@/components/ui/HPBar'
 import { XPBar } from '@/components/ui/XPBar'
 import { LevelBadge } from '@/components/ui/LevelBadge'
-import { MAX_HP } from '@/lib/items'
+import { MAX_HP, getMaxHp } from '@/lib/items'
 import { GunshotWounds } from '@/components/profile/GunshotWounds'
 import { SprayPaintOverlay } from '@/components/profile/SprayPaintOverlay'
 
@@ -34,7 +34,7 @@ export default function ProfilePage() {
   const [showFollowModal, setShowFollowModal] = useState<'followers' | 'following' | null>(null)
   const [followList, setFollowList] = useState<User[]>([])
   const [pinnedSpit, setPinnedSpit] = useState<SpitWithAuthor | null>(null)
-  const [profileHp, setProfileHp] = useState(MAX_HP)
+  const [profileHp, setProfileHp] = useState(getMaxHp(1))
   const [profileDestroyed, setProfileDestroyed] = useState(false)
   const [showAttackModal, setShowAttackModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
@@ -161,7 +161,7 @@ export default function ProfilePage() {
       }
 
       setProfile(profileData)
-      setProfileHp(profileData.hp ?? MAX_HP)
+      setProfileHp(profileData.hp ?? getMaxHp(1))
       setProfileDestroyed(profileData.is_destroyed ?? false)
 
       const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes, xpRes] = await Promise.all([
@@ -420,7 +420,7 @@ export default function ProfilePage() {
 
           {/* HP Bar */}
           <div style={{ marginTop: '0.75rem' }}>
-            <HPBar hp={profileHp} maxHp={MAX_HP} size="md" />
+            <HPBar hp={profileHp} maxHp={getMaxHp(userLevel)} size="md" />
           </div>
 
           {/* XP Bar */}
@@ -466,8 +466,8 @@ export default function ProfilePage() {
       </div>
 
       {/* Gunshot Wounds */}
-      {!profileDestroyed && profileHp < MAX_HP && (
-        <GunshotWounds hp={profileHp} maxHp={MAX_HP} userId={profile.id} />
+      {!profileDestroyed && profileHp < getMaxHp(userLevel) && (
+        <GunshotWounds hp={profileHp} maxHp={getMaxHp(userLevel)} userId={profile.id} />
       )}
       {/* Spray Paint Overlay */}
       <SprayPaintOverlay targetUserId={profile.id} />
