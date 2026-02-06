@@ -83,15 +83,25 @@ export default function ShopPage() {
       return
     }
 
-    // Add to inventory (upsert)
-    const currentQty = getQuantity(item.type)
+    // Add to inventory — read current qty from DB to avoid stale state
+    const { data: existing } = await supabase
+      .from('user_inventory')
+      .select('quantity')
+      .eq('user_id', user.id)
+      .eq('item_type', item.type)
+      .single()
+
+    const currentQty = existing?.quantity ?? 0
     const { error } = await supabase
       .from('user_inventory')
-      .upsert({
-        user_id: user.id,
-        item_type: item.type,
-        quantity: currentQty + 1,
-      })
+      .upsert(
+        {
+          user_id: user.id,
+          item_type: item.type,
+          quantity: currentQty + 1,
+        },
+        { onConflict: 'user_id,item_type' }
+      )
 
     if (error) {
       console.error('Inventory error:', error)
