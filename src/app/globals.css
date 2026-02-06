@@ -3569,7 +3569,7 @@ a:hover {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background: url('/destroyed.png') center / cover no-repeat;
+  background: url('/destroyed.png') center / 100% 100% no-repeat;
   opacity: 1;
   pointer-events: none;
   mix-blend-mode: screen;
