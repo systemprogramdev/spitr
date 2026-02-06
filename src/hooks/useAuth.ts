@@ -22,6 +22,10 @@ export function useAuth() {
           .single()
           .then(({ data: profile }) => {
             setUser(profile)
+            // Check if user is destroyed
+            if (profile?.is_destroyed && typeof window !== 'undefined' && !window.location.pathname.includes('/destroyed')) {
+              router.push('/destroyed')
+            }
           })
       }
     })
@@ -37,6 +41,9 @@ export function useAuth() {
             .single()
             .then(({ data: profile }) => {
               setUser(profile)
+              if (profile?.is_destroyed && typeof window !== 'undefined' && !window.location.pathname.includes('/destroyed')) {
+                router.push('/destroyed')
+              }
             })
         } else if (event === 'SIGNED_OUT') {
           setUser(null)
@@ -45,7 +52,7 @@ export function useAuth() {
     )
 
     return () => subscription.unsubscribe()
-  }, [setUser])
+  }, [setUser, router])
 
   const signOut = async () => {
     await supabase.auth.signOut()

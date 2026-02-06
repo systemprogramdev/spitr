@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCredits } from '@/hooks/useCredits'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
+import { useGold } from '@/hooks/useGold'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
 import { createClient } from '@/lib/supabase/client'
@@ -18,7 +19,7 @@ const navItems = [
   { href: '/', label: 'Home', icon: 'home' },
   { href: '/search', label: 'Explore', icon: 'search' },
   { href: '/notifications', label: 'Alerts', icon: 'bell' },
-  { href: '/messages', label: 'Messages', icon: 'mail' },
+  { href: '/shop', label: 'Shop', icon: 'shopping-bag' },
   { href: '/credits', label: 'Credits', icon: 'star' },
   { href: '/settings', label: 'Settings', icon: 'lock' },
 ]
@@ -33,6 +34,7 @@ export default function MainLayout({
   const { balance } = useCredits()
   const unreadMessages = useUnreadMessages()
   const unreadNotifications = useUnreadNotifications()
+  const { balance: goldBalance } = useGold()
   const { openSpitModal } = useModalStore()
   const [whoToFollow, setWhoToFollow] = useState<User[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -140,6 +142,16 @@ export default function MainLayout({
                   <span>Profile</span>
                 </Link>
 
+                <Link href="/messages" className="mobile-menu-item">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  <span>Messages</span>
+                  {unreadMessages > 0 && (
+                    <span className="sidebar-badge badge-glow" style={{ marginLeft: 'auto' }}>{unreadMessages}</span>
+                  )}
+                </Link>
+
                 <Link href="/credits" className="mobile-menu-item">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
@@ -195,8 +207,8 @@ export default function MainLayout({
                     {item.href === '/notifications' && unreadNotifications > 0 && (
                       <span className="sidebar-badge badge-glow">{unreadNotifications}</span>
                     )}
-                    {item.href === '/messages' && unreadMessages > 0 && (
-                      <span className="sidebar-badge badge-glow">{unreadMessages}</span>
+                    {item.href === '/shop' && (
+                      <span className="sidebar-badge sidebar-badge-gold">{goldBalance.toLocaleString()}g</span>
                     )}
                   </Link>
                 </li>
@@ -366,13 +378,12 @@ export default function MainLayout({
             )}
           </Link>
 
-          <Link href="/messages" className={`mobile-nav-item ${pathname?.startsWith('/messages') ? 'active' : ''}`}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname?.startsWith('/messages') ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <Link href="/shop" className={`mobile-nav-item ${pathname === '/shop' ? 'active' : ''}`}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname === '/shop' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
-            {unreadMessages > 0 && (
-              <span className="mobile-nav-badge">{unreadMessages > 9 ? '9+' : unreadMessages}</span>
-            )}
           </Link>
         </nav>
 

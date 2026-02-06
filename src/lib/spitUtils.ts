@@ -10,6 +10,7 @@ interface RawSpit {
   image_url: string | null
   reply_to_id: string | null
   effect: string | null
+  hp: number
   created_at: string
   author: {
     id: string
@@ -20,6 +21,8 @@ interface RawSpit {
     banner_url: string | null
     location: string | null
     website: string | null
+    hp: number
+    is_destroyed: boolean
     created_at: string
     updated_at: string
   }

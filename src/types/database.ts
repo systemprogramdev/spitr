@@ -19,6 +19,8 @@ export type Database = {
           banner_url: string | null
           location: string | null
           website: string | null
+          hp: number
+          is_destroyed: boolean
           created_at: string
           updated_at: string
         }
@@ -31,6 +33,8 @@ export type Database = {
           banner_url?: string | null
           location?: string | null
           website?: string | null
+          hp?: number
+          is_destroyed?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +47,8 @@ export type Database = {
           banner_url?: string | null
           location?: string | null
           website?: string | null
+          hp?: number
+          is_destroyed?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -56,6 +62,7 @@ export type Database = {
           image_url: string | null
           reply_to_id: string | null
           effect: string | null
+          hp: number
           created_at: string
         }
         Insert: {
@@ -65,6 +72,7 @@ export type Database = {
           image_url?: string | null
           reply_to_id?: string | null
           effect?: string | null
+          hp?: number
           created_at?: string
         }
         Update: {
@@ -74,6 +82,7 @@ export type Database = {
           image_url?: string | null
           reply_to_id?: string | null
           effect?: string | null
+          hp?: number
           created_at?: string
         }
         Relationships: [
@@ -280,27 +289,30 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention'
+          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
           actor_id: string
           spit_id: string | null
+          reference_id: string | null
           read: boolean
           created_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention'
+          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
           actor_id: string
           spit_id?: string | null
+          reference_id?: string | null
           read?: boolean
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          type?: 'follow' | 'like' | 'respit' | 'reply' | 'mention'
+          type?: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
           actor_id?: string
           spit_id?: string | null
+          reference_id?: string | null
           read?: boolean
           created_at?: string
         }
@@ -458,6 +470,145 @@ export type Database = {
           }
         ]
       }
+      user_gold: {
+        Row: {
+          user_id: string
+          balance: number
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          balance?: number
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          balance?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_gold_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      gold_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          type: 'purchase' | 'convert' | 'item_purchase'
+          amount: number
+          balance_after: number
+          reference_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: 'purchase' | 'convert' | 'item_purchase'
+          amount: number
+          balance_after: number
+          reference_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: 'purchase' | 'convert' | 'item_purchase'
+          amount?: number
+          balance_after?: number
+          reference_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gold_transactions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_inventory: {
+        Row: {
+          id: string
+          user_id: string
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          quantity: number
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          quantity?: number
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          item_type?: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_inventory_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      attack_log: {
+        Row: {
+          id: string
+          attacker_id: string
+          target_user_id: string | null
+          target_spit_id: string | null
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          damage: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          attacker_id: string
+          target_user_id?: string | null
+          target_spit_id?: string | null
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          damage: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          attacker_id?: string
+          target_user_id?: string | null
+          target_spit_id?: string | null
+          item_type?: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
+          damage?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attack_log_attacker_id_fkey"
+            columns: ["attacker_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attack_log_target_user_id_fkey"
+            columns: ["target_user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attack_log_target_spit_id_fkey"
+            columns: ["target_spit_id"]
+            referencedRelation: "spits"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -466,8 +617,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention'
+      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
       transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase'
+      gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
+      item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -487,6 +640,11 @@ export type Notification = Database['public']['Tables']['notifications']['Row']
 export type UserCredits = Database['public']['Tables']['user_credits']['Row']
 export type CreditTransaction = Database['public']['Tables']['credit_transactions']['Row']
 export type PinnedSpit = Database['public']['Tables']['pinned_spits']['Row']
+export type UserGold = Database['public']['Tables']['user_gold']['Row']
+export type GoldTransaction = Database['public']['Tables']['gold_transactions']['Row']
+export type UserInventory = Database['public']['Tables']['user_inventory']['Row']
+export type AttackLog = Database['public']['Tables']['attack_log']['Row']
+export type ItemType = Database['public']['Enums']['item_type']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {

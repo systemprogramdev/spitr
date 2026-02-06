@@ -6,8 +6,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { User, SpitWithAuthor } from '@/types'
-import { Spit } from '@/components/spit'
+import { Spit, AttackModal } from '@/components/spit'
 import { enrichSpitsWithCounts } from '@/lib/spitUtils'
+import { HPBar } from '@/components/ui/HPBar'
+import { MAX_HP } from '@/lib/items'
 
 const supabase = createClient()
 
@@ -27,6 +29,9 @@ export default function ProfilePage() {
   const [showFollowModal, setShowFollowModal] = useState<'followers' | 'following' | null>(null)
   const [followList, setFollowList] = useState<User[]>([])
   const [pinnedSpit, setPinnedSpit] = useState<SpitWithAuthor | null>(null)
+  const [profileHp, setProfileHp] = useState(MAX_HP)
+  const [profileDestroyed, setProfileDestroyed] = useState(false)
+  const [showAttackModal, setShowAttackModal] = useState(false)
 
   const fetchTabContent = useCallback(async (profileId: string, selectedTab: TabType) => {
     setIsTabLoading(true)
@@ -148,6 +153,8 @@ export default function ProfilePage() {
       }
 
       setProfile(profileData)
+      setProfileHp(profileData.hp ?? MAX_HP)
+      setProfileDestroyed(profileData.is_destroyed ?? false)
 
       const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
@@ -327,6 +334,16 @@ export default function ProfilePage() {
                 <span className="sys-icon sys-icon-mail"></span>
               </Link>
             )}
+            {!isOwnProfile && currentUser && !profileDestroyed && (
+              <button
+                className="btn"
+                style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
+                onClick={() => setShowAttackModal(true)}
+                title="Attack this user"
+              >
+                ⚔️
+              </button>
+            )}
             {isOwnProfile ? (
               <Link href="/settings/profile" className="btn btn-outline">
                 <span className="sys-icon sys-icon-edit" style={{ marginRight: '0.5rem' }}></span>
@@ -374,6 +391,28 @@ export default function ProfilePage() {
               Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </span>
           </div>
+
+          {/* HP Bar */}
+          <div style={{ marginTop: '0.75rem' }}>
+            <HPBar hp={profileHp} maxHp={MAX_HP} size="md" />
+          </div>
+
+          {profileDestroyed && (
+            <div style={{
+              marginTop: '0.75rem',
+              padding: '0.5rem 1rem',
+              background: 'rgba(255,68,68,0.1)',
+              border: '1px solid var(--sys-danger)',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: 'var(--sys-danger)',
+              fontWeight: 'bold',
+              fontFamily: 'var(--sys-font-display)',
+              letterSpacing: '0.1em',
+            }}>
+              DESTROYED
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
             <button
@@ -446,6 +485,20 @@ export default function ProfilePage() {
             <Spit key={spit.id} spit={spit} />
           ))}
         </div>
+      )}
+
+      {/* Attack Modal */}
+      {showAttackModal && profile && (
+        <AttackModal
+          targetType="user"
+          targetId={profile.id}
+          targetName={profile.name}
+          onClose={() => setShowAttackModal(false)}
+          onAttackComplete={(result) => {
+            setProfileHp(result.newHp)
+            if (result.destroyed) setProfileDestroyed(true)
+          }}
+        />
       )}
 
       {/* Follow Modal */}

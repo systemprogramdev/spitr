@@ -10,6 +10,8 @@ import { useModalStore } from '@/stores/modalStore'
 import { SpitWithAuthor } from '@/types'
 import { getEffectClassName, getEffectById } from '@/lib/effects'
 import { LinkPreview } from '@/components/LinkPreview'
+import { AttackModal } from './AttackModal'
+import { SPIT_MAX_HP } from '@/lib/items'
 
 // URL regex pattern
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
@@ -120,6 +122,9 @@ export function Spit({ spit, showActions = true }: SpitProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isDeleted, setIsDeleted] = useState(false)
+  const [showAttackModal, setShowAttackModal] = useState(false)
+  const [spitHp, setSpitHp] = useState(spit.hp ?? SPIT_MAX_HP)
+  const isSpitDestroyed = spitHp <= 0
   const supabase = createClient()
   const isOwnSpit = user?.id === spit.user_id
 
@@ -320,7 +325,7 @@ export function Spit({ spit, showActions = true }: SpitProps) {
   }
 
   return (
-    <article className="spit">
+    <article className={`spit ${isSpitDestroyed ? 'spit-destroyed' : ''}`}>
       {spit._respitBy && (
         <div className="spit-respit-indicator">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -369,6 +374,9 @@ export function Spit({ spit, showActions = true }: SpitProps) {
             <Link href={`/${spit.author.handle}/status/${spit.id}`} className="spit-time">
               {formatDistanceToNow(spit.created_at)}
             </Link>
+            <span className={`spit-hp ${isSpitDestroyed ? 'spit-hp-dead' : ''}`}>
+              {isSpitDestroyed ? '💀' : `${spitHp}HP`}
+            </span>
           </div>
 
           <Link href={`/${spit.author.handle}/status/${spit.id}`} className="spit-text-link">
@@ -448,6 +456,27 @@ export function Spit({ spit, showActions = true }: SpitProps) {
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
               </button>
+
+              {/* Attack */}
+              {!isOwnSpit && !isSpitDestroyed && (
+                <button
+                  className="spit-action spit-action-attack"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowAttackModal(true)
+                  }}
+                  title="Attack this spit"
+                >
+                  <svg className="spit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="22" y1="12" x2="18" y2="12"/>
+                    <line x1="6" y1="12" x2="2" y2="12"/>
+                    <line x1="12" y1="6" x2="12" y2="2"/>
+                    <line x1="12" y1="22" x2="12" y2="18"/>
+                  </svg>
+                </button>
+              )}
 
               {/* Pin */}
               {isOwnSpit && !spit.is_pinned && (
@@ -570,6 +599,19 @@ export function Spit({ spit, showActions = true }: SpitProps) {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Attack Modal */}
+          {showAttackModal && (
+            <AttackModal
+              targetType="spit"
+              targetId={spit.id}
+              targetName={`@${spit.author.handle}'s spit`}
+              onClose={() => setShowAttackModal(false)}
+              onAttackComplete={(result) => {
+                setSpitHp(result.newHp)
+              }}
+            />
           )}
 
           {/* Delete Confirmation Modal */}

@@ -142,6 +142,16 @@ export default function ConversationPage() {
         .from('conversations')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', conversationId)
+
+      // Send notification to other participant
+      if (participant && participant.id !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: participant.id,
+          type: 'message',
+          actor_id: user.id,
+          reference_id: conversationId,
+        })
+      }
     }
 
     setIsSending(false)

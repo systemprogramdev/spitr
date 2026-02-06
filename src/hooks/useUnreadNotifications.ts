@@ -12,6 +12,8 @@ const NOTIF_LABELS: Record<string, string> = {
   respit: 'respit your post',
   reply: 'replied to your spit',
   mention: 'mentioned you',
+  message: 'sent you a message',
+  attack: 'attacked you',
 }
 
 function updateBadge(count: number) {

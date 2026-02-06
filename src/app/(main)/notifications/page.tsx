@@ -52,6 +52,8 @@ export default function NotificationsPage() {
       case 'respit': return 'repeat'
       case 'reply': return 'message'
       case 'mention': return 'at-sign'
+      case 'message': return 'mail'
+      case 'attack': return 'zap'
       default: return 'bell'
     }
   }
@@ -68,6 +70,10 @@ export default function NotificationsPage() {
         return 'replied to your spit'
       case 'mention':
         return 'mentioned you'
+      case 'message':
+        return 'sent you a message'
+      case 'attack':
+        return `attacked ${notification.spit_id ? 'your spit' : 'you'} with ${notification.reference_id || 'a weapon'}`
       default:
         return ''
     }
@@ -108,6 +114,15 @@ export default function NotificationsPage() {
             // For reply notifications, link to the original spit (not the reply)
             // The original spit belongs to the current user
             const getNotificationHref = () => {
+              if (notification.type === 'message' && notification.reference_id) {
+                return `/messages/${notification.reference_id}`
+              }
+              if (notification.type === 'attack') {
+                if (notification.spit_id && notification.spit) {
+                  return `/${notification.actor.handle}/status/${notification.spit.id}`
+                }
+                return `/${user!.handle}`
+              }
               if (!notification.spit) return `/${notification.actor.handle}`
               if (notification.type === 'reply' && notification.spit.reply_to_id) {
                 return `/${user!.handle}/status/${notification.spit.reply_to_id}`
