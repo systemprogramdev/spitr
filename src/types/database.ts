@@ -372,7 +372,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase'
+          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
           amount: number
           balance_after: number
           reference_id: string | null
@@ -381,7 +381,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase'
+          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
           amount: number
           balance_after: number
           reference_id?: string | null
@@ -390,7 +390,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase'
+          type?: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
           amount?: number
           balance_after?: number
           reference_id?: string | null
@@ -655,7 +655,7 @@ export type Database = {
     }
     Enums: {
       notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
-      transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase'
+      transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
       gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
       item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
     }

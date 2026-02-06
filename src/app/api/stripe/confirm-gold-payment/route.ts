@@ -63,31 +63,42 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get current balance
-    const { data: currentGold } = await supabase
-      .from('user_gold')
-      .select('balance')
-      .eq('user_id', userId)
-      .single()
+    // Atomic balance update using RPC to avoid TOCTOU race conditions
+    const { data: updated, error: updateError } = await supabase.rpc('increment_balance', {
+      table_name: 'user_gold',
+      user_id_param: userId,
+      amount_param: goldAmount,
+    })
 
-    const currentBalance = currentGold?.balance || 0
-    const newBalance = currentBalance + goldAmount
-
-    // Upsert gold balance
-    const { error: updateError } = await supabase
-      .from('user_gold')
-      .upsert({
-        user_id: userId,
-        balance: newBalance,
-        updated_at: new Date().toISOString(),
-      })
-
+    // Fallback: if RPC doesn't exist, use read-then-write
+    let newBalance: number
     if (updateError) {
-      console.error('Failed to update gold:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update gold balance' },
-        { status: 500 }
-      )
+      const { data: currentGold } = await supabase
+        .from('user_gold')
+        .select('balance')
+        .eq('user_id', userId)
+        .single()
+
+      const currentBalance = currentGold?.balance || 0
+      newBalance = currentBalance + goldAmount
+
+      const { error: upsertError } = await supabase
+        .from('user_gold')
+        .upsert({
+          user_id: userId,
+          balance: newBalance,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (upsertError) {
+        console.error('Failed to update gold:', upsertError)
+        return NextResponse.json(
+          { error: 'Failed to update gold balance' },
+          { status: 500 }
+        )
+      }
+    } else {
+      newBalance = (updated as number) || 0
     }
 
     // Log the transaction

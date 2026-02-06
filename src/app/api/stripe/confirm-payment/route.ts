@@ -65,31 +65,42 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Get current balance
-    const { data: currentCredits } = await supabase
-      .from('user_credits')
-      .select('balance')
-      .eq('user_id', userId)
-      .single()
+    // Atomic balance update using RPC to avoid TOCTOU race conditions
+    const { data: updated, error: updateError } = await supabase.rpc('increment_balance', {
+      table_name: 'user_credits',
+      user_id_param: userId,
+      amount_param: creditsAmount,
+    })
 
-    const currentBalance = currentCredits?.balance || 0
-    const newBalance = currentBalance + creditsAmount
-
-    // Update user credits
-    const { error: updateError } = await supabase
-      .from('user_credits')
-      .upsert({
-        user_id: userId,
-        balance: newBalance,
-        updated_at: new Date().toISOString(),
-      })
-
+    // Fallback: if RPC doesn't exist, use read-then-write
+    let newBalance: number
     if (updateError) {
-      console.error('Failed to update credits:', updateError)
-      return NextResponse.json(
-        { error: 'Failed to update credits' },
-        { status: 500 }
-      )
+      const { data: currentCredits } = await supabase
+        .from('user_credits')
+        .select('balance')
+        .eq('user_id', userId)
+        .single()
+
+      const currentBalance = currentCredits?.balance || 0
+      newBalance = currentBalance + creditsAmount
+
+      const { error: upsertError } = await supabase
+        .from('user_credits')
+        .upsert({
+          user_id: userId,
+          balance: newBalance,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (upsertError) {
+        console.error('Failed to update credits:', upsertError)
+        return NextResponse.json(
+          { error: 'Failed to update credits' },
+          { status: 500 }
+        )
+      }
+    } else {
+      newBalance = (updated as number) || 0
     }
 
     // Log the transaction

@@ -15,21 +15,23 @@ export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')
 
-  // For development without webhook secret, we'll process all events
-  // In production, you should verify the webhook signature
   let event: Stripe.Event
 
   try {
-    if (process.env.STRIPE_WEBHOOK_SECRET && signature) {
-      event = stripe.webhooks.constructEvent(
-        body,
-        signature,
-        process.env.STRIPE_WEBHOOK_SECRET
-      )
-    } else {
-      // Development mode - parse event directly
-      event = JSON.parse(body) as Stripe.Event
+    if (!process.env.STRIPE_WEBHOOK_SECRET) {
+      console.error('STRIPE_WEBHOOK_SECRET is not set — rejecting webhook')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
     }
+
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
+    }
+
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET
+    )
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
@@ -69,28 +71,39 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ received: true, alreadyProcessed: true })
       }
 
-      // Get current balance
-      const { data: currentCredits } = await supabase
-        .from('user_credits')
-        .select('balance')
-        .eq('user_id', userId)
-        .single()
+      // Atomic balance update using RPC to avoid TOCTOU race conditions
+      const { data: updated, error: rpcError } = await supabase.rpc('increment_balance', {
+        table_name: 'user_credits',
+        user_id_param: userId,
+        amount_param: creditsAmount,
+      })
 
-      const currentBalance = currentCredits?.balance || 0
-      const newBalance = currentBalance + creditsAmount
+      let newBalance: number
+      if (rpcError) {
+        // Fallback: read-then-write
+        const { data: currentCredits } = await supabase
+          .from('user_credits')
+          .select('balance')
+          .eq('user_id', userId)
+          .single()
 
-      // Update user credits
-      const { error: updateError } = await supabase
-        .from('user_credits')
-        .upsert({
-          user_id: userId,
-          balance: newBalance,
-          updated_at: new Date().toISOString(),
-        })
+        const currentBalance = currentCredits?.balance || 0
+        newBalance = currentBalance + creditsAmount
 
-      if (updateError) {
-        console.error('Failed to update credits:', updateError)
-        return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 })
+        const { error: updateError } = await supabase
+          .from('user_credits')
+          .upsert({
+            user_id: userId,
+            balance: newBalance,
+            updated_at: new Date().toISOString(),
+          })
+
+        if (updateError) {
+          console.error('Failed to update credits:', updateError)
+          return NextResponse.json({ error: 'Failed to update credits' }, { status: 500 })
+        }
+      } else {
+        newBalance = (updated as number) || 0
       }
 
       // Log the transaction

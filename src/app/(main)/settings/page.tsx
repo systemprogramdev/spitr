@@ -171,7 +171,17 @@ export default function SettingsPage() {
             <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: 'var(--sys-text-muted)' }}>
               Once you delete your account, there is no going back. Please be certain.
             </p>
-            <button className="btn btn-danger" style={{ width: '100%' }}>
+            <button
+              className="btn btn-danger"
+              style={{ width: '100%' }}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                  if (window.confirm('This will permanently delete all your data. Type confirm to proceed.')) {
+                    alert('Account deletion is not yet available. Please contact support.')
+                  }
+                }
+              }}
+            >
               <span className="sys-icon sys-icon-alert-triangle" style={{ marginRight: '0.5rem' }}></span>
               Delete Account
             </button>

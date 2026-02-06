@@ -111,11 +111,10 @@ function NewMessageContent() {
 
           if (newConvo) {
             conversationId = newConvo.id
-            // Only add ourselves - the other user will be added when they respond
-            await supabase.from('conversation_participants').insert({
-              conversation_id: conversationId,
-              user_id: user.id,
-            })
+            await supabase.from('conversation_participants').insert([
+              { conversation_id: conversationId, user_id: user.id },
+              { conversation_id: conversationId, user_id: selectedUser.id },
+            ])
           }
         }
 

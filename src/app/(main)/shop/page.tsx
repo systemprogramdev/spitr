@@ -31,6 +31,11 @@ export default function ShopPage() {
   const [userHp, setUserHp] = useState(user?.hp ?? MAX_HP)
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
 
+  // Sync HP when user loads (useState initial value only runs once)
+  useEffect(() => {
+    if (user?.hp !== undefined) setUserHp(user.hp)
+  }, [user?.hp])
+
   const fetchChests = useCallback(async () => {
     if (!user) return
     const { data } = await supabase
@@ -79,7 +84,7 @@ export default function ShopPage() {
     setIsConverting(true)
 
     // Deduct spits
-    const credited = await deductAmount(actualSpitCost, 'post', 'gold_convert')
+    const credited = await deductAmount(actualSpitCost, 'convert', 'gold_convert')
     if (!credited) {
       alert('Insufficient spits!')
       setIsConverting(false)

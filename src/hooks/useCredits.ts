@@ -125,7 +125,7 @@ export function useCredits() {
   // Deduct a custom amount (for images, bulk operations, etc.)
   const deductAmount = async (
     amount: number,
-    type: 'post' | 'reply' | 'respit' | 'pin_purchase',
+    type: 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert',
     referenceId?: string
   ) => {
     // Get real-time balance from store to avoid stale state in sequential calls

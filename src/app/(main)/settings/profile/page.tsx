@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
@@ -16,6 +16,7 @@ export default function EditProfilePage() {
   const [website, setWebsite] = useState(user?.website || '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '')
   const [bannerUrl, setBannerUrl] = useState(user?.banner_url || '')
+  const [fieldsInitialized, setFieldsInitialized] = useState(!!user)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
@@ -23,6 +24,20 @@ export default function EditProfilePage() {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
+
+  // Sync fields when user loads async (useState initial value only runs once)
+  useEffect(() => {
+    if (user && !fieldsInitialized) {
+      setName(user.name || '')
+      setHandle(user.handle || '')
+      setBio(user.bio || '')
+      setLocation(user.location || '')
+      setWebsite(user.website || '')
+      setAvatarUrl(user.avatar_url || '')
+      setBannerUrl(user.banner_url || '')
+      setFieldsInitialized(true)
+    }
+  }, [user, fieldsInitialized])
 
   const validateHandle = (value: string) => {
     if (value.length < 3) return 'Handle must be at least 3 characters'
