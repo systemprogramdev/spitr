@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function POST(request: NextRequest) {
   try {
-    const { attackerId, targetUserId, targetSpitId, itemType, damage } = await request.json()
+    // Authenticate the request
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!attackerId || !itemType || !damage) {
+    const { targetUserId, targetSpitId, itemType, damage } = await request.json()
+    const attackerId = user.id
+
+    if (!itemType || !damage) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -25,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the server-side function
-    const { data, error } = await supabase.rpc('perform_attack', {
+    const { data, error } = await supabaseAdmin.rpc('perform_attack', {
       p_attacker_id: attackerId,
       p_target_user_id: targetUserId || null,
       p_target_spit_id: targetSpitId || null,
@@ -52,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Create notification for the target user
     if (targetUserId && targetUserId !== attackerId) {
-      await supabase.from('notifications').insert({
+      await supabaseAdmin.from('notifications').insert({
         user_id: targetUserId,
         type: 'attack',
         actor_id: attackerId,
@@ -63,14 +72,14 @@ export async function POST(request: NextRequest) {
 
     // If attacking a spit, notify the spit owner
     if (targetSpitId && !targetUserId) {
-      const { data: spit } = await supabase
+      const { data: spit } = await supabaseAdmin
         .from('spits')
         .select('user_id')
         .eq('id', targetSpitId)
         .single()
 
       if (spit && spit.user_id !== attackerId) {
-        await supabase.from('notifications').insert({
+        await supabaseAdmin.from('notifications').insert({
           user_id: spit.user_id,
           type: 'attack',
           actor_id: attackerId,

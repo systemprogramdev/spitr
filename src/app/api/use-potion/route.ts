@@ -1,16 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, itemType, healAmount } = await request.json()
+    // Authenticate the request
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!userId || !itemType || !healAmount) {
+    const { itemType, healAmount } = await request.json()
+    const userId = user.id
+
+    if (!itemType || !healAmount) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -18,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call the server-side function
-    const { data, error } = await supabase.rpc('use_potion', {
+    const { data, error } = await supabaseAdmin.rpc('use_potion', {
       p_user_id: userId,
       p_item_type: itemType,
       p_heal_amount: healAmount,

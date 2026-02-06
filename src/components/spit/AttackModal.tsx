@@ -34,7 +34,6 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        attackerId: user.id,
         targetUserId: targetType === 'user' ? targetId : undefined,
         targetSpitId: targetType === 'spit' ? targetId : undefined,
         itemType: weapon.type,

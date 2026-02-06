@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 import { rollChestLoot, LootReward } from '@/lib/items'
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, chestId } = await request.json()
+    // Authenticate the request
+    const supabase = await createServerClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!userId || !chestId) {
+    const { chestId } = await request.json()
+    const userId = user.id
+
+    if (!chestId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -19,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate chest belongs to user and is unopened
-    const { data: chest, error: chestErr } = await supabase
+    const { data: chest, error: chestErr } = await supabaseAdmin
       .from('user_chests')
       .select('*')
       .eq('id', chestId)
@@ -40,35 +49,33 @@ export async function POST(request: NextRequest) {
     // Apply rewards
     for (const reward of loot) {
       if (reward.type === 'credits') {
-        // Get current balance
-        const { data: credits } = await supabase
+        const { data: credits } = await supabaseAdmin
           .from('user_credits')
           .select('balance')
           .eq('user_id', userId)
           .single()
 
         if (credits) {
-          await supabase
+          await supabaseAdmin
             .from('user_credits')
             .update({ balance: credits.balance + reward.amount })
             .eq('user_id', userId)
         }
       } else if (reward.type === 'gold') {
-        const { data: gold } = await supabase
+        const { data: gold } = await supabaseAdmin
           .from('user_gold')
           .select('balance')
           .eq('user_id', userId)
           .single()
 
         if (gold) {
-          await supabase
+          await supabaseAdmin
             .from('user_gold')
             .update({ balance: gold.balance + reward.amount })
             .eq('user_id', userId)
         }
       } else if (reward.type === 'item' && reward.itemType) {
-        // Upsert inventory
-        const { data: existing } = await supabase
+        const { data: existing } = await supabaseAdmin
           .from('user_inventory')
           .select('quantity')
           .eq('user_id', userId)
@@ -76,7 +83,7 @@ export async function POST(request: NextRequest) {
           .single()
 
         const currentQty = existing?.quantity ?? 0
-        await supabase
+        await supabaseAdmin
           .from('user_inventory')
           .upsert(
             {
@@ -90,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Mark chest as opened with loot data
-    await supabase
+    await supabaseAdmin
       .from('user_chests')
       .update({
         opened: true,

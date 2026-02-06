@@ -62,27 +62,20 @@ export default function SignupPage() {
     }
 
     if (data.user) {
-      // Create public profile + credit/gold rows
+      // Ensure public profile exists (trigger may have already created it)
       const userId = data.user.id
-      const { error: profileError } = await supabase
+      await supabase
         .from('users')
-        .insert({
+        .upsert({
           id: userId,
           handle: handle.toLowerCase(),
           name: name.trim(),
-        })
+        }, { onConflict: 'id' })
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        setError('Account created but profile setup failed. Try logging in.')
-        setIsLoading(false)
-        return
-      }
-
-      // Initialize credits (1000 free) and gold (0) in parallel
+      // Ensure credits and gold rows exist
       await Promise.all([
-        supabase.from('user_credits').insert({ user_id: userId }),
-        supabase.from('user_gold').insert({ user_id: userId }),
+        supabase.from('user_credits').upsert({ user_id: userId }, { onConflict: 'user_id' }),
+        supabase.from('user_gold').upsert({ user_id: userId }, { onConflict: 'user_id' }),
       ])
 
       router.push('/')

@@ -152,7 +152,6 @@ export default function ShopPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: user.id,
         itemType: item.type,
         healAmount: item.healAmount,
       }),
