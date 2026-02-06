@@ -194,14 +194,28 @@ export function Spit({ spit, showActions = true }: SpitProps) {
         // Revert on error
         setIsLiked(false)
         setLikeCount(c => c - 1)
-      } else if (spit.user_id !== user.id) {
-        // Create notification for spit owner (not for own spits)
-        await supabase.from('notifications').insert({
-          user_id: spit.user_id,
-          type: 'like',
-          actor_id: user.id,
-          spit_id: spit.id,
-        })
+      } else {
+        if (spit.user_id !== user.id) {
+          // Create notification for spit owner (not for own spits)
+          await supabase.from('notifications').insert({
+            user_id: spit.user_id,
+            type: 'like',
+            actor_id: user.id,
+            spit_id: spit.id,
+          })
+        }
+
+        // Trigger like reward (+5 HP to spit, +1 credit to author)
+        // Fire-and-forget: reward is idempotent and anti-gaming safe
+        fetch('/api/like-reward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spitId: spit.id }),
+        }).then(res => res.json()).then(data => {
+          if (data.rewarded && data.newHp !== undefined) {
+            setSpitHp(data.newHp)
+          }
+        }).catch(() => {})
       }
     }
 

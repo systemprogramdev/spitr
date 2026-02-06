@@ -292,7 +292,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
+          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
           actor_id: string
           spit_id: string | null
           reference_id: string | null
@@ -302,7 +302,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
+          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
           actor_id: string
           spit_id?: string | null
           reference_id?: string | null
@@ -312,7 +312,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
+          type?: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
           actor_id?: string
           spit_id?: string | null
           reference_id?: string | null
@@ -372,7 +372,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
+          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
           amount: number
           balance_after: number
           reference_id: string | null
@@ -381,7 +381,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
+          type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
           amount: number
           balance_after: number
           reference_id?: string | null
@@ -390,7 +390,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
+          type?: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received'
           amount?: number
           balance_after?: number
           reference_id?: string | null
@@ -646,6 +646,37 @@ export type Database = {
           }
         ]
       }
+      like_rewards: {
+        Row: {
+          user_id: string
+          spit_id: string
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          spit_id: string
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          spit_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "like_rewards_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "like_rewards_spit_id_fkey"
+            columns: ["spit_id"]
+            referencedRelation: "spits"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -654,8 +685,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack'
-      transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert'
+      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'like_reward' | 'transfer'
+      transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received' | 'like_reward' | 'transfer_sent' | 'transfer_received'
       gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
       item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'small_potion' | 'medium_potion' | 'large_potion'
     }
@@ -683,6 +714,7 @@ export type UserInventory = Database['public']['Tables']['user_inventory']['Row'
 export type AttackLog = Database['public']['Tables']['attack_log']['Row']
 export type UserChest = Database['public']['Tables']['user_chests']['Row']
 export type ItemType = Database['public']['Enums']['item_type']
+export type LikeReward = Database['public']['Tables']['like_rewards']['Row']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {

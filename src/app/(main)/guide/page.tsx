@@ -11,6 +11,8 @@ const sections = [
   { id: 'gold-shop', label: 'Gold & Shop' },
   { id: 'combat', label: 'Combat System' },
   { id: 'chests', label: 'Treasure Chests' },
+  { id: 'like-rewards', label: 'Like Rewards' },
+  { id: 'transfers', label: 'Sending Spits' },
   { id: 'profiles', label: 'Profiles' },
   { id: 'messages', label: 'Messages' },
   { id: 'promoted', label: 'Promoted Spits' },
@@ -127,7 +129,7 @@ export default function GuidePage() {
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">❤️ Like</span>
-              <span className="guide-table-value">Show appreciation (free)</span>
+              <span className="guide-table-value">Show appreciation (free) — gives +5 HP and +1 credit to author</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">🔗 Share</span>
@@ -181,13 +183,15 @@ export default function GuidePage() {
           </div>
 
           <h3 className="guide-subheading">Free Actions</h3>
-          <p>Likes, follows, and direct messages are always free.</p>
+          <p>Likes, follows, and direct messages are always free. Likes also reward the author with +1 credit and +5 HP to the spit.</p>
 
           <h3 className="guide-subheading">Earning Credits</h3>
           <ul className="guide-list">
             <li><strong>Signup bonus</strong> — 1,000 free credits</li>
             <li><strong>Monthly renewal</strong> — 1,000 credits every 30 days (automatic)</li>
             <li><strong>Daily chest</strong> — Open every 24 hours for random rewards</li>
+            <li><strong>Like rewards</strong> — Earn 1 credit each time someone likes your spit</li>
+            <li><strong>Transfers</strong> — Receive spits from other users</li>
             <li><strong>Purchase</strong> — Buy credit packages on the <Link href="/credits" className="guide-link">Credits</Link> page</li>
           </ul>
         </section>
@@ -309,6 +313,83 @@ export default function GuidePage() {
           </div>
         </section>
 
+        {/* Like Rewards */}
+        <section id="like-rewards" className="guide-section">
+          <h2 className="guide-heading">Like Rewards</h2>
+          <p>
+            Liking spits is more than just showing appreciation — it actively
+            supports the author!
+          </p>
+
+          <h3 className="guide-subheading">How It Works</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">+5 HP to spit</span>
+              <span className="guide-table-value">Each unique like adds 5 HP to the spit (up to 100 HP max)</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">+1 Credit to author</span>
+              <span className="guide-table-value">The spit&apos;s author earns 1 free spit credit</span>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Anti-Gaming Rules</h3>
+          <ul className="guide-list">
+            <li>You cannot earn rewards by liking your own spits</li>
+            <li>Each like only rewards once — unliking and re-liking does NOT give additional rewards</li>
+            <li>The author gets a notification when they earn a like reward</li>
+          </ul>
+
+          <div className="guide-callout">
+            <span className="guide-callout-icon">💡</span>
+            <div>
+              <strong>Tip:</strong> The more people like your spits, the harder they become
+              to destroy in combat — and you earn credits passively!
+            </div>
+          </div>
+        </section>
+
+        {/* Sending Spits */}
+        <section id="transfers" className="guide-section">
+          <h2 className="guide-heading">Sending Spits</h2>
+          <p>
+            You can send spit credits to other users directly from their profile.
+          </p>
+
+          <h3 className="guide-subheading">How to Send</h3>
+          <div className="guide-steps">
+            <div className="guide-step">
+              <span className="guide-step-num">1</span>
+              <div>
+                <strong>Visit a user&apos;s profile</strong>
+                <p>Navigate to any user&apos;s profile page.</p>
+              </div>
+            </div>
+            <div className="guide-step">
+              <span className="guide-step-num">2</span>
+              <div>
+                <strong>Click the send button</strong>
+                <p>Click the money emoji button next to the message and follow buttons.</p>
+              </div>
+            </div>
+            <div className="guide-step">
+              <span className="guide-step-num">3</span>
+              <div>
+                <strong>Enter an amount</strong>
+                <p>Enter the number of spits you want to send and confirm.</p>
+              </div>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Rules</h3>
+          <ul className="guide-list">
+            <li>Transfers are instant and cannot be reversed</li>
+            <li>The minimum transfer amount is 1 spit</li>
+            <li>You cannot send more spits than your current balance</li>
+            <li>The recipient receives a notification about the transfer</li>
+          </ul>
+        </section>
+
         {/* Profiles */}
         <section id="profiles" className="guide-section">
           <h2 className="guide-heading">Profiles</h2>
@@ -380,6 +461,14 @@ export default function GuidePage() {
             <div className="guide-tip">
               <span className="guide-tip-emoji">⚡</span>
               <p>Promote your best spit to gain followers fast. 500 credits well spent.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">❤️</span>
+              <p>Like other people&apos;s spits — you make their spit harder to kill and earn them free credits.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">💸</span>
+              <p>Send spits to friends who are running low. Visit their profile and hit the send button.</p>
             </div>
           </div>
         </section>

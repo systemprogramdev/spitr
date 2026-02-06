@@ -54,6 +54,8 @@ export default function NotificationsPage() {
       case 'mention': return 'at-sign'
       case 'message': return 'mail'
       case 'attack': return 'zap'
+      case 'like_reward': return 'star'
+      case 'transfer': return 'dollar-sign'
       default: return 'bell'
     }
   }
@@ -74,6 +76,10 @@ export default function NotificationsPage() {
         return 'sent you a message'
       case 'attack':
         return `attacked ${notification.spit_id ? 'your spit' : 'you'} with ${notification.reference_id || 'a weapon'}`
+      case 'like_reward':
+        return 'liked your spit (+1 credit, +5 HP)'
+      case 'transfer':
+        return `sent you ${notification.reference_id || ''} spits`
       default:
         return ''
     }
@@ -116,6 +122,9 @@ export default function NotificationsPage() {
             const getNotificationHref = () => {
               if (notification.type === 'message' && notification.reference_id) {
                 return `/messages/${notification.reference_id}`
+              }
+              if (notification.type === 'transfer') {
+                return `/${notification.actor.handle}`
               }
               if (notification.type === 'attack') {
                 if (notification.spit_id && notification.spit) {

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { User, SpitWithAuthor } from '@/types'
 import { Spit, AttackModal } from '@/components/spit'
+import { TransferModal } from '@/components/transfer/TransferModal'
 import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 import { HPBar } from '@/components/ui/HPBar'
 import { MAX_HP } from '@/lib/items'
@@ -32,6 +33,7 @@ export default function ProfilePage() {
   const [profileHp, setProfileHp] = useState(MAX_HP)
   const [profileDestroyed, setProfileDestroyed] = useState(false)
   const [showAttackModal, setShowAttackModal] = useState(false)
+  const [showTransferModal, setShowTransferModal] = useState(false)
 
   const fetchTabContent = useCallback(async (profileId: string, selectedTab: TabType) => {
     setIsTabLoading(true)
@@ -334,6 +336,15 @@ export default function ProfilePage() {
                 <span className="sys-icon sys-icon-mail"></span>
               </Link>
             )}
+            {!isOwnProfile && currentUser && (
+              <button
+                className="btn btn-outline"
+                onClick={() => setShowTransferModal(true)}
+                title="Send Spits"
+              >
+                &#x1F4B8;
+              </button>
+            )}
             {!isOwnProfile && currentUser && !profileDestroyed && (
               <button
                 className="btn"
@@ -498,6 +509,16 @@ export default function ProfilePage() {
             setProfileHp(result.newHp)
             if (result.destroyed) setProfileDestroyed(true)
           }}
+        />
+      )}
+
+      {/* Transfer Modal */}
+      {showTransferModal && profile && (
+        <TransferModal
+          recipientId={profile.id}
+          recipientHandle={profile.handle}
+          recipientName={profile.name}
+          onClose={() => setShowTransferModal(false)}
         />
       )}
 

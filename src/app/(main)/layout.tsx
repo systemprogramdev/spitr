@@ -8,6 +8,7 @@ import { useCredits } from '@/hooks/useCredits'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { useGold } from '@/hooks/useGold'
+import { useInventory } from '@/hooks/useInventory'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
 import { ChestClaimModal } from '@/components/chest/ChestClaimModal'
@@ -35,10 +36,11 @@ export default function MainLayout({
 }) {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
-  const { balance } = useCredits()
+  const { balance, refreshBalance: refreshCredits } = useCredits()
   const unreadMessages = useUnreadMessages()
   const unreadNotifications = useUnreadNotifications()
-  const { balance: goldBalance } = useGold()
+  const { balance: goldBalance, refreshBalance: refreshGold } = useGold()
+  const { refreshInventory } = useInventory()
   const { openSpitModal } = useModalStore()
   const [whoToFollow, setWhoToFollow] = useState<User[]>([])
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -48,6 +50,17 @@ export default function MainLayout({
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [pathname])
+
+  // Auto-refresh balances after chest opening
+  useEffect(() => {
+    const handleChestOpened = () => {
+      refreshCredits()
+      refreshGold()
+      refreshInventory()
+    }
+    window.addEventListener('chest-opened', handleChestOpened)
+    return () => window.removeEventListener('chest-opened', handleChestOpened)
+  }, [refreshCredits, refreshGold, refreshInventory])
 
   // Fetch who to follow (3 newest users, excluding self)
   useEffect(() => {
