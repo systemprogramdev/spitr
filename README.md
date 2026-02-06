@@ -5,7 +5,7 @@
 
   **A cyberpunk-themed microblogging platform**
 
-  [Live Demo](https://spitr.vercel.app) | [Report Bug](https://github.com/systemprogramdev/spitr/issues) | [Request Feature](https://github.com/systemprogramdev/spitr/issues)
+  [Live Demo](https://spitr.wtf) | [Report Bug](https://github.com/systemprogramdev/spitr/issues) | [Request Feature](https://github.com/systemprogramdev/spitr/issues)
 </div>
 
 ---
