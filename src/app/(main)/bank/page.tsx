@@ -12,6 +12,7 @@ import {
   getCurrentDailyRate,
   formatRate,
   calculateBankBalance,
+  calculateInterest,
   getStockPrice,
   TICKET_TIERS,
   BankBalance,
@@ -240,7 +241,11 @@ export default function BankPage() {
   const pnl = currentValue - costBasis
   const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0
 
-  const activeDeposits = depositTab === 'spit' ? spitDeposits : goldDeposits
+  const allDeposits = depositTab === 'spit' ? spitDeposits : goldDeposits
+  const activeDeposits = allDeposits.filter(d => {
+    const interest = calculateInterest(d.principal, d.locked_rate, d.deposited_at)
+    return d.principal + interest - d.withdrawn >= 0.01
+  })
   const bankBalance = depositTab === 'spit' ? spitBank : goldBank
   const walletBalance = depositTab === 'spit' ? walletSpits : walletGold
 
