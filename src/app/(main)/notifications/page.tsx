@@ -56,6 +56,7 @@ export default function NotificationsPage() {
       case 'attack': return 'zap'
       case 'like_reward': return 'star'
       case 'transfer': return 'dollar-sign'
+      case 'level_up': return 'trending-up'
       default: return 'bell'
     }
   }
@@ -80,6 +81,8 @@ export default function NotificationsPage() {
         return 'liked your spit (+1 credit, +5 HP)'
       case 'transfer':
         return `sent you ${notification.reference_id || ''} spits`
+      case 'level_up':
+        return `You reached Level ${notification.reference_id || ''}! +100 Spits, +10 Gold, +1 Chest`
       default:
         return ''
     }
@@ -124,6 +127,9 @@ export default function NotificationsPage() {
                 return `/messages/${notification.reference_id}`
               }
               if (notification.type === 'transfer') {
+                return `/${notification.actor.handle}`
+              }
+              if (notification.type === 'level_up') {
                 return `/${notification.actor.handle}`
               }
               if (notification.type === 'attack') {

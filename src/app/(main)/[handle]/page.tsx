@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -12,11 +12,12 @@ import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 import { HPBar } from '@/components/ui/HPBar'
 import { XPBar } from '@/components/ui/XPBar'
 import { LevelBadge } from '@/components/ui/LevelBadge'
-import { MAX_HP, getMaxHp } from '@/lib/items'
+import { getMaxHp } from '@/lib/items'
 import { GunshotWounds } from '@/components/profile/GunshotWounds'
 import { SprayPaintOverlay } from '@/components/profile/SprayPaintOverlay'
 
 const supabase = createClient()
+const PAGE_SIZE = 20
 
 type TabType = 'spits' | 'replies' | 'likes' | 'respits'
 
@@ -31,6 +32,9 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isTabLoading, setIsTabLoading] = useState(false)
   const [tab, setTab] = useState<TabType>('spits')
+  const [hasMore, setHasMore] = useState(false)
+  const loadingMore = useRef(false)
+  const observerRef = useRef<HTMLDivElement>(null)
   const [showFollowModal, setShowFollowModal] = useState<'followers' | 'following' | null>(null)
   const [followList, setFollowList] = useState<User[]>([])
   const [pinnedSpit, setPinnedSpit] = useState<SpitWithAuthor | null>(null)
@@ -40,28 +44,42 @@ export default function ProfilePage() {
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [userXp, setUserXp] = useState(0)
   const [userLevel, setUserLevel] = useState(1)
+  const [activeBuffs, setActiveBuffs] = useState<{ buff_type: string; charges_remaining: number }[]>([])
 
-  const fetchTabContent = useCallback(async (profileId: string, selectedTab: TabType) => {
-    setIsTabLoading(true)
+  const fetchTabContent = useCallback(async (profileId: string, selectedTab: TabType, cursor?: string) => {
+    const isLoadMore = !!cursor
+    if (isLoadMore) {
+      if (loadingMore.current) return
+      loadingMore.current = true
+    } else {
+      setIsTabLoading(true)
+    }
     let data: SpitWithAuthor[] = []
+    let fetchedCount = 0
 
     if (selectedTab === 'spits') {
       // User's original spits AND respits combined, sorted by date
-      const [spitsResult, respitsResult] = await Promise.all([
-        supabase
-          .from('spits')
-          .select(`*, author:users!spits_user_id_fkey(*)`)
-          .eq('user_id', profileId)
-          .is('reply_to_id', null)
-          .order('created_at', { ascending: false })
-          .limit(50),
-        supabase
-          .from('respits')
-          .select(`created_at, spit:spits!respits_spit_id_fkey(*, author:users!spits_user_id_fkey(*))`)
-          .eq('user_id', profileId)
-          .order('created_at', { ascending: false })
-          .limit(50),
-      ])
+      let spitsQuery = supabase
+        .from('spits')
+        .select(`*, author:users!spits_user_id_fkey(*)`)
+        .eq('user_id', profileId)
+        .is('reply_to_id', null)
+        .order('created_at', { ascending: false })
+        .limit(PAGE_SIZE)
+
+      let respitsQuery = supabase
+        .from('respits')
+        .select(`created_at, spit:spits!respits_spit_id_fkey(*, author:users!spits_user_id_fkey(*))`)
+        .eq('user_id', profileId)
+        .order('created_at', { ascending: false })
+        .limit(PAGE_SIZE)
+
+      if (cursor) {
+        spitsQuery = spitsQuery.lt('created_at', cursor)
+        respitsQuery = respitsQuery.lt('created_at', cursor)
+      }
+
+      const [spitsResult, respitsResult] = await Promise.all([spitsQuery, respitsQuery])
 
       // Enrich original spits
       const enrichedSpits = await enrichSpitsWithCounts(spitsResult.data || [], currentUser?.id)
@@ -86,28 +104,35 @@ export default function ProfilePage() {
       // Combine and sort by time descending
       const combined = [...spitsWithTime, ...respitsWithTime]
         .sort((a, b) => b._sortTime - a._sortTime)
-        .slice(0, 50)
+        .slice(0, PAGE_SIZE)
 
       data = combined
+      fetchedCount = (spitsResult.data || []).length + (respitsResult.data || []).length
     } else if (selectedTab === 'replies') {
-      // User's replies
-      const { data: repliesData } = await supabase
+      let query = supabase
         .from('spits')
         .select(`*, author:users!spits_user_id_fkey(*)`)
         .eq('user_id', profileId)
         .not('reply_to_id', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(PAGE_SIZE)
 
+      if (cursor) query = query.lt('created_at', cursor)
+
+      const { data: repliesData } = await query
       data = await enrichSpitsWithCounts(repliesData || [], currentUser?.id)
+      fetchedCount = (repliesData || []).length
     } else if (selectedTab === 'likes') {
-      // Spits the user has liked
-      const { data: likesData } = await supabase
+      let query = supabase
         .from('likes')
-        .select('spit_id')
+        .select('spit_id, created_at')
         .eq('user_id', profileId)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(PAGE_SIZE)
+
+      if (cursor) query = query.lt('created_at', cursor)
+
+      const { data: likesData } = await query
 
       if (likesData && likesData.length > 0) {
         const spitIds = likesData.map(l => l.spit_id)
@@ -116,19 +141,22 @@ export default function ProfilePage() {
           .select(`*, author:users!spits_user_id_fkey(*)`)
           .in('id', spitIds)
 
-        // Maintain the order from likes
         const spitsMap = new Map((spitsData || []).map(s => [s.id, s]))
         const orderedSpits = spitIds.map(id => spitsMap.get(id)).filter(Boolean)
         data = await enrichSpitsWithCounts(orderedSpits as any[], currentUser?.id)
       }
+      fetchedCount = (likesData || []).length
     } else if (selectedTab === 'respits') {
-      // Spits the user has respit
-      const { data: respitsData } = await supabase
+      let query = supabase
         .from('respits')
-        .select('spit_id')
+        .select('spit_id, created_at')
         .eq('user_id', profileId)
         .order('created_at', { ascending: false })
-        .limit(50)
+        .limit(PAGE_SIZE)
+
+      if (cursor) query = query.lt('created_at', cursor)
+
+      const { data: respitsData } = await query
 
       if (respitsData && respitsData.length > 0) {
         const spitIds = respitsData.map(r => r.spit_id)
@@ -141,11 +169,18 @@ export default function ProfilePage() {
         const orderedSpits = spitIds.map(id => spitsMap.get(id)).filter(Boolean)
         data = await enrichSpitsWithCounts(orderedSpits as any[], currentUser?.id)
       }
+      fetchedCount = (respitsData || []).length
     }
 
-    setSpits(data)
-    setIsTabLoading(false)
-  }, [currentUser?.id])
+    if (isLoadMore) {
+      setSpits((prev) => [...prev, ...data])
+      loadingMore.current = false
+    } else {
+      setSpits(data)
+      setIsTabLoading(false)
+    }
+    setHasMore(fetchedCount >= PAGE_SIZE)
+  }, [currentUser?.id, profile?.handle])
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -164,7 +199,7 @@ export default function ProfilePage() {
       setProfileHp(profileData.hp ?? getMaxHp(1))
       setProfileDestroyed(profileData.is_destroyed ?? false)
 
-      const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes, xpRes] = await Promise.all([
+      const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes, xpRes, buffsRes] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         supabase.from('spits').select('*', { count: 'exact', head: true }).eq('user_id', profileData.id).is('reply_to_id', null),
@@ -175,12 +210,15 @@ export default function ProfilePage() {
           .gt('expires_at', new Date().toISOString())
           .single(),
         supabase.from('user_xp').select('xp, level').eq('user_id', profileData.id).single(),
+        supabase.from('user_buffs').select('buff_type, charges_remaining').eq('user_id', profileData.id),
       ])
 
       if (xpRes.data) {
         setUserXp(xpRes.data.xp)
         setUserLevel(xpRes.data.level)
       }
+
+      setActiveBuffs(buffsRes.data || [])
 
       setStats({
         followers: followersRes.count || 0,
@@ -222,6 +260,29 @@ export default function ProfilePage() {
       fetchTabContent(profile.id, tab)
     }
   }, [tab, profile, fetchTabContent])
+
+  const loadMoreTab = useCallback(() => {
+    if (!profile || !hasMore || loadingMore.current) return
+    const lastSpit = spits[spits.length - 1]
+    if (!lastSpit) return
+    fetchTabContent(profile.id, tab, lastSpit.created_at)
+  }, [profile, hasMore, spits, tab, fetchTabContent])
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const node = observerRef.current
+    if (!node) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isTabLoading) {
+          loadMoreTab()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasMore, isTabLoading, loadMoreTab])
 
   const handleFollow = async () => {
     if (!currentUser || !profile) return
@@ -418,9 +479,33 @@ export default function ProfilePage() {
             </span>
           </div>
 
-          {/* HP Bar */}
-          <div style={{ marginTop: '0.75rem' }}>
-            <HPBar hp={profileHp} maxHp={getMaxHp(userLevel)} size="md" />
+          {/* HP Bar + Active Buffs */}
+          <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ flex: 1 }}>
+              <HPBar hp={profileHp} maxHp={getMaxHp(userLevel)} size="md" />
+            </div>
+            {activeBuffs.map((buff) => (
+              <span
+                key={buff.buff_type}
+                title={buff.buff_type === 'firewall' ? 'Firewall Active' : `Kevlar Active (${buff.charges_remaining} charges)`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  padding: '0.2rem 0.5rem',
+                  fontSize: '0.75rem',
+                  fontFamily: 'var(--sys-font-mono)',
+                  background: buff.buff_type === 'firewall' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                  border: `1px solid ${buff.buff_type === 'firewall' ? 'rgba(59, 130, 246, 0.4)' : 'rgba(34, 197, 94, 0.4)'}`,
+                  borderRadius: '4px',
+                  color: buff.buff_type === 'firewall' ? '#3b82f6' : '#22c55e',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {buff.buff_type === 'firewall' ? '🛡️' : '🦺'}
+                {buff.buff_type === 'kevlar' && `×${buff.charges_remaining}`}
+              </span>
+            ))}
           </div>
 
           {/* XP Bar */}
@@ -509,7 +594,7 @@ export default function ProfilePage() {
       )}
 
       {/* Content */}
-      {isTabLoading ? (
+      {isTabLoading && spits.length === 0 ? (
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <div className="loading-spinner"></div>
         </div>
@@ -523,6 +608,14 @@ export default function ProfilePage() {
           {spits.filter(s => s.id !== pinnedSpit?.id).map((spit) => (
             <Spit key={spit.id} spit={spit} />
           ))}
+          <div ref={observerRef} style={{ padding: '1rem', textAlign: 'center' }}>
+            {loadingMore.current && <div className="loading-spinner"></div>}
+            {!hasMore && spits.length > 0 && (
+              <p style={{ color: 'var(--sys-text-muted)', fontFamily: 'var(--sys-font-mono)', fontSize: '0.8rem' }}>
+                {'// end of feed'}
+              </p>
+            )}
+          </div>
         </div>
       )}
 

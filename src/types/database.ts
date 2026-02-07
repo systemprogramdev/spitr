@@ -295,7 +295,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
+          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray' | 'level_up'
           actor_id: string
           spit_id: string | null
           reference_id: string | null
@@ -305,7 +305,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
+          type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray' | 'level_up'
           actor_id: string
           spit_id?: string | null
           reference_id?: string | null
@@ -315,7 +315,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer'
+          type?: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray' | 'level_up'
           actor_id?: string
           spit_id?: string | null
           reference_id?: string | null
@@ -849,7 +849,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray'
+      notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray' | 'level_up' | 'spray' | 'level_up'
       transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received' | 'chest_purchase'
       gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
       item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'

@@ -53,6 +53,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to award XP' }, { status: 500 })
   }
 
+  // Insert a notification when the user levels up
+  if (data.leveled_up) {
+    await adminClient.from('notifications').insert({
+      user_id: user.id,
+      actor_id: user.id,
+      type: 'level_up',
+      reference_id: String(data.level),
+    })
+  }
+
   return NextResponse.json({
     success: true,
     xp: data.xp,
