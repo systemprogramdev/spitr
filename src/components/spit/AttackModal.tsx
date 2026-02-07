@@ -8,12 +8,12 @@ import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
 import { toast } from '@/stores/toastStore'
 
-const WEAPON_SOUNDS: Record<string, 'knife' | 'gunshot' | 'drone'> = {
+const WEAPON_SOUNDS: Record<string, 'knife' | 'gunshot' | 'drone' | 'nuke'> = {
   knife: 'knife',
   gun: 'gunshot',
   soldier: 'gunshot',
   drone: 'drone',
-  nuke: 'drone',
+  nuke: 'nuke',
 }
 
 interface AttackModalProps {
@@ -59,11 +59,14 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
 
     if (data.success) {
       if (data.blocked) {
-        playSound('knife') // deflection sound
+        playSound('block')
         setResult({ damage: 0, newHp: data.newHp ?? 0, destroyed: false, blocked: true, blockedBy: data.blockedBy })
         await refreshInventory()
       } else {
         playSound(WEAPON_SOUNDS[weapon.type] || 'knife')
+        if (data.destroyed) {
+          setTimeout(() => playSound('destroy'), 400)
+        }
         awardXP('attack', targetId)
         setResult({ damage: data.damage, newHp: data.newHp, destroyed: data.destroyed })
         await refreshInventory()
@@ -96,7 +99,7 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
     const data = await res.json()
 
     if (data.success) {
-      playSound('gold')
+      playSound('spraypaint')
       setSprayResult(true)
       await refreshInventory()
     } else {

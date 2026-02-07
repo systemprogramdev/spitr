@@ -734,6 +734,22 @@ export default function GuidePage() {
               <span className="guide-table-value">Drone buzz</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">Nuke attack</span>
+              <span className="guide-table-value">Nuclear explosion</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Attack blocked</span>
+              <span className="guide-table-value">Shield deflection</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Target destroyed</span>
+              <span className="guide-table-value">Destruction sound</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Activate defense</span>
+              <span className="guide-table-value">Shield activate</span>
+            </div>
+            <div className="guide-table-row">
               <span className="guide-table-label">Open chest</span>
               <span className="guide-table-value">Chest opening</span>
             </div>
@@ -744,6 +760,22 @@ export default function GuidePage() {
             <div className="guide-table-row">
               <span className="guide-table-label">Gold / Transfers</span>
               <span className="guide-table-value">Gold coin clink</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Post a spit</span>
+              <span className="guide-table-value">Send whoosh</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Spray paint</span>
+              <span className="guide-table-value">Spray can hiss</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Level up</span>
+              <span className="guide-table-value">Level-up fanfare</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">New notification</span>
+              <span className="guide-table-value">Notification ping</span>
             </div>
           </div>
 

@@ -283,7 +283,7 @@ export function SpitModal() {
       }
 
       // Sound + XP
-      playSound('spit')
+      playSound('send')
       awardXP(replyToId ? 'reply' : 'post', newSpit?.id)
 
       const postedContent = content.trim()

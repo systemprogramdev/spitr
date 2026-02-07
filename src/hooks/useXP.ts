@@ -5,11 +5,13 @@ import { useAuthStore } from '@/stores/authStore'
 import { createClient } from '@/lib/supabase/client'
 import { XP_AMOUNTS } from '@/lib/xp'
 import { toast } from '@/stores/toastStore'
+import { useSound } from '@/hooks/useSound'
 
 const supabase = createClient()
 
 export function useXP() {
   const { user } = useAuthStore()
+  const { playSound } = useSound()
   const [xp, setXp] = useState(0)
   const [level, setLevel] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -50,6 +52,7 @@ export function useXP() {
           if (data.success) {
             setXp(data.xp)
             if (data.leveled_up) {
+              playSound('levelup')
               toast.success(`LEVEL UP! You're now Level ${data.level}! +100 Spits, +10 Gold, +1 Chest, HP fully restored!`)
             }
             setLevel(data.level)
@@ -57,7 +60,7 @@ export function useXP() {
         })
         .catch(() => {})
     },
-    [user]
+    [user, playSound]
   )
 
   return { xp, level, loading, awardXP, refreshXP: fetchXP }

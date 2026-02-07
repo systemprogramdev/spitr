@@ -283,7 +283,7 @@ function ShopPageContent() {
     const data = await res.json()
 
     if (data.success) {
-      playSound('gold')
+      playSound('shield')
       await refreshInventory()
       toast.success(`${item.name} activated! ${data.charges} charge${data.charges > 1 ? 's' : ''} remaining.`)
     } else {

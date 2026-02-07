@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
+import { useUIStore } from '@/stores/uiStore'
 
 const supabase = createClient()
 
@@ -50,6 +51,20 @@ function showBrowserNotification(type: string, actorHandle?: string) {
   }
 }
 
+let notifAudio: HTMLAudioElement | null = null
+function playNotificationSound() {
+  const soundEnabled = useUIStore.getState().soundEnabled
+  if (!soundEnabled || typeof window === 'undefined') return
+  try {
+    if (!notifAudio) {
+      notifAudio = new Audio('/sounds/notification.mp3')
+      notifAudio.volume = 0.5
+    }
+    notifAudio.currentTime = 0
+    notifAudio.play().catch(() => {})
+  } catch {}
+}
+
 export function useUnreadNotifications() {
   const { user } = useAuthStore()
   const [unreadCount, setUnreadCount] = useState(0)
@@ -89,6 +104,7 @@ export function useUnreadNotifications() {
           filter: `user_id=eq.${user.id}`,
         },
         async (payload: any) => {
+          playNotificationSound()
           setUnreadCount(c => {
             const newCount = c + 1
             updateBadge(newCount)
