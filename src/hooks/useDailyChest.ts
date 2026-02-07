@@ -7,17 +7,20 @@ import { useModalStore } from '@/stores/modalStore'
 
 const supabase = createClient()
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
+const CHECK_INTERVAL_MS = 60 * 60 * 1000 // Re-check every hour
 
 export function useDailyChest() {
   const { user } = useAuthStore()
   const { openChestClaimModal } = useModalStore()
-  const checkedRef = useRef(false)
+  const shownRef = useRef(false)
 
   useEffect(() => {
-    if (!user || checkedRef.current) return
-    checkedRef.current = true
+    if (!user) return
 
     const checkChest = async () => {
+      // Don't show again if already shown this session and not dismissed
+      if (shownRef.current) return
+
       const { data } = await supabase
         .from('users')
         .select('last_chest_claimed_at')
@@ -32,10 +35,20 @@ export function useDailyChest() {
       const now = Date.now()
 
       if (now - lastClaimed >= TWENTY_FOUR_HOURS_MS) {
+        shownRef.current = true
         openChestClaimModal()
       }
     }
 
+    // Check immediately on mount
     checkChest()
+
+    // Re-check every hour for long sessions
+    const interval = setInterval(() => {
+      shownRef.current = false
+      checkChest()
+    }, CHECK_INTERVAL_MS)
+
+    return () => clearInterval(interval)
   }, [user, openChestClaimModal])
 }
