@@ -219,7 +219,7 @@ export default function BankPage() {
       const data = await res.json()
       if (data.success) {
         toast.success('Ticket purchased!')
-        playSound('chest')
+        playSound('paper')
         awardXP('ticket_buy')
         refreshBank()
       } else {

@@ -99,7 +99,7 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
 
         // Play sound
         try {
-          const sound = data.isWinner ? '/sounds/levelup.mp3' : '/sounds/spit.mp3'
+          const sound = data.isWinner ? '/sounds/winning.mp3' : '/sounds/losing.mp3'
           new Audio(sound).play()
         } catch {}
       }

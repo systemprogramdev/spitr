@@ -133,8 +133,11 @@ export interface TicketTier {
 }
 
 export const TICKET_TIERS: TicketTier[] = [
+  { type: 'ping', name: 'Ping Scratch', cost: 1, currency: 'spit', emoji: '📡' },
   { type: 'phishing', name: 'Phishing Scratch', cost: 10, currency: 'spit', emoji: '🎣' },
   { type: 'buffer', name: 'Buffer Overflow', cost: 50, currency: 'spit', emoji: '💾' },
+  { type: 'ddos', name: 'DDoS Deluxe', cost: 100, currency: 'spit', emoji: '🌊' },
+  { type: 'token', name: 'Token Flip', cost: 1, currency: 'gold', emoji: '🪙' },
   { type: 'backdoor', name: 'Backdoor Access', cost: 5, currency: 'gold', emoji: '🔓' },
   { type: 'zeroday', name: 'Zero Day Exploit', cost: 25, currency: 'gold', emoji: '🐛' },
   { type: 'mainframe', name: 'Mainframe Jackpot', cost: 100, currency: 'gold', emoji: '🏛️' },
