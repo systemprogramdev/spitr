@@ -321,7 +321,7 @@ export default function BankPage() {
           <div className="bank-rate-bar">
             <div className="bank-rate-bar-info">
               <span className="bank-rate-bar-label">Interest Rate</span>
-              <span className="bank-rate-bar-value">{formatRate(currentRate)}/yr</span>
+              <span className="bank-rate-bar-value">{formatRate(currentRate)}/day</span>
             </div>
             <div className="bank-rate-bar-track">
               <div className="bank-rate-bar-fill" style={{ width: `${ratePosition * 100}%` }} />
@@ -362,7 +362,7 @@ export default function BankPage() {
                 <div className="bank-form-icon">+</div>
                 <div>
                   <h3 className="bank-form-title">Deposit</h3>
-                  <p className="bank-form-sub">Locks at {formatRate(currentRate)}/yr</p>
+                  <p className="bank-form-sub">Locks at {formatRate(currentRate)}/day</p>
                 </div>
               </div>
               <div className="bank-form-body">

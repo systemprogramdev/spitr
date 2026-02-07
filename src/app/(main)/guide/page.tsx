@@ -506,7 +506,7 @@ export default function GuidePage() {
           <div className="guide-list">
             <ul>
               <li>Deposit spits or gold from your wallet into the bank</li>
-              <li>The interest rate oscillates between <strong>0.50%</strong> and <strong>1.00%</strong> per year</li>
+              <li>The interest rate oscillates between <strong>0.50%</strong> and <strong>1.00%</strong> per day</li>
               <li>Your rate is <strong>locked at deposit time</strong> — it never changes</li>
               <li>Interest accrues continuously and shows in real-time</li>
               <li>Withdrawals floor to integers (no free fractions!)</li>

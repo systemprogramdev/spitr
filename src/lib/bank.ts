@@ -4,7 +4,7 @@ import { BankDeposit } from '@/types'
 // Interest Rate System
 // ============================================
 
-// Rate oscillates between 0.5% and 1% with a ~12 hour period
+// Rate oscillates between 0.5% and 1% daily with a ~12 hour period
 const MIN_RATE = 0.005
 const MAX_RATE = 0.01
 const RATE_PERIOD_MS = 12 * 60 * 60 * 1000 // 12 hours
@@ -33,7 +33,7 @@ export function calculateInterest(
   const nowTime = now.getTime()
   const daysElapsed = (nowTime - depositTime) / (86400 * 1000)
   if (daysElapsed <= 0) return 0
-  const interest = principal * (rate / 365) * daysElapsed
+  const interest = principal * rate * daysElapsed
   // Floor to 5 decimal places
   return Math.floor(interest * 100000) / 100000
 }
