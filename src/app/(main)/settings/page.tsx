@@ -6,11 +6,19 @@ import { useUIStore } from '@/stores/uiStore'
 import { toast } from '@/stores/toastStore'
 
 const themes = [
-  { id: 'terminal', name: 'Terminal', description: 'Classic green phosphor' },
   { id: 'neon', name: 'Neon', description: 'Vibrant cyberpunk colors' },
-  { id: 'hologram', name: 'Hologram', description: 'Futuristic blue glow' },
+  { id: 'terminal', name: 'Terminal', description: 'Classic green phosphor' },
   { id: 'terminal-amber', name: 'Amber', description: 'Warm amber monochrome' },
+  { id: 'hologram', name: 'Hologram', description: 'Futuristic blue glow' },
   { id: 'military', name: 'Military', description: 'Tactical ops style' },
+  { id: 'bloodline', name: 'Bloodline', description: 'Crimson red darkness' },
+  { id: 'ocean', name: 'Ocean', description: 'Deep sea blues' },
+  { id: 'synthwave', name: 'Synthwave', description: 'Purple & pink retro future' },
+  { id: 'toxic', name: 'Toxic', description: 'Radioactive lime green' },
+  { id: 'frost', name: 'Frost', description: 'Icy cool cyan glow' },
+  { id: 'retro', name: 'Retro', description: 'Warm orange nostalgia' },
+  { id: 'light', name: 'Light', description: 'Clean light mode' },
+  { id: 'light-cyber', name: 'Light Cyber', description: 'Light mode with edge' },
 ]
 
 export default function SettingsPage() {

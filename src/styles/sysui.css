@@ -307,6 +307,181 @@
   --sys-scanline-opacity: 0.01;
 }
 
+[data-theme="bloodline"] {
+  --sys-primary: #dc2626;
+  --sys-primary-rgb: 220, 38, 38;
+  --sys-secondary: #991b1b;
+  --sys-secondary-rgb: 153, 27, 27;
+  --sys-accent: #f87171;
+  --sys-accent-rgb: 248, 113, 113;
+  --sys-highlight: #ff4444;
+  --sys-highlight-rgb: 255, 68, 68;
+
+  --sys-success: #4ade80;
+  --sys-success-rgb: 74, 222, 128;
+  --sys-warning: #fbbf24;
+  --sys-warning-rgb: 251, 191, 36;
+  --sys-danger: #ff0000;
+  --sys-danger-rgb: 255, 0, 0;
+  --sys-info: #f87171;
+  --sys-info-rgb: 248, 113, 113;
+
+  --sys-bg: #0a0000;
+  --sys-bg-rgb: 10, 0, 0;
+  --sys-surface: #1a0505;
+  --sys-surface-rgb: 26, 5, 5;
+  --sys-surface-elevated: #2a0a0a;
+  --sys-border: #4a1515;
+
+  --sys-text: #fca5a5;
+  --sys-text-muted: #7f3333;
+  --sys-text-bright: #fef2f2;
+
+  --sys-glow-color: #dc2626;
+  --sys-glow-intensity: 0.9;
+  --sys-scanline-opacity: 0.06;
+}
+
+[data-theme="ocean"] {
+  --sys-primary: #0ea5e9;
+  --sys-primary-rgb: 14, 165, 233;
+  --sys-secondary: #06b6d4;
+  --sys-secondary-rgb: 6, 182, 212;
+  --sys-accent: #22d3ee;
+  --sys-accent-rgb: 34, 211, 238;
+  --sys-highlight: #38bdf8;
+  --sys-highlight-rgb: 56, 189, 248;
+
+  --sys-success: #34d399;
+  --sys-success-rgb: 52, 211, 153;
+  --sys-warning: #fbbf24;
+  --sys-warning-rgb: 251, 191, 36;
+  --sys-danger: #f43f5e;
+  --sys-danger-rgb: 244, 63, 94;
+  --sys-info: #38bdf8;
+  --sys-info-rgb: 56, 189, 248;
+
+  --sys-bg: #020617;
+  --sys-bg-rgb: 2, 6, 23;
+  --sys-surface: #0c1929;
+  --sys-surface-rgb: 12, 25, 41;
+  --sys-surface-elevated: #132338;
+  --sys-border: #1e3a5f;
+
+  --sys-text: #bae6fd;
+  --sys-text-muted: #4a7a9b;
+  --sys-text-bright: #f0f9ff;
+
+  --sys-glow-color: #0ea5e9;
+  --sys-glow-intensity: 0.7;
+  --sys-scanline-opacity: 0.04;
+}
+
+[data-theme="synthwave"] {
+  --sys-primary: #e879f9;
+  --sys-primary-rgb: 232, 121, 249;
+  --sys-secondary: #fb923c;
+  --sys-secondary-rgb: 251, 146, 60;
+  --sys-accent: #fbbf24;
+  --sys-accent-rgb: 251, 191, 36;
+  --sys-highlight: #f472b6;
+  --sys-highlight-rgb: 244, 114, 182;
+
+  --sys-success: #a3e635;
+  --sys-success-rgb: 163, 230, 53;
+  --sys-warning: #fbbf24;
+  --sys-warning-rgb: 251, 191, 36;
+  --sys-danger: #fb7185;
+  --sys-danger-rgb: 251, 113, 133;
+  --sys-info: #c084fc;
+  --sys-info-rgb: 192, 132, 252;
+
+  --sys-bg: #13071e;
+  --sys-bg-rgb: 19, 7, 30;
+  --sys-surface: #1e0a2e;
+  --sys-surface-rgb: 30, 10, 46;
+  --sys-surface-elevated: #2a1040;
+  --sys-border: #4c1d95;
+
+  --sys-text: #e9d5ff;
+  --sys-text-muted: #7e5baa;
+  --sys-text-bright: #faf5ff;
+
+  --sys-glow-color: #e879f9;
+  --sys-glow-intensity: 0.85;
+  --sys-scanline-opacity: 0.05;
+}
+
+[data-theme="toxic"] {
+  --sys-primary: #a3e635;
+  --sys-primary-rgb: 163, 230, 53;
+  --sys-secondary: #22c55e;
+  --sys-secondary-rgb: 34, 197, 94;
+  --sys-accent: #facc15;
+  --sys-accent-rgb: 250, 204, 21;
+  --sys-highlight: #84cc16;
+  --sys-highlight-rgb: 132, 204, 22;
+
+  --sys-success: #4ade80;
+  --sys-success-rgb: 74, 222, 128;
+  --sys-warning: #facc15;
+  --sys-warning-rgb: 250, 204, 21;
+  --sys-danger: #ef4444;
+  --sys-danger-rgb: 239, 68, 68;
+  --sys-info: #a3e635;
+  --sys-info-rgb: 163, 230, 53;
+
+  --sys-bg: #070a02;
+  --sys-bg-rgb: 7, 10, 2;
+  --sys-surface: #0f1505;
+  --sys-surface-rgb: 15, 21, 5;
+  --sys-surface-elevated: #1a2209;
+  --sys-border: #3d5c12;
+
+  --sys-text: #d9f99d;
+  --sys-text-muted: #5c7a24;
+  --sys-text-bright: #f7fee7;
+
+  --sys-glow-color: #a3e635;
+  --sys-glow-intensity: 0.8;
+  --sys-scanline-opacity: 0.07;
+}
+
+[data-theme="frost"] {
+  --sys-primary: #a5f3fc;
+  --sys-primary-rgb: 165, 243, 252;
+  --sys-secondary: #e0f2fe;
+  --sys-secondary-rgb: 224, 242, 254;
+  --sys-accent: #7dd3fc;
+  --sys-accent-rgb: 125, 211, 252;
+  --sys-highlight: #67e8f9;
+  --sys-highlight-rgb: 103, 232, 249;
+
+  --sys-success: #86efac;
+  --sys-success-rgb: 134, 239, 172;
+  --sys-warning: #fde68a;
+  --sys-warning-rgb: 253, 230, 138;
+  --sys-danger: #fca5a5;
+  --sys-danger-rgb: 252, 165, 165;
+  --sys-info: #bae6fd;
+  --sys-info-rgb: 186, 230, 253;
+
+  --sys-bg: #030a12;
+  --sys-bg-rgb: 3, 10, 18;
+  --sys-surface: #081825;
+  --sys-surface-rgb: 8, 24, 37;
+  --sys-surface-elevated: #0d2236;
+  --sys-border: #164e63;
+
+  --sys-text: #cffafe;
+  --sys-text-muted: #4b8fa5;
+  --sys-text-bright: #ecfeff;
+
+  --sys-glow-color: #a5f3fc;
+  --sys-glow-intensity: 0.6;
+  --sys-scanline-opacity: 0.03;
+}
+
 /* ============================================
    BASE RESET & TYPOGRAPHY
    ============================================ */
