@@ -5963,6 +5963,90 @@ details.accordion-item > div {
   border-radius: 2px 2px 0 0;
 }
 
+/* Shopping Bag Icon */
+.sys-icon-shopping-bag::before {
+  content: '';
+  width: 0.6em;
+  height: 0.5em;
+  border: 2px solid currentColor;
+  border-radius: 0 0 3px 3px;
+  transform: translateY(12%);
+}
+
+.sys-icon-shopping-bag::after {
+  content: '';
+  position: absolute;
+  top: 0.08em;
+  width: 0.3em;
+  height: 0.22em;
+  border: 2px solid currentColor;
+  border-bottom: none;
+  border-radius: 0.15em 0.15em 0 0;
+}
+
+/* Landmark / Bank Icon (triangle roof + base bar) */
+.sys-icon-landmark::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 0.45em solid transparent;
+  border-right: 0.45em solid transparent;
+  border-bottom: 0.3em solid currentColor;
+  transform: translateY(-30%);
+}
+
+.sys-icon-landmark::after {
+  content: '';
+  position: absolute;
+  bottom: 0.05em;
+  width: 0.75em;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 -0.15em 0 0 currentColor, 0 -0.3em 0 0 currentColor;
+}
+
+/* Book Open / Guide Icon */
+.sys-icon-book-open::before {
+  content: '';
+  width: 0.4em;
+  height: 0.55em;
+  border: 2px solid currentColor;
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+  transform: translateX(-15%) skewY(-4deg);
+}
+
+.sys-icon-book-open::after {
+  content: '';
+  position: absolute;
+  width: 0.4em;
+  height: 0.55em;
+  border: 2px solid currentColor;
+  border-left: none;
+  border-radius: 0 3px 3px 0;
+  transform: translateX(15%) skewY(4deg);
+}
+
+/* Log Out Icon */
+.sys-icon-log-out::before {
+  content: '';
+  width: 0.4em;
+  height: 0.6em;
+  border: 2px solid currentColor;
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+}
+
+.sys-icon-log-out::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  width: 0.35em;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0.12em -0.15em 0 -0.5px currentColor, 0.12em 0.15em 0 -0.5px currentColor;
+}
+
 /* ============================================
    MOBILE RESPONSIVE
    ============================================ */
