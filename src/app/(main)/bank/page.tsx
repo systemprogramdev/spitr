@@ -6,6 +6,7 @@ import { useCredits } from '@/hooks/useCredits'
 import { useGold } from '@/hooks/useGold'
 import { useBank } from '@/hooks/useBank'
 import { useSound } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 import { toast } from '@/stores/toastStore'
 import {
   getCurrentDailyRate,
@@ -45,6 +46,7 @@ export default function BankPage() {
     getGoldBankBalance,
   } = useBank()
   const { playSound } = useSound()
+  const { awardXP } = useXP()
 
   // Ticking state
   const [currentRate, setCurrentRate] = useState(getCurrentDailyRate())
@@ -102,6 +104,7 @@ export default function BankPage() {
       if (data.success) {
         toast.success(`Deposited ${amount} ${depositTab} at ${formatRate(data.lockedRate)}`)
         playSound('gold')
+        awardXP('bank_deposit')
         setDepositAmount('')
         refreshBank()
         if (depositTab === 'spit') refreshCredits()
@@ -130,6 +133,7 @@ export default function BankPage() {
       if (data.success) {
         toast.success(`Withdrew ${data.withdrawn} ${depositTab} to wallet`)
         playSound('gold')
+        awardXP('bank_withdraw')
         setWithdrawAmount('')
         refreshBank()
         if (depositTab === 'spit') refreshCredits()
@@ -158,6 +162,7 @@ export default function BankPage() {
       if (data.success) {
         toast.success(`Bought ${Number(data.sharesBought).toFixed(2)} shares at ${data.pricePerShare}/share`)
         playSound('gold')
+        awardXP('stock_buy')
         setBuyStockAmount('')
         refreshBank()
       } else {
@@ -184,6 +189,7 @@ export default function BankPage() {
       if (data.success) {
         toast.success(`Sold ${Number(data.sharesSold).toFixed(2)} shares for ${Number(data.proceeds).toFixed(2)} spits`)
         playSound('gold')
+        awardXP('stock_sell')
         setSellSharesAmount('')
         refreshBank()
       } else {
@@ -208,6 +214,7 @@ export default function BankPage() {
       if (data.success) {
         toast.success('Ticket purchased!')
         playSound('chest')
+        awardXP('ticket_buy')
         refreshBank()
       } else {
         toast.error(data.error || 'Ticket purchase failed')
@@ -220,6 +227,7 @@ export default function BankPage() {
   }
 
   const handleTicketScratched = (ticketId: string) => {
+    awardXP('ticket_scratch')
     setScratchedIds(prev => new Set(prev).add(ticketId))
     refreshBank()
   }

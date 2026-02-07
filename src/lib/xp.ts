@@ -8,6 +8,12 @@ export const XP_AMOUNTS: Record<string, number> = {
   transfer: 3,
   chest_open: 15,
   potion_use: 2,
+  bank_deposit: 5,
+  bank_withdraw: 3,
+  stock_buy: 8,
+  stock_sell: 8,
+  ticket_buy: 5,
+  ticket_scratch: 3,
 }
 
 // XP needed to reach a given level (cumulative)
