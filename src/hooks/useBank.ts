@@ -5,8 +5,35 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useBankStore } from '@/stores/bankStore'
 import { calculateBankBalance } from '@/lib/bank'
+import { BankDeposit, UserStockHolding, LotteryTicket } from '@/types'
 
 const supabase = createClient()
+
+// Supabase returns NUMERIC columns as strings — parse them to numbers
+function parseDeposit(d: Record<string, unknown>): BankDeposit {
+  return {
+    ...d,
+    principal: Number(d.principal),
+    locked_rate: Number(d.locked_rate),
+    withdrawn: Number(d.withdrawn),
+  } as BankDeposit
+}
+
+function parseHolding(h: Record<string, unknown>): UserStockHolding {
+  return {
+    ...h,
+    shares: Number(h.shares),
+    total_cost_basis: Number(h.total_cost_basis),
+  } as UserStockHolding
+}
+
+function parseTicket(t: Record<string, unknown>): LotteryTicket {
+  return {
+    ...t,
+    cost_amount: Number(t.cost_amount),
+    prize_amount: Number(t.prize_amount),
+  } as LotteryTicket
+}
 
 export function useBank() {
   const { user } = useAuthStore()
@@ -46,11 +73,12 @@ export function useBank() {
     ])
 
     if (depositsRes.data) {
-      setSpitDeposits(depositsRes.data.filter(d => d.currency === 'spit'))
-      setGoldDeposits(depositsRes.data.filter(d => d.currency === 'gold'))
+      const parsed = depositsRes.data.map(parseDeposit)
+      setSpitDeposits(parsed.filter(d => d.currency === 'spit'))
+      setGoldDeposits(parsed.filter(d => d.currency === 'gold'))
     }
-    setStockHolding(holdingRes.data || null)
-    if (ticketsRes.data) setUnscratchedTickets(ticketsRes.data)
+    setStockHolding(holdingRes.data ? parseHolding(holdingRes.data as Record<string, unknown>) : null)
+    if (ticketsRes.data) setUnscratchedTickets(ticketsRes.data.map(t => parseTicket(t as Record<string, unknown>)))
     setLoaded(true)
   }
 
