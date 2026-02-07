@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/authStore'
 import { useCredits } from '@/hooks/useCredits'
 import { SPIT_EFFECTS, EFFECT_COST } from '@/lib/effects'
 import { MentionAutocomplete } from '@/components/MentionAutocomplete'
+import { playSoundDirect } from '@/hooks/useSound'
+import { useXP } from '@/hooks/useXP'
 
 const IMAGE_COST = 50
 
@@ -18,6 +20,7 @@ interface SpitComposerProps {
 export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happening?" }: SpitComposerProps) {
   const { user } = useAuthStore()
   const { balance, deductAmount, hasCredits } = useCredits()
+  const { awardXP } = useXP()
   const [content, setContent] = useState('')
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
   const [showEffects, setShowEffects] = useState(false)
@@ -251,6 +254,9 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
           }
         }
       }
+
+      playSoundDirect('send')
+      awardXP(replyTo ? 'reply' : 'post', newSpit?.id)
 
       setContent('')
       setSelectedEffect(null)
