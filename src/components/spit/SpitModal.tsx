@@ -282,7 +282,7 @@ export function SpitModal() {
         }
       }
 
-      // Sound + XP
+      // Sound + XP — play sound before closing modal to ensure it fires
       playSound('send')
       awardXP(replyToId ? 'reply' : 'post', newSpit?.id)
 
@@ -292,7 +292,8 @@ export function SpitModal() {
       setShowEffects(false)
       setImageFile(null)
       setImagePreview(null)
-      closeSpitModal()
+      // Small delay so the sound has time to start playing before unmount
+      setTimeout(() => closeSpitModal(), 50)
 
       // Dispatch appropriate event
       if (replyToId) {
