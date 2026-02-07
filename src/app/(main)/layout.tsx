@@ -30,6 +30,7 @@ const navItems = [
   { href: '/bookmarks', label: 'Bookmarks', icon: 'bookmark' },
   { href: '/shop', label: 'Shop', icon: 'shopping-bag' },
   { href: '/bank', label: 'Bank', icon: 'landmark' },
+  { href: '/datacenter', label: 'Datacenter', icon: 'terminal' },
   { href: '/guide', label: 'Guide', icon: 'book-open' },
   { href: '/settings', label: 'Settings', icon: 'lock' },
 ]
@@ -197,6 +198,16 @@ export default function MainLayout({
                     <line x1="2" y1="20" x2="22" y2="20"/>
                   </svg>
                   <span>Bank</span>
+                </Link>
+
+                <Link href="/datacenter" className="mobile-menu-item">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2"/>
+                    <rect x="2" y="14" width="20" height="8" rx="2"/>
+                    <circle cx="6" cy="6" r="1" fill="currentColor"/>
+                    <circle cx="6" cy="18" r="1" fill="currentColor"/>
+                  </svg>
+                  <span>Datacenter</span>
                 </Link>
 
                 <Link href="/settings" className="mobile-menu-item">

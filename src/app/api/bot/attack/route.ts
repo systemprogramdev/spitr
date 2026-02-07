@@ -1,0 +1,170 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+
+export async function POST(request: NextRequest) {
+  const { context, error, status } = await validateBotRequest(request)
+  if (!context) return NextResponse.json({ error }, { status })
+
+  const { botUserId } = context
+
+  try {
+    const { targetUserId, targetSpitId, itemType, damage } = await request.json()
+
+    if (!itemType || !damage) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (!targetUserId && !targetSpitId) {
+      return NextResponse.json({ error: 'Must specify a target' }, { status: 400 })
+    }
+
+    // Check target user's defensive buffs
+    if (targetUserId) {
+      const { data: buffs } = await supabaseAdmin
+        .from('user_buffs')
+        .select('*')
+        .eq('user_id', targetUserId)
+
+      if (buffs && buffs.length > 0) {
+        // Check firewall first
+        const firewall = buffs.find(b => b.buff_type === 'firewall')
+        if (firewall) {
+          await supabaseAdmin.from('user_buffs').delete().eq('id', firewall.id)
+
+          // Deduct weapon from bot
+          const { data: inv } = await supabaseAdmin
+            .from('user_inventory')
+            .select('quantity')
+            .eq('user_id', botUserId)
+            .eq('item_type', itemType)
+            .single()
+
+          if (inv) {
+            if (inv.quantity <= 1) {
+              await supabaseAdmin.from('user_inventory').delete().eq('user_id', botUserId).eq('item_type', itemType)
+            } else {
+              await supabaseAdmin.from('user_inventory').update({ quantity: inv.quantity - 1 }).eq('user_id', botUserId).eq('item_type', itemType)
+            }
+          }
+
+          await supabaseAdmin.from('attack_log').insert({
+            attacker_id: botUserId,
+            target_user_id: targetUserId,
+            item_type: itemType,
+            damage: 0,
+          })
+
+          await supabaseAdmin.from('notifications').insert({
+            user_id: targetUserId,
+            type: 'attack',
+            actor_id: botUserId,
+            reference_id: itemType,
+          })
+
+          return NextResponse.json({ success: true, blocked: true, blockedBy: 'firewall', damage: 0 })
+        }
+
+        // Check kevlar
+        const kevlar = buffs.find(b => b.buff_type === 'kevlar')
+        if (kevlar && itemType !== 'drone' && itemType !== 'nuke') {
+          const newCharges = kevlar.charges_remaining - 1
+          if (newCharges <= 0) {
+            await supabaseAdmin.from('user_buffs').delete().eq('id', kevlar.id)
+          } else {
+            await supabaseAdmin.from('user_buffs').update({ charges_remaining: newCharges }).eq('id', kevlar.id)
+          }
+
+          const { data: inv } = await supabaseAdmin
+            .from('user_inventory')
+            .select('quantity')
+            .eq('user_id', botUserId)
+            .eq('item_type', itemType)
+            .single()
+
+          if (inv) {
+            if (inv.quantity <= 1) {
+              await supabaseAdmin.from('user_inventory').delete().eq('user_id', botUserId).eq('item_type', itemType)
+            } else {
+              await supabaseAdmin.from('user_inventory').update({ quantity: inv.quantity - 1 }).eq('user_id', botUserId).eq('item_type', itemType)
+            }
+          }
+
+          await supabaseAdmin.from('attack_log').insert({
+            attacker_id: botUserId,
+            target_user_id: targetUserId,
+            item_type: itemType,
+            damage: 0,
+          })
+
+          await supabaseAdmin.from('notifications').insert({
+            user_id: targetUserId,
+            type: 'attack',
+            actor_id: botUserId,
+            reference_id: itemType,
+          })
+
+          return NextResponse.json({ success: true, blocked: true, blockedBy: 'kevlar', chargesLeft: newCharges, damage: 0 })
+        }
+      }
+    }
+
+    // Perform the attack
+    const { data, error: rpcErr } = await supabaseAdmin.rpc('perform_attack', {
+      p_attacker_id: botUserId,
+      p_target_user_id: targetUserId || null,
+      p_target_spit_id: targetSpitId || null,
+      p_item_type: itemType,
+      p_damage: damage,
+    })
+
+    if (rpcErr) {
+      console.error('Bot attack RPC error:', rpcErr)
+      return NextResponse.json({ error: rpcErr.message }, { status: 500 })
+    }
+
+    const result = data as { success: boolean; error?: string; new_hp?: number; destroyed?: boolean; damage?: number }
+
+    if (!result.success) {
+      return NextResponse.json({ error: result.error || 'Attack failed' }, { status: 400 })
+    }
+
+    // Notify target
+    if (targetUserId && targetUserId !== botUserId) {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: targetUserId,
+        type: 'attack',
+        actor_id: botUserId,
+        spit_id: targetSpitId || null,
+        reference_id: itemType,
+      })
+    }
+
+    if (targetSpitId && !targetUserId) {
+      const { data: spit } = await supabaseAdmin
+        .from('spits')
+        .select('user_id')
+        .eq('id', targetSpitId)
+        .single()
+
+      if (spit && spit.user_id !== botUserId) {
+        await supabaseAdmin.from('notifications').insert({
+          user_id: spit.user_id,
+          type: 'attack',
+          actor_id: botUserId,
+          spit_id: targetSpitId,
+          reference_id: itemType,
+        })
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      newHp: result.new_hp,
+      destroyed: result.destroyed,
+      damage: result.damage,
+    })
+  } catch (err) {
+    console.error('Bot attack error:', err)
+    return NextResponse.json({ error: 'Attack failed' }, { status: 500 })
+  }
+}
