@@ -5321,6 +5321,204 @@ a:hover {
   color: var(--spit-green);
 }
 
+/* ---- Certificates of Deposit ---- */
+
+.bank-cd-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.625rem;
+  margin-bottom: 1rem;
+}
+
+.bank-cd-tier-card {
+  background: var(--sys-surface);
+  border: 2px solid var(--sys-border);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.bank-cd-tier-card:hover {
+  border-color: var(--sys-text-muted);
+}
+
+.bank-cd-tier-card.active {
+  border-color: var(--sys-primary);
+  background: rgba(var(--sys-primary-rgb), 0.06);
+}
+
+.bank-cd-tier-card.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--sys-primary);
+}
+
+.bank-cd-tier-badge {
+  display: inline-block;
+  background: var(--sys-primary);
+  color: var(--sys-bg);
+  font-family: var(--sys-font-display);
+  font-size: 0.9rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.bank-cd-tier-name {
+  font-family: var(--sys-font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sys-text);
+  margin-bottom: 0.125rem;
+}
+
+.bank-cd-tier-rate {
+  font-family: var(--sys-font-mono);
+  font-size: 0.8rem;
+  color: var(--spit-green);
+  font-weight: 600;
+}
+
+.bank-cd-form {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bank-cd-form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.bank-cd-form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Active CDs list */
+
+.bank-cd-list {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bank-cd-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.bank-cd-item:last-child {
+  border-bottom: none;
+}
+
+.bank-cd-item.matured {
+  background: rgba(var(--sys-primary-rgb), 0.04);
+}
+
+.bank-cd-item-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.bank-cd-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.bank-cd-item-term {
+  font-family: var(--sys-font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--sys-text);
+}
+
+.bank-cd-item-principal {
+  font-family: var(--sys-font-mono);
+  font-size: 0.75rem;
+  color: var(--sys-text-muted);
+}
+
+.bank-cd-item-payout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.bank-cd-item-payout-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sys-text-muted);
+}
+
+.bank-cd-item-payout-value {
+  font-family: var(--sys-font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sys-text);
+}
+
+.bank-cd-item-bonus {
+  color: var(--spit-green);
+  font-size: 0.75rem;
+}
+
+.bank-cd-item-action {
+  min-width: 80px;
+  text-align: right;
+}
+
+.bank-cd-item-time {
+  font-family: var(--sys-font-mono);
+  font-size: 0.75rem;
+  color: var(--sys-text-muted);
+}
+
+.bank-cd-redeem-btn {
+  padding: 0.3rem 0.875rem;
+  font-size: 0.8rem;
+}
+
+.bank-cd-progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bank-cd-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--spit-green), var(--spit-cyan));
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+
+.bank-cd-item.matured .bank-cd-progress-fill {
+  background: var(--sys-primary);
+  box-shadow: 0 0 8px rgba(var(--sys-primary-rgb), 0.4);
+}
+
 /* ---- Stock Market ---- */
 
 .bank-stock-header {
@@ -5712,6 +5910,20 @@ a:hover {
 
   .bank-stock-current {
     font-size: 1.3rem;
+  }
+
+  .bank-cd-form-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .bank-cd-item-top {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .bank-cd-item-action {
+    min-width: auto;
   }
 }
 

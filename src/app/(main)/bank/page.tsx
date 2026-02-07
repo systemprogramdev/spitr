@@ -686,18 +686,27 @@ export default function BankPage() {
           <h2 className="bank-section-heading">Certificates of Deposit</h2>
           <p className="bank-section-sub">Lock funds for a fixed term and earn a guaranteed return.</p>
 
-          <div className="bank-forms-row">
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon bank-form-icon-buy">📜</div>
-                <div>
-                  <h3 className="bank-form-title">Buy CD</h3>
-                  <p className="bank-form-sub">Deducts from wallet</p>
-                </div>
+          {/* CD Tier cards */}
+          <div className="bank-cd-tiers">
+            {CD_TIERS.map(tier => (
+              <div
+                key={tier.termDays}
+                className={`bank-cd-tier-card ${cdTerm === tier.termDays ? 'active' : ''}`}
+                onClick={() => setCdTerm(tier.termDays)}
+              >
+                <div className="bank-cd-tier-badge">{tier.termDays}d</div>
+                <div className="bank-cd-tier-name">{tier.name}</div>
+                <div className="bank-cd-tier-rate">{tier.description}</div>
               </div>
-              <div className="bank-form-body">
+            ))}
+          </div>
+
+          {/* Buy form */}
+          <div className="bank-cd-form">
+            <div className="bank-cd-form-row">
+              <div className="bank-cd-form-field">
                 <label className="bank-form-label">Currency</label>
-                <div className="bank-tabs" style={{ marginBottom: '0.75rem' }}>
+                <div className="bank-tabs">
                   <button
                     className={`bank-tab ${cdCurrency === 'spit' ? 'active' : ''}`}
                     onClick={() => setCdCurrency('spit')}
@@ -711,20 +720,8 @@ export default function BankPage() {
                     Gold
                   </button>
                 </div>
-
-                <label className="bank-form-label">Term</label>
-                <div className="bank-tabs" style={{ marginBottom: '0.75rem' }}>
-                  {CD_TIERS.map(tier => (
-                    <button
-                      key={tier.termDays}
-                      className={`bank-tab ${cdTerm === tier.termDays ? 'active' : ''}`}
-                      onClick={() => setCdTerm(tier.termDays)}
-                    >
-                      {tier.name} ({tier.description})
-                    </button>
-                  ))}
-                </div>
-
+              </div>
+              <div className="bank-cd-form-field" style={{ flex: 1 }}>
                 <label className="bank-form-label">Amount ({cdCurrency})</label>
                 <div className="bank-form-input-group">
                   <input
@@ -742,68 +739,75 @@ export default function BankPage() {
                     MAX
                   </button>
                 </div>
-                {cdAmount && parseInt(cdAmount) > 0 && (
-                  <div className="bank-form-preview">
-                    Payout: {Math.floor(parseInt(cdAmount) * (1 + (CD_TIERS.find(t => t.termDays === cdTerm)?.rate || 0)))} {cdCurrency} after {cdTerm} days
-                  </div>
-                )}
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleBuyCD}
-                  disabled={isBuyingCD || !cdAmount || parseInt(cdAmount) <= 0 || parseInt(cdAmount) > (cdCurrency === 'spit' ? walletSpits : walletGold)}
-                >
-                  {isBuyingCD ? 'Locking...' : 'Lock Funds'}
-                </button>
-                <div className="bank-form-footer">
-                  Wallet: <strong>{(cdCurrency === 'spit' ? walletSpits : walletGold).toLocaleString()}</strong> {cdCurrency}
-                </div>
               </div>
+            </div>
+            {cdAmount && parseInt(cdAmount) > 0 && (
+              <div className="bank-form-preview">
+                Payout: {Math.floor(parseInt(cdAmount) * (1 + (CD_TIERS.find(t => t.termDays === cdTerm)?.rate || 0)))} {cdCurrency} after {cdTerm} days
+              </div>
+            )}
+            <button
+              className="btn btn-primary bank-form-submit"
+              onClick={handleBuyCD}
+              disabled={isBuyingCD || !cdAmount || parseInt(cdAmount) <= 0 || parseInt(cdAmount) > (cdCurrency === 'spit' ? walletSpits : walletGold)}
+            >
+              {isBuyingCD ? 'Locking...' : `Lock in ${cdTerm}-Day CD`}
+            </button>
+            <div className="bank-form-footer">
+              Wallet: <strong>{(cdCurrency === 'spit' ? walletSpits : walletGold).toLocaleString()}</strong> {cdCurrency}
             </div>
           </div>
 
           {/* Active CDs */}
           {activeCDs.length > 0 && (
-            <div className="bank-deposits-list">
+            <div className="bank-cd-list">
               <h3 className="bank-deposits-list-title">
                 Active CDs ({activeCDs.length})
               </h3>
-              <div className="bank-deposits-table-header">
-                <span>Principal</span>
-                <span>Return</span>
-                <span>Matures</span>
-                <span>Action</span>
-              </div>
               {activeCDs.map((cd) => {
                 const maturesAt = new Date(cd.matures_at)
                 const isMatured = new Date() >= maturesAt
-                const payout = Math.floor(cd.principal * (1 + cd.rate))
+                const bonus = Math.floor(cd.principal * cd.rate)
+                const payout = Math.floor(cd.principal) + bonus
+                const totalMs = cd.term_days * 86400000
+                const elapsed = Date.now() - new Date(cd.created_at).getTime()
+                const progress = isMatured ? 100 : Math.min(100, (elapsed / totalMs) * 100)
                 const timeLeft = isMatured
-                  ? 'Matured'
+                  ? 'Ready!'
                   : (() => {
                       const ms = maturesAt.getTime() - Date.now()
                       const days = Math.floor(ms / 86400000)
                       const hours = Math.floor((ms % 86400000) / 3600000)
-                      return days > 0 ? `${days}d ${hours}h` : `${hours}h`
+                      return days > 0 ? `${days}d ${hours}h left` : `${hours}h left`
                     })()
                 return (
-                  <div key={cd.id} className="bank-deposit-row">
-                    <span className="bank-deposit-principal">{cd.principal.toFixed(0)} {cd.currency}</span>
-                    <span className="bank-deposit-rate">{(cd.rate * 100).toFixed(0)}% → {payout}</span>
-                    <span className="bank-deposit-time">{timeLeft}</span>
-                    <span>
-                      {isMatured ? (
-                        <button
-                          className="btn btn-primary"
-                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-                          onClick={() => handleRedeemCD(cd.id)}
-                          disabled={redeemingCdId === cd.id}
-                        >
-                          {redeemingCdId === cd.id ? '...' : 'Redeem'}
-                        </button>
-                      ) : (
-                        <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.8rem' }}>Locked</span>
-                      )}
-                    </span>
+                  <div key={cd.id} className={`bank-cd-item ${isMatured ? 'matured' : ''}`}>
+                    <div className="bank-cd-item-top">
+                      <div className="bank-cd-item-info">
+                        <span className="bank-cd-item-term">{cd.term_days}-Day CD</span>
+                        <span className="bank-cd-item-principal">{cd.principal.toFixed(0)} {cd.currency}</span>
+                      </div>
+                      <div className="bank-cd-item-payout">
+                        <span className="bank-cd-item-payout-label">Payout</span>
+                        <span className="bank-cd-item-payout-value">{payout} <span className="bank-cd-item-bonus">(+{bonus})</span></span>
+                      </div>
+                      <div className="bank-cd-item-action">
+                        {isMatured ? (
+                          <button
+                            className="btn btn-primary bank-cd-redeem-btn"
+                            onClick={() => handleRedeemCD(cd.id)}
+                            disabled={redeemingCdId === cd.id}
+                          >
+                            {redeemingCdId === cd.id ? '...' : 'Redeem'}
+                          </button>
+                        ) : (
+                          <span className="bank-cd-item-time">{timeLeft}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="bank-cd-progress-track">
+                      <div className="bank-cd-progress-fill" style={{ width: `${progress}%` }} />
+                    </div>
                   </div>
                 )
               })}
