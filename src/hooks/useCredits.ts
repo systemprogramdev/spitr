@@ -154,12 +154,42 @@ export function useCredits() {
     return true
   }
 
+  const addAmount = async (
+    amount: number,
+    type: 'convert' | 'like_reward' | 'transfer_received',
+    referenceId?: string
+  ) => {
+    const currentBalance = useCreditsStore.getState().balance
+    if (!user) return false
+
+    const newBalance = currentBalance + amount
+
+    const { error } = await supabase
+      .from('user_credits')
+      .update({ balance: newBalance })
+      .eq('user_id', user.id)
+
+    if (error) return false
+
+    await supabase.from('credit_transactions').insert({
+      user_id: user.id,
+      type,
+      amount,
+      balance_after: newBalance,
+      reference_id: referenceId,
+    })
+
+    setBalance(newBalance)
+    return true
+  }
+
   const hasCredits = (amount = 1) => balance >= amount
 
   return {
     balance,
     deductCredit,
     deductAmount,
+    addAmount,
     hasCredits,
     refreshBalance,
   }

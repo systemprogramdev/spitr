@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useCredits } from '@/hooks/useCredits'
 import { useGold } from '@/hooks/useGold'
+import { SPIT_TO_GOLD_RATIO } from '@/lib/items'
 import { useBank } from '@/hooks/useBank'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
@@ -34,8 +35,8 @@ function timeAgo(dateStr: string) {
 
 export default function BankPage() {
   const { user } = useAuthStore()
-  const { balance: walletSpits, refreshBalance: refreshCredits } = useCredits()
-  const { balance: walletGold, refreshBalance: refreshGold } = useGold()
+  const { balance: walletSpits, deductAmount, addAmount, refreshBalance: refreshCredits } = useCredits()
+  const { balance: walletGold, deductGold, addGold, refreshBalance: refreshGold } = useGold()
   const {
     spitDeposits,
     goldDeposits,
@@ -68,6 +69,10 @@ export default function BankPage() {
   const [buyingTicket, setBuyingTicket] = useState<string | null>(null)
   const [chartDays, setChartDays] = useState(30)
   const [scratchedIds, setScratchedIds] = useState<Set<string>>(new Set())
+  const [spitToGoldAmount, setSpitToGoldAmount] = useState('')
+  const [goldToSpitAmount, setGoldToSpitAmount] = useState('')
+  const [isConvertingToGold, setIsConvertingToGold] = useState(false)
+  const [isConvertingToSpit, setIsConvertingToSpit] = useState(false)
 
   // Tick rate + stock price every second
   useEffect(() => {
@@ -233,6 +238,57 @@ export default function BankPage() {
     refreshBank()
   }
 
+  const handleConvertToGold = async () => {
+    if (!user || isConvertingToGold) return
+    const spits = parseInt(spitToGoldAmount, 10)
+    if (isNaN(spits) || spits < SPIT_TO_GOLD_RATIO) return
+
+    const goldToGet = Math.floor(spits / SPIT_TO_GOLD_RATIO)
+    const actualCost = goldToGet * SPIT_TO_GOLD_RATIO
+
+    setIsConvertingToGold(true)
+    const deducted = await deductAmount(actualCost, 'convert', 'gold_convert')
+    if (!deducted) {
+      toast.warning('Insufficient spits!')
+      setIsConvertingToGold(false)
+      return
+    }
+    const added = await addGold(goldToGet, 'convert')
+    if (!added) {
+      toast.error('Failed to add gold')
+    } else {
+      toast.success(`Converted ${actualCost} spits → ${goldToGet} gold`)
+      playSound('gold')
+    }
+    setSpitToGoldAmount('')
+    setIsConvertingToGold(false)
+  }
+
+  const handleConvertToSpit = async () => {
+    if (!user || isConvertingToSpit) return
+    const gold = parseInt(goldToSpitAmount, 10)
+    if (isNaN(gold) || gold < 1) return
+
+    const spitsToGet = gold * SPIT_TO_GOLD_RATIO
+
+    setIsConvertingToSpit(true)
+    const deducted = await deductGold(gold, 'convert', 'spit_convert')
+    if (!deducted) {
+      toast.warning('Insufficient gold!')
+      setIsConvertingToSpit(false)
+      return
+    }
+    const added = await addAmount(spitsToGet, 'convert', 'gold_convert')
+    if (!added) {
+      toast.error('Failed to add spits')
+    } else {
+      toast.success(`Converted ${gold} gold → ${spitsToGet} spits`)
+      playSound('gold')
+    }
+    setGoldToSpitAmount('')
+    setIsConvertingToSpit(false)
+  }
+
   // ---- Computed ----
 
   const currentShares = stockHolding?.shares || 0
@@ -330,6 +386,105 @@ export default function BankPage() {
               <span>0.50%</span>
               <span>locked at deposit</span>
               <span>1.00%</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ============================================ */}
+        {/* CONVERT */}
+        {/* ============================================ */}
+        <section className="bank-section">
+          <h2 className="bank-section-heading">Convert Currency</h2>
+
+          <div className="bank-forms-row">
+            {/* Spits → Gold */}
+            <div className="bank-form-card">
+              <div className="bank-form-header">
+                <div className="bank-form-icon bank-form-icon-buy">🔄</div>
+                <div>
+                  <h3 className="bank-form-title">Spits → Gold</h3>
+                  <p className="bank-form-sub">{SPIT_TO_GOLD_RATIO} spits = 1 gold</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Spits to convert</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder={`Min ${SPIT_TO_GOLD_RATIO}`}
+                    value={spitToGoldAmount}
+                    onChange={(e) => setSpitToGoldAmount(e.target.value)}
+                    min={SPIT_TO_GOLD_RATIO}
+                  />
+                  <button
+                    className="bank-form-max-btn"
+                    onClick={() => setSpitToGoldAmount(String(walletSpits))}
+                  >
+                    MAX
+                  </button>
+                </div>
+                {spitToGoldAmount && parseInt(spitToGoldAmount) >= SPIT_TO_GOLD_RATIO && (
+                  <div className="bank-form-preview">
+                    = {Math.floor(parseInt(spitToGoldAmount) / SPIT_TO_GOLD_RATIO)} gold
+                  </div>
+                )}
+                <button
+                  className="btn btn-primary bank-form-submit"
+                  onClick={handleConvertToGold}
+                  disabled={isConvertingToGold || !spitToGoldAmount || parseInt(spitToGoldAmount) < SPIT_TO_GOLD_RATIO || parseInt(spitToGoldAmount) > walletSpits}
+                >
+                  {isConvertingToGold ? 'Converting...' : 'Convert'}
+                </button>
+                <div className="bank-form-footer">
+                  Wallet: <strong>{walletSpits.toLocaleString()}</strong> spits
+                </div>
+              </div>
+            </div>
+
+            {/* Gold → Spits */}
+            <div className="bank-form-card">
+              <div className="bank-form-header">
+                <div className="bank-form-icon bank-form-icon-sell">🔄</div>
+                <div>
+                  <h3 className="bank-form-title">Gold → Spits</h3>
+                  <p className="bank-form-sub">1 gold = {SPIT_TO_GOLD_RATIO} spits</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Gold to convert</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder="Min 1"
+                    value={goldToSpitAmount}
+                    onChange={(e) => setGoldToSpitAmount(e.target.value)}
+                    min="1"
+                  />
+                  <button
+                    className="bank-form-max-btn"
+                    onClick={() => setGoldToSpitAmount(String(walletGold))}
+                  >
+                    MAX
+                  </button>
+                </div>
+                {goldToSpitAmount && parseInt(goldToSpitAmount) >= 1 && (
+                  <div className="bank-form-preview">
+                    = {parseInt(goldToSpitAmount) * SPIT_TO_GOLD_RATIO} spits
+                  </div>
+                )}
+                <button
+                  className="btn btn-primary bank-form-submit"
+                  onClick={handleConvertToSpit}
+                  disabled={isConvertingToSpit || !goldToSpitAmount || parseInt(goldToSpitAmount) < 1 || parseInt(goldToSpitAmount) > walletGold}
+                >
+                  {isConvertingToSpit ? 'Converting...' : 'Convert'}
+                </button>
+                <div className="bank-form-footer">
+                  Wallet: <strong>{walletGold.toLocaleString()}</strong> gold
+                </div>
+              </div>
             </div>
           </div>
         </section>
