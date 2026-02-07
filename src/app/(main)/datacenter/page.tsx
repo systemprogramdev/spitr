@@ -59,19 +59,16 @@ export default function DatacenterPage() {
   const { balance: goldBalance, refreshBalance: refreshGold } = useGold()
   const { playSound } = useSound()
 
-  // Buy form state
   const [botName, setBotName] = useState('')
   const [botHandle, setBotHandle] = useState('')
   const [botPersonality, setBotPersonality] = useState('neutral')
   const [isPurchasing, setIsPurchasing] = useState(false)
 
-  // Bots list state
   const [bots, setBots] = useState<Bot[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedBot, setExpandedBot] = useState<string | null>(null)
   const [savingConfig, setSavingConfig] = useState<string | null>(null)
 
-  // Config edit state (per expanded bot)
   const [editPersonality, setEditPersonality] = useState('')
   const [editCombatStrategy, setEditCombatStrategy] = useState('')
   const [editBankingStrategy, setEditBankingStrategy] = useState('')
@@ -213,26 +210,26 @@ export default function DatacenterPage() {
   }
 
   return (
-    <div className="bank-content">
-      {/* Header */}
-      <div className="bank-header">
-        <h1 className="bank-title">Datacenter</h1>
-        <p className="bank-subtitle">Deploy AI bots to automate your empire</p>
-      </div>
+    <div>
+      <header className="feed-header">
+        <h1 className="text-glow" style={{ fontSize: '1.25rem', fontWeight: 'bold', fontFamily: 'var(--sys-font-display)' }}>
+          Datacenter
+        </h1>
+      </header>
 
-      {/* Buy a Bot Section */}
-      <div className="bank-section">
-        <div className="bank-form-card">
-          <div className="bank-form-header">
-            <span>Deploy New Bot</span>
-          </div>
-          <div className="bank-form-body">
-            <div className="dc-form-grid">
-              <div className="dc-form-field">
+      <div className="dc-content">
+        {/* Deploy New Bot */}
+        <section className="dc-section">
+          <h2 className="dc-section-heading">Deploy New Bot</h2>
+          <p className="dc-section-sub">Purchase an AI bot to automate actions on your behalf</p>
+
+          <div className="dc-deploy-card">
+            <div className="dc-deploy-fields">
+              <div className="dc-field">
                 <label className="dc-label">Bot Name</label>
                 <input
                   type="text"
-                  className="bank-form-input"
+                  className="dc-input"
                   placeholder="My Bot"
                   value={botName}
                   onChange={e => setBotName(e.target.value)}
@@ -240,13 +237,13 @@ export default function DatacenterPage() {
                 />
               </div>
 
-              <div className="dc-form-field">
+              <div className="dc-field">
                 <label className="dc-label">Handle</label>
-                <div className="dc-handle-input">
-                  <span className="dc-handle-prefix">@</span>
+                <div className="dc-handle-wrap">
+                  <span className="dc-handle-at">@</span>
                   <input
                     type="text"
-                    className="bank-form-input"
+                    className="dc-input dc-input-handle"
                     placeholder="my_bot"
                     value={botHandle}
                     onChange={e => setBotHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
@@ -255,10 +252,10 @@ export default function DatacenterPage() {
                 </div>
               </div>
 
-              <div className="dc-form-field">
+              <div className="dc-field">
                 <label className="dc-label">Personality</label>
                 <select
-                  className="bank-form-input"
+                  className="dc-input"
                   value={botPersonality}
                   onChange={e => setBotPersonality(e.target.value)}
                 >
@@ -269,61 +266,65 @@ export default function DatacenterPage() {
               </div>
             </div>
 
-            <div className="dc-buy-buttons">
+            <div className="dc-deploy-actions">
               <button
                 className="btn btn-primary"
                 onClick={() => handlePurchase('spits')}
                 disabled={isPurchasing}
               >
-                {isPurchasing ? 'Deploying...' : 'Buy with 1,000 Spits'}
+                {isPurchasing ? 'Deploying...' : '1,000 Spits'}
               </button>
               <button
-                className="btn btn-primary dc-btn-gold"
+                className="dc-btn-gold"
                 onClick={() => handlePurchase('gold')}
                 disabled={isPurchasing}
               >
-                {isPurchasing ? 'Deploying...' : 'Buy with 100 Gold'}
+                {isPurchasing ? 'Deploying...' : '100 Gold'}
               </button>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* My Bots Section */}
-      <div className="bank-section">
-        <div className="bank-form-card">
-          <div className="bank-form-header">
-            <span>My Bots</span>
-            <span className="dc-bot-count">{bots.length}</span>
+        {/* My Bots */}
+        <section className="dc-section">
+          <div className="dc-bots-heading">
+            <h2 className="dc-section-heading" style={{ marginBottom: 0 }}>My Bots</h2>
+            {bots.length > 0 && <span className="dc-count">{bots.length}</span>}
           </div>
-          <div className="bank-form-body" style={{ padding: 0 }}>
-            {loading ? (
-              <div className="dc-empty">Loading...</div>
-            ) : bots.length === 0 ? (
-              <div className="dc-empty">No bots yet. Deploy your first bot above!</div>
-            ) : (
-              bots.map(bot => (
-                <div key={bot.id} className="dc-bot-card">
-                  <div className="dc-bot-header" onClick={() => expandBot(bot)}>
-                    <div className="dc-bot-info">
-                      <div className="dc-bot-name">{bot.name}</div>
-                      <div className="dc-bot-handle">@{bot.handle}</div>
-                      <span className={`dc-badge dc-badge-${bot.personality}`}>
+
+          {loading ? (
+            <div className="dc-empty">Loading...</div>
+          ) : bots.length === 0 ? (
+            <div className="dc-empty">No bots deployed yet</div>
+          ) : (
+            <div className="dc-bot-list">
+              {bots.map(bot => (
+                <div key={bot.id} className={`dc-bot ${expandedBot === bot.id ? 'dc-bot-expanded' : ''}`}>
+                  <div className="dc-bot-row" onClick={() => expandBot(bot)}>
+                    <div className="dc-bot-left">
+                      <div className="dc-bot-avatar">
+                        {bot.name[0]?.toUpperCase() || '?'}
+                      </div>
+                      <div className="dc-bot-meta">
+                        <span className="dc-bot-name">{bot.name}</span>
+                        <span className="dc-bot-handle">@{bot.handle}</span>
+                      </div>
+                      <span className={`dc-pill dc-pill-${bot.personality}`}>
                         {bot.personality}
                       </span>
                     </div>
-                    <div className="dc-bot-actions">
+                    <div className="dc-bot-right">
                       <button
-                        className={`dc-toggle ${bot.is_active ? 'dc-toggle-on' : ''}`}
+                        className={`dc-switch ${bot.is_active ? 'dc-switch-on' : ''}`}
                         onClick={e => { e.stopPropagation(); handleToggleActive(bot) }}
                         title={bot.is_active ? 'Deactivate' : 'Activate'}
                       >
-                        <div className="dc-toggle-knob" />
+                        <div className="dc-switch-thumb" />
                       </button>
                       <svg
-                        width="16" height="16" viewBox="0 0 24 24"
+                        width="14" height="14" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" strokeWidth="2"
-                        className={`dc-chevron ${expandedBot === bot.id ? 'dc-chevron-open' : ''}`}
+                        className={`dc-caret ${expandedBot === bot.id ? 'dc-caret-open' : ''}`}
                       >
                         <polyline points="6 9 12 15 18 9"/>
                       </svg>
@@ -331,12 +332,12 @@ export default function DatacenterPage() {
                   </div>
 
                   {expandedBot === bot.id && (
-                    <div className="dc-bot-config">
-                      <div className="dc-config-grid">
-                        <div className="dc-form-field">
+                    <div className="dc-bot-panel">
+                      <div className="dc-panel-grid">
+                        <div className="dc-field">
                           <label className="dc-label">Personality</label>
                           <select
-                            className="bank-form-input"
+                            className="dc-input"
                             value={editPersonality}
                             onChange={e => setEditPersonality(e.target.value)}
                           >
@@ -346,10 +347,10 @@ export default function DatacenterPage() {
                           </select>
                         </div>
 
-                        <div className="dc-form-field">
-                          <label className="dc-label">Combat Strategy</label>
+                        <div className="dc-field">
+                          <label className="dc-label">Combat</label>
                           <select
-                            className="bank-form-input"
+                            className="dc-input"
                             value={editCombatStrategy}
                             onChange={e => setEditCombatStrategy(e.target.value)}
                           >
@@ -359,10 +360,10 @@ export default function DatacenterPage() {
                           </select>
                         </div>
 
-                        <div className="dc-form-field">
-                          <label className="dc-label">Banking Strategy</label>
+                        <div className="dc-field">
+                          <label className="dc-label">Banking</label>
                           <select
-                            className="bank-form-input"
+                            className="dc-input"
                             value={editBankingStrategy}
                             onChange={e => setEditBankingStrategy(e.target.value)}
                           >
@@ -372,8 +373,8 @@ export default function DatacenterPage() {
                           </select>
                         </div>
 
-                        <div className="dc-form-field">
-                          <label className="dc-label">Auto-Heal Threshold: {editAutoHeal}%</label>
+                        <div className="dc-field">
+                          <label className="dc-label">Auto-Heal: {editAutoHeal}%</label>
                           <input
                             type="range"
                             min={10}
@@ -381,16 +382,16 @@ export default function DatacenterPage() {
                             step={5}
                             value={editAutoHeal}
                             onChange={e => setEditAutoHeal(Number(e.target.value))}
-                            className="dc-slider"
+                            className="dc-range"
                           />
                         </div>
                       </div>
 
-                      <div className="dc-form-field">
-                        <label className="dc-label">Custom Prompt (optional)</label>
+                      <div className="dc-field">
+                        <label className="dc-label">Custom Prompt</label>
                         <textarea
-                          className="bank-form-input dc-textarea"
-                          placeholder="Additional instructions for the bot's LLM..."
+                          className="dc-input dc-textarea"
+                          placeholder="Additional instructions for the bot LLM..."
                           value={editCustomPrompt}
                           onChange={e => setEditCustomPrompt(e.target.value)}
                           rows={3}
@@ -399,7 +400,7 @@ export default function DatacenterPage() {
                       </div>
 
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-primary dc-save-btn"
                         onClick={() => handleSaveConfig(bot.id)}
                         disabled={savingConfig === bot.id}
                       >
@@ -408,10 +409,10 @@ export default function DatacenterPage() {
                     </div>
                   )}
                 </div>
-              ))
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )
