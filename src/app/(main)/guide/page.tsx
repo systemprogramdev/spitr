@@ -513,6 +513,18 @@ export default function GuidePage() {
             </ul>
           </div>
 
+          <h3 className="guide-subheading">Certificates of Deposit (CDs)</h3>
+          <div className="guide-list">
+            <ul>
+              <li>Lock spits or gold from your wallet for a fixed term</li>
+              <li><strong>7-Day CD</strong> — 10% return on principal</li>
+              <li><strong>30-Day CD</strong> — 20% return on principal</li>
+              <li>Funds are locked until the CD matures — no early withdrawal</li>
+              <li>Once matured, redeem to receive principal + bonus to your wallet</li>
+              <li>Guaranteed returns — no risk!</li>
+            </ul>
+          </div>
+
           <h3 className="guide-subheading">Stock Market ($SPIT)</h3>
           <div className="guide-list">
             <ul>
@@ -589,6 +601,14 @@ export default function GuidePage() {
               <span className="guide-table-label">Scratch ticket</span>
               <span className="guide-table-value">+3 XP</span>
             </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Buy CD</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Redeem CD</span>
+              <span className="guide-table-value">+8 XP</span>
+            </div>
           </div>
         </section>
 
@@ -657,6 +677,14 @@ export default function GuidePage() {
             <div className="guide-table-row">
               <span className="guide-table-label">Scratch ticket</span>
               <span className="guide-table-value">+3 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Buy CD</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Redeem CD</span>
+              <span className="guide-table-value">+8 XP</span>
             </div>
           </div>
 

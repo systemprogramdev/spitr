@@ -940,6 +940,49 @@ export type Database = {
           }
         ]
       }
+      bank_cds: {
+        Row: {
+          id: string
+          user_id: string
+          currency: string
+          principal: number
+          rate: number
+          term_days: number
+          created_at: string
+          matures_at: string
+          redeemed: boolean
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          currency: string
+          principal: number
+          rate: number
+          term_days: number
+          created_at?: string
+          matures_at: string
+          redeemed?: boolean
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          currency?: string
+          principal?: number
+          rate?: number
+          term_days?: number
+          created_at?: string
+          matures_at?: string
+          redeemed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_cds_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       lottery_tickets: {
         Row: {
           id: string
@@ -1033,6 +1076,7 @@ export type BankDeposit = Database['public']['Tables']['bank_deposits']['Row']
 export type UserStockHolding = Database['public']['Tables']['user_stock_holdings']['Row']
 export type StockTransaction = Database['public']['Tables']['stock_transactions']['Row']
 export type LotteryTicket = Database['public']['Tables']['lottery_tickets']['Row']
+export type BankCD = Database['public']['Tables']['bank_cds']['Row']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {

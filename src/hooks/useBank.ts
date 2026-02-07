@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useBankStore } from '@/stores/bankStore'
 import { calculateBankBalance } from '@/lib/bank'
-import { BankDeposit, UserStockHolding, LotteryTicket } from '@/types'
+import { BankDeposit, UserStockHolding, LotteryTicket, BankCD } from '@/types'
 
 const supabase = createClient()
 
@@ -35,6 +35,15 @@ function parseTicket(t: Record<string, unknown>): LotteryTicket {
   } as LotteryTicket
 }
 
+function parseCD(c: Record<string, unknown>): BankCD {
+  return {
+    ...c,
+    principal: Number(c.principal),
+    rate: Number(c.rate),
+    term_days: Number(c.term_days),
+  } as BankCD
+}
+
 export function useBank() {
   const { user } = useAuthStore()
   const {
@@ -42,18 +51,20 @@ export function useBank() {
     goldDeposits,
     stockHolding,
     unscratchedTickets,
+    activeCDs,
     loaded,
     setSpitDeposits,
     setGoldDeposits,
     setStockHolding,
     setUnscratchedTickets,
+    setActiveCDs,
     setLoaded,
   } = useBankStore()
 
   const refresh = async () => {
     if (!user) return
 
-    const [depositsRes, holdingRes, ticketsRes] = await Promise.all([
+    const [depositsRes, holdingRes, ticketsRes, cdsRes] = await Promise.all([
       supabase
         .from('bank_deposits')
         .select('*')
@@ -70,6 +81,12 @@ export function useBank() {
         .eq('user_id', user.id)
         .eq('scratched', false)
         .order('created_at', { ascending: false }),
+      supabase
+        .from('bank_cds')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('redeemed', false)
+        .order('created_at', { ascending: false }),
     ])
 
     if (depositsRes.data) {
@@ -79,6 +96,7 @@ export function useBank() {
     }
     setStockHolding(holdingRes.data ? parseHolding(holdingRes.data as Record<string, unknown>) : null)
     if (ticketsRes.data) setUnscratchedTickets(ticketsRes.data.map(t => parseTicket(t as Record<string, unknown>)))
+    if (cdsRes.data) setActiveCDs(cdsRes.data.map(c => parseCD(c as Record<string, unknown>)))
     setLoaded(true)
   }
 
@@ -98,6 +116,7 @@ export function useBank() {
     goldDeposits,
     stockHolding,
     unscratchedTickets,
+    activeCDs,
     loaded,
     refresh,
     getSpitBankBalance,

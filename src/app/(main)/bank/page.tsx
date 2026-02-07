@@ -16,6 +16,7 @@ import {
   calculateInterest,
   getStockPrice,
   TICKET_TIERS,
+  CD_TIERS,
   BankBalance,
 } from '@/lib/bank'
 import { InterestTicker, DepositRowTicker } from '@/components/bank/InterestTicker'
@@ -42,6 +43,7 @@ export default function BankPage() {
     goldDeposits,
     stockHolding,
     unscratchedTickets,
+    activeCDs,
     loaded,
     refresh: refreshBank,
     getSpitBankBalance,
@@ -73,6 +75,11 @@ export default function BankPage() {
   const [goldToSpitAmount, setGoldToSpitAmount] = useState('')
   const [isConvertingToGold, setIsConvertingToGold] = useState(false)
   const [isConvertingToSpit, setIsConvertingToSpit] = useState(false)
+  const [cdCurrency, setCdCurrency] = useState<'spit' | 'gold'>('spit')
+  const [cdAmount, setCdAmount] = useState('')
+  const [cdTerm, setCdTerm] = useState(7)
+  const [isBuyingCD, setIsBuyingCD] = useState(false)
+  const [redeemingCdId, setRedeemingCdId] = useState<string | null>(null)
 
   // Tick rate + stock price every second
   useEffect(() => {
@@ -287,6 +294,62 @@ export default function BankPage() {
     }
     setGoldToSpitAmount('')
     setIsConvertingToSpit(false)
+  }
+
+  const handleBuyCD = async () => {
+    const amount = parseInt(cdAmount)
+    if (!amount || amount <= 0) return
+    setIsBuyingCD(true)
+    try {
+      const res = await fetch('/api/bank/buy-cd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currency: cdCurrency, amount, termDays: cdTerm }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        const tier = CD_TIERS.find(t => t.termDays === cdTerm)
+        toast.success(`Locked ${amount} ${cdCurrency} in ${tier?.name || 'CD'}`)
+        playSound('gold')
+        awardXP('cd_buy')
+        setCdAmount('')
+        refreshBank()
+        if (cdCurrency === 'spit') refreshCredits()
+        else refreshGold()
+      } else {
+        toast.error(data.error || 'CD purchase failed')
+      }
+    } catch {
+      toast.error('CD purchase failed')
+    } finally {
+      setIsBuyingCD(false)
+    }
+  }
+
+  const handleRedeemCD = async (cdId: string) => {
+    setRedeemingCdId(cdId)
+    try {
+      const res = await fetch('/api/bank/redeem-cd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cdId }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Redeemed CD: ${data.payout} (${data.principal} + ${data.bonus} bonus)`)
+        playSound('gold')
+        awardXP('cd_redeem')
+        refreshBank()
+        refreshCredits()
+        refreshGold()
+      } else {
+        toast.error(data.error || 'CD redemption failed')
+      }
+    } catch {
+      toast.error('CD redemption failed')
+    } finally {
+      setRedeemingCdId(null)
+    }
   }
 
   // ---- Computed ----
@@ -612,6 +675,138 @@ export default function BankPage() {
                   <DepositRowTicker deposit={d} />
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* ============================================ */}
+        {/* CERTIFICATES OF DEPOSIT */}
+        {/* ============================================ */}
+        <section className="bank-section">
+          <h2 className="bank-section-heading">Certificates of Deposit</h2>
+          <p className="bank-section-sub">Lock funds for a fixed term and earn a guaranteed return.</p>
+
+          <div className="bank-forms-row">
+            <div className="bank-form-card">
+              <div className="bank-form-header">
+                <div className="bank-form-icon bank-form-icon-buy">📜</div>
+                <div>
+                  <h3 className="bank-form-title">Buy CD</h3>
+                  <p className="bank-form-sub">Deducts from wallet</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Currency</label>
+                <div className="bank-tabs" style={{ marginBottom: '0.75rem' }}>
+                  <button
+                    className={`bank-tab ${cdCurrency === 'spit' ? 'active' : ''}`}
+                    onClick={() => setCdCurrency('spit')}
+                  >
+                    Spits
+                  </button>
+                  <button
+                    className={`bank-tab ${cdCurrency === 'gold' ? 'active' : ''}`}
+                    onClick={() => setCdCurrency('gold')}
+                  >
+                    Gold
+                  </button>
+                </div>
+
+                <label className="bank-form-label">Term</label>
+                <div className="bank-tabs" style={{ marginBottom: '0.75rem' }}>
+                  {CD_TIERS.map(tier => (
+                    <button
+                      key={tier.termDays}
+                      className={`bank-tab ${cdTerm === tier.termDays ? 'active' : ''}`}
+                      onClick={() => setCdTerm(tier.termDays)}
+                    >
+                      {tier.name} ({tier.description})
+                    </button>
+                  ))}
+                </div>
+
+                <label className="bank-form-label">Amount ({cdCurrency})</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder="0"
+                    value={cdAmount}
+                    onChange={(e) => setCdAmount(e.target.value)}
+                    min="1"
+                  />
+                  <button
+                    className="bank-form-max-btn"
+                    onClick={() => setCdAmount(String(cdCurrency === 'spit' ? walletSpits : walletGold))}
+                  >
+                    MAX
+                  </button>
+                </div>
+                {cdAmount && parseInt(cdAmount) > 0 && (
+                  <div className="bank-form-preview">
+                    Payout: {Math.floor(parseInt(cdAmount) * (1 + (CD_TIERS.find(t => t.termDays === cdTerm)?.rate || 0)))} {cdCurrency} after {cdTerm} days
+                  </div>
+                )}
+                <button
+                  className="btn btn-primary bank-form-submit"
+                  onClick={handleBuyCD}
+                  disabled={isBuyingCD || !cdAmount || parseInt(cdAmount) <= 0 || parseInt(cdAmount) > (cdCurrency === 'spit' ? walletSpits : walletGold)}
+                >
+                  {isBuyingCD ? 'Locking...' : 'Lock Funds'}
+                </button>
+                <div className="bank-form-footer">
+                  Wallet: <strong>{(cdCurrency === 'spit' ? walletSpits : walletGold).toLocaleString()}</strong> {cdCurrency}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Active CDs */}
+          {activeCDs.length > 0 && (
+            <div className="bank-deposits-list">
+              <h3 className="bank-deposits-list-title">
+                Active CDs ({activeCDs.length})
+              </h3>
+              <div className="bank-deposits-table-header">
+                <span>Principal</span>
+                <span>Return</span>
+                <span>Matures</span>
+                <span>Action</span>
+              </div>
+              {activeCDs.map((cd) => {
+                const maturesAt = new Date(cd.matures_at)
+                const isMatured = new Date() >= maturesAt
+                const payout = Math.floor(cd.principal * (1 + cd.rate))
+                const timeLeft = isMatured
+                  ? 'Matured'
+                  : (() => {
+                      const ms = maturesAt.getTime() - Date.now()
+                      const days = Math.floor(ms / 86400000)
+                      const hours = Math.floor((ms % 86400000) / 3600000)
+                      return days > 0 ? `${days}d ${hours}h` : `${hours}h`
+                    })()
+                return (
+                  <div key={cd.id} className="bank-deposit-row">
+                    <span className="bank-deposit-principal">{cd.principal.toFixed(0)} {cd.currency}</span>
+                    <span className="bank-deposit-rate">{(cd.rate * 100).toFixed(0)}% → {payout}</span>
+                    <span className="bank-deposit-time">{timeLeft}</span>
+                    <span>
+                      {isMatured ? (
+                        <button
+                          className="btn btn-primary"
+                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+                          onClick={() => handleRedeemCD(cd.id)}
+                          disabled={redeemingCdId === cd.id}
+                        >
+                          {redeemingCdId === cd.id ? '...' : 'Redeem'}
+                        </button>
+                      ) : (
+                        <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.8rem' }}>Locked</span>
+                      )}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
         </section>

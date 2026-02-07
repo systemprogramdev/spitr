@@ -121,6 +121,22 @@ export function getStockPriceHistory(
 }
 
 // ============================================
+// Certificate of Deposits (CDs)
+// ============================================
+
+export interface CDTier {
+  termDays: number
+  rate: number
+  name: string
+  description: string
+}
+
+export const CD_TIERS: CDTier[] = [
+  { termDays: 7, rate: 0.10, name: '7-Day CD', description: '10% return' },
+  { termDays: 30, rate: 0.20, name: '30-Day CD', description: '20% return' },
+]
+
+// ============================================
 // Lottery System
 // ============================================
 
