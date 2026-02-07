@@ -16,10 +16,12 @@ export default function EditProfilePage() {
   const [website, setWebsite] = useState(user?.website || '')
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '')
   const [bannerUrl, setBannerUrl] = useState(user?.banner_url || '')
+  const [avatarPreview, setAvatarPreview] = useState('')
+  const [bannerPreview, setBannerPreview] = useState('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [fieldsInitialized, setFieldsInitialized] = useState(!!user)
   const [isSaving, setIsSaving] = useState(false)
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
-  const [isUploadingBanner, setIsUploadingBanner] = useState(false)
   const [error, setError] = useState('')
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
@@ -83,11 +85,10 @@ export default function EditProfilePage() {
     return data.publicUrl
   }
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file) return
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file')
       return
@@ -97,25 +98,15 @@ export default function EditProfilePage() {
       return
     }
 
-    setIsUploadingAvatar(true)
     setError('')
-
-    try {
-      const url = await uploadImage(file, 'avatars')
-      setAvatarUrl(url)
-    } catch (err) {
-      setError('Failed to upload avatar')
-      console.error(err)
-    }
-
-    setIsUploadingAvatar(false)
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
   }
 
-  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user) return
+    if (!file) return
 
-    // Validate file
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file')
       return
@@ -125,18 +116,9 @@ export default function EditProfilePage() {
       return
     }
 
-    setIsUploadingBanner(true)
     setError('')
-
-    try {
-      const url = await uploadImage(file, 'banners')
-      setBannerUrl(url)
-    } catch (err) {
-      setError('Failed to upload banner')
-      console.error(err)
-    }
-
-    setIsUploadingBanner(false)
+    setBannerFile(file)
+    setBannerPreview(URL.createObjectURL(file))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -152,6 +134,24 @@ export default function EditProfilePage() {
     setIsSaving(true)
     setError('')
 
+    // Upload files sequentially before saving profile
+    let finalAvatarUrl = avatarUrl
+    let finalBannerUrl = bannerUrl
+
+    try {
+      if (avatarFile) {
+        finalAvatarUrl = await uploadImage(avatarFile, 'avatars')
+      }
+      if (bannerFile) {
+        finalBannerUrl = await uploadImage(bannerFile, 'banners')
+      }
+    } catch (err) {
+      console.error('Upload failed:', err)
+      setError('Failed to upload image. Please try again.')
+      setIsSaving(false)
+      return
+    }
+
     const { data, error: updateError } = await supabase
       .from('users')
       .update({
@@ -160,9 +160,8 @@ export default function EditProfilePage() {
         bio: bio.trim() || null,
         location: location.trim() || null,
         website: website.trim() || null,
-        avatar_url: avatarUrl || null,
-        banner_url: bannerUrl || null,
-        updated_at: new Date().toISOString(),
+        avatar_url: finalAvatarUrl || null,
+        banner_url: finalBannerUrl || null,
       })
       .eq('id', user.id)
       .select()
@@ -214,7 +213,7 @@ export default function EditProfilePage() {
         <div
           className="image-upload banner-upload"
           style={{
-            backgroundImage: bannerUrl ? `url(${bannerUrl})` : undefined,
+            backgroundImage: (bannerPreview || bannerUrl) ? `url(${bannerPreview || bannerUrl})` : undefined,
           }}
           onClick={() => bannerInputRef.current?.click()}
         >
@@ -225,15 +224,10 @@ export default function EditProfilePage() {
             onChange={handleBannerChange}
             style={{ display: 'none' }}
           />
-          {!bannerUrl && !isUploadingBanner && (
+          {!bannerUrl && !bannerPreview && (
             <div className="banner-upload-placeholder">
               <span className="sys-icon sys-icon-image sys-icon-lg"></span>
               <span>Click to upload banner</span>
-            </div>
-          )}
-          {isUploadingBanner && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <div className="loading-spinner"></div>
             </div>
           )}
           <div className="image-upload-overlay">
@@ -248,7 +242,7 @@ export default function EditProfilePage() {
           <div
             className="image-upload avatar-upload"
             style={{
-              backgroundImage: avatarUrl ? `url(${avatarUrl})` : undefined,
+              backgroundImage: (avatarPreview || avatarUrl) ? `url(${avatarPreview || avatarUrl})` : undefined,
             }}
             onClick={() => avatarInputRef.current?.click()}
           >
@@ -259,11 +253,8 @@ export default function EditProfilePage() {
               onChange={handleAvatarChange}
               style={{ display: 'none' }}
             />
-            {!avatarUrl && !isUploadingAvatar && (
+            {!avatarUrl && !avatarPreview && (
               <span className="avatar-upload-letter">{name[0]?.toUpperCase() || '?'}</span>
-            )}
-            {isUploadingAvatar && (
-              <div className="loading-spinner"></div>
             )}
             <div className="image-upload-overlay">
               <div className="image-upload-icon">
@@ -404,7 +395,7 @@ export default function EditProfilePage() {
                 <button
                   type="submit"
                   className="btn btn-primary btn-glow"
-                  disabled={isSaving || !name.trim() || !handle.trim() || !!handleError || isUploadingAvatar || isUploadingBanner}
+                  disabled={isSaving || !name.trim() || !handle.trim() || !!handleError}
                 >
                   {isSaving ? (
                     <>
