@@ -7,7 +7,7 @@ import { useModalStore } from '@/stores/modalStore'
 import { useCredits } from '@/hooks/useCredits'
 import { SPIT_EFFECTS, EFFECT_COST } from '@/lib/effects'
 import { MentionAutocomplete } from '@/components/MentionAutocomplete'
-import { useSound } from '@/hooks/useSound'
+import { playSoundDirect } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
 
 const IMAGE_COST = 50
@@ -16,7 +16,6 @@ export function SpitModal() {
   const { user } = useAuthStore()
   const { isSpitModalOpen, replyToId, replyToHandle, quoteSpit, closeSpitModal } = useModalStore()
   const { balance, deductCredit, deductAmount, hasCredits } = useCredits()
-  const { playSound } = useSound()
   const { awardXP } = useXP()
   const [content, setContent] = useState('')
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null)
@@ -282,8 +281,8 @@ export function SpitModal() {
         }
       }
 
-      // Sound + XP — play sound before closing modal to ensure it fires
-      playSound('send')
+      // Sound + XP — use direct play to avoid async/unmount issues
+      playSoundDirect('send')
       awardXP(replyToId ? 'reply' : 'post', newSpit?.id)
 
       const postedContent = content.trim()
@@ -292,8 +291,7 @@ export function SpitModal() {
       setShowEffects(false)
       setImageFile(null)
       setImagePreview(null)
-      // Small delay so the sound has time to start playing before unmount
-      setTimeout(() => closeSpitModal(), 50)
+      closeSpitModal()
 
       // Dispatch appropriate event
       if (replyToId) {
