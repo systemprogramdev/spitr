@@ -25,6 +25,7 @@ SPITr is a modern microblogging platform with a distinctive cyberpunk aesthetic.
 - **HP System** - Users have 5,000 HP, spits have 10 HP — reach 0 and get destroyed
 - **XP & Levels** - Every interaction earns XP. Level up with a progressive difficulty curve. Level badges show your rank
 - **Treasure Chests** - Daily free chest + purchasable chests with randomized loot (credits, gold, weapons, potions)
+- **Bank** - Deposit spits/gold to earn interest, trade $SPIT stock, buy scratch-off lottery tickets, and lock funds in CDs
 - **Bookmarks** - Save spits for later, accessible from your private bookmarks page
 - **Quote Respits** - Share someone's spit with your own commentary embedded
 - **Leaderboard** - Compete across 4 categories: Most Kills, Highest Level, Richest, Most Liked
@@ -159,6 +160,71 @@ Earn a free chest every 24 hours or buy additional chests for 100 credits each.
 
 ---
 
+## Bank & Investments
+
+The SPITr Bank is a full financial system where users can grow their currency through deposits, stock trading, lottery tickets, and certificates of deposit.
+
+### Deposits & Interest
+
+Deposit spits or gold from your wallet into the bank to earn interest. The interest rate oscillates between **0.50%** and **1.00% per day** on a ~12 hour sine wave cycle. Your rate is **locked at deposit time** and never changes. Interest accrues continuously and displays in real-time with a ticking counter. Withdrawals are floored to integers.
+
+### Currency Conversion
+
+Convert between spits and gold directly in the bank at the standard 10:1 ratio (both directions).
+
+### Stock Market ($SPIT)
+
+Buy and sell shares of $SPIT stock using your bank spit balance. The stock price is deterministic — same for all users at any given moment — with a base upward trend plus oscillations for volatility. An interactive SVG chart shows price history over 7, 14, 30, or 90 day windows. Track your portfolio P&L in real-time.
+
+### Certificates of Deposit (CDs)
+
+Lock funds from your wallet for a fixed term with guaranteed returns:
+
+| Term | Return |
+|------|--------|
+| 7-Day CD | 10% on principal |
+| 30-Day CD | 20% on principal |
+
+Funds are locked until maturity — no early withdrawal. On maturity, redeem to receive principal + bonus back to your wallet. Progress bars show time remaining.
+
+### Scratch-Off Lottery
+
+Buy scratch tickets with your bank balance. Outcomes are pre-determined at purchase — scratching with the interactive canvas overlay just reveals the result.
+
+**Spit Tickets:**
+
+| Ticket | Cost |
+|--------|------|
+| Ping Scratch | 1 spit |
+| Phishing Scratch | 10 spits |
+| Buffer Overflow | 50 spits |
+| DDoS Deluxe | 100 spits |
+
+**Gold Tickets:**
+
+| Ticket | Cost |
+|--------|------|
+| Token Flip | 1 gold |
+| Backdoor Access | 5 gold |
+| Zero Day Exploit | 25 gold |
+| Mainframe Jackpot | 100 gold |
+
+**Odds:** 20% chance to win. Prize tiers: 60% small (1-2x), 25% medium (2-5x), 10% large (5-10x), 4% big (10-25x), 1% jackpot (50-100x). Wins are deposited into your bank.
+
+### Bank XP Rewards
+
+| Action | XP |
+|--------|-----|
+| Deposit | +5 |
+| Withdraw | +3 |
+| Buy/sell stock | +8 |
+| Buy lottery ticket | +5 |
+| Scratch ticket | +3 |
+| Buy CD | +5 |
+| Redeem CD | +8 |
+
+---
+
 ## Explore Page
 
 The Explore page features 3 tabs:
@@ -229,6 +295,7 @@ Search for users and spits from the search bar.
    Run the SQL migrations in order in your Supabase SQL editor (`supabase/migrations/`):
    - `001` through `010` — Core tables, economy, combat, chests, transfers
    - `011` — XP system, bookmarks, quote respits, leaderboard RLS
+   - `015` through `018` — Bank: deposits, stock market, lottery, daily rate, deposit rebalancing, CDs
 
 5. **Run the development server**
    ```bash
@@ -270,10 +337,12 @@ spitr/
 │   │   │   ├── messages/ # Direct messages
 │   │   │   ├── notifications/ # Notification center
 │   │   │   ├── search/   # Explore (discover, leaderboard, kill feed)
+│   │   │   ├── bank/     # Bank: deposits, stock market, lottery, CDs
 │   │   │   ├── settings/ # Settings + profile editing
 │   │   │   └── shop/     # Unified shop: gold, spits, weapons, potions, chests, transaction history
 │   │   └── api/          # API routes (attack, award-xp, transfer, chest, etc.)
 │   ├── components/
+│   │   ├── bank/         # InterestTicker, StockChart, ScratchCard
 │   │   ├── chest/        # Chest open modal + daily chest popup
 │   │   ├── explore/      # LeaderboardTab, KillFeedTab
 │   │   ├── profile/      # GunshotWounds overlay
@@ -281,12 +350,12 @@ spitr/
 │   │   ├── spit/         # Spit, SpitModal, AttackModal
 │   │   ├── transfer/     # TransferModal
 │   │   └── ui/           # HPBar, XPBar, LevelBadge, LinkPreview, ToastContainer
-│   ├── hooks/            # useAuth, useCredits, useGold, useInventory, useFeed, useSound, useXP
+│   ├── hooks/            # useAuth, useCredits, useGold, useInventory, useBank, useFeed, useSound, useXP
 │   ├── lib/              # Utilities (spitUtils, xp, items, effects, supabase client)
-│   ├── stores/           # Zustand stores (auth, modal, ui, toast)
+│   ├── stores/           # Zustand stores (auth, modal, ui, toast, bank)
 │   └── types/            # TypeScript type definitions
 ├── supabase/
-│   └── migrations/       # SQL migrations (001-011)
+│   └── migrations/       # SQL migrations (001-018)
 ├── scripts/              # Utility scripts (seeding, etc.)
 └── tests/                # Test files
 ```
@@ -327,6 +396,14 @@ spitr/
 - **spray_paints** - Active spray paint tags on user profiles with expiration
 - **user_xp** - XP and level per user
 - **xp_transactions** - XP award history
+
+### Bank & Investments
+
+- **bank_deposits** - Individual deposit records with locked interest rates and withdrawal tracking
+- **user_stock_holdings** - Per-user stock share count and cost basis
+- **stock_transactions** - Buy/sell stock transaction history
+- **lottery_tickets** - Scratch-off tickets with pre-determined outcomes
+- **bank_cds** - Certificates of deposit with principal, rate, term, and maturity date
 
 ### Collections
 
