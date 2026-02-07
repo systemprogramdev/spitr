@@ -554,6 +554,30 @@ export default function GuidePage() {
               Lottery wins are deposited into your bank at 0% interest.
             </div>
           </div>
+
+          <h3 className="guide-subheading">Bank XP Rewards</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">Deposit</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Withdraw</span>
+              <span className="guide-table-value">+3 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Buy/sell stock</span>
+              <span className="guide-table-value">+8 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Buy lottery ticket</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Scratch ticket</span>
+              <span className="guide-table-value">+3 XP</span>
+            </div>
+          </div>
         </section>
 
         {/* XP & Levels */}
@@ -601,6 +625,26 @@ export default function GuidePage() {
             <div className="guide-table-row">
               <span className="guide-table-label">Use potion</span>
               <span className="guide-table-value">+2 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Bank deposit</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Bank withdraw</span>
+              <span className="guide-table-value">+3 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Buy/sell stock</span>
+              <span className="guide-table-value">+8 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Buy lottery ticket</span>
+              <span className="guide-table-value">+5 XP</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Scratch ticket</span>
+              <span className="guide-table-value">+3 XP</span>
             </div>
           </div>
 

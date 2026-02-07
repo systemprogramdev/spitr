@@ -8,7 +8,11 @@ import { useCredits } from '@/hooks/useCredits'
 import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { useUnreadNotifications } from '@/hooks/useUnreadNotifications'
 import { useGold } from '@/hooks/useGold'
+import { useXP } from '@/hooks/useXP'
 import { useInventory } from '@/hooks/useInventory'
+import { HPBar } from '@/components/ui/HPBar'
+import { XPBar } from '@/components/ui/XPBar'
+import { getMaxHp } from '@/lib/items'
 import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
 import { ChestClaimModal } from '@/components/chest/ChestClaimModal'
@@ -41,6 +45,7 @@ export default function MainLayout({
   const unreadMessages = useUnreadMessages()
   const unreadNotifications = useUnreadNotifications()
   const { balance: goldBalance, refreshBalance: refreshGold } = useGold()
+  const { xp, level } = useXP()
   const { refreshInventory } = useInventory()
   const { openSpitModal } = useModalStore()
   const [whoToFollow, setWhoToFollow] = useState<User[]>([])
@@ -304,7 +309,7 @@ export default function MainLayout({
 
         {/* Right Panel */}
         <aside className="right-panel">
-          {/* Credits Panel */}
+          {/* Stats Panel */}
           <div className="right-panel-card">
             <div className="right-panel-card-header">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -315,12 +320,16 @@ export default function MainLayout({
             <div className="right-panel-card-body">
               <div className="credits-amount">{balance.toLocaleString()}</div>
               <div className="credits-sublabel">available to spend</div>
-              <Link href="/shop" className="btn btn-primary btn-glow" style={{ width: '100%', marginTop: '1rem' }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.5rem' }}>
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <div className="right-panel-gold-row">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1">
+                  <circle cx="12" cy="12" r="10"/>
                 </svg>
-                Get More
-              </Link>
+                <span className="right-panel-gold-amount">{goldBalance.toLocaleString()} gold</span>
+              </div>
+              <div className="right-panel-bars">
+                <HPBar hp={user?.hp ?? getMaxHp(level)} maxHp={getMaxHp(level)} size="sm" />
+                <XPBar xp={xp} level={level} />
+              </div>
             </div>
           </div>
 

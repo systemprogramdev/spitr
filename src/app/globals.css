@@ -2745,6 +2745,29 @@ a:hover {
   letter-spacing: 0.05em;
 }
 
+.right-panel-gold-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--sys-border);
+}
+
+.right-panel-gold-amount {
+  font-family: var(--sys-font-mono);
+  font-size: 0.85rem;
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.right-panel-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 /* Right Panel Links */
 .right-panel-links {
   display: flex;
