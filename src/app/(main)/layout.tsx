@@ -25,6 +25,7 @@ const navItems = [
   { href: '/notifications', label: 'Alerts', icon: 'bell' },
   { href: '/bookmarks', label: 'Bookmarks', icon: 'bookmark' },
   { href: '/shop', label: 'Shop', icon: 'shopping-bag' },
+  { href: '/bank', label: 'Bank', icon: 'landmark' },
   { href: '/guide', label: 'Guide', icon: 'book-open' },
   { href: '/settings', label: 'Settings', icon: 'lock' },
 ]

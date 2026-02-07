@@ -841,6 +841,151 @@ export type Database = {
           }
         ]
       }
+      bank_deposits: {
+        Row: {
+          id: string
+          user_id: string
+          currency: string
+          principal: number
+          locked_rate: number
+          deposited_at: string
+          withdrawn: number
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          currency: string
+          principal: number
+          locked_rate: number
+          deposited_at?: string
+          withdrawn?: number
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          currency?: string
+          principal?: number
+          locked_rate?: number
+          deposited_at?: string
+          withdrawn?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_deposits_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      user_stock_holdings: {
+        Row: {
+          user_id: string
+          shares: number
+          total_cost_basis: number
+        }
+        Insert: {
+          user_id: string
+          shares?: number
+          total_cost_basis?: number
+        }
+        Update: {
+          user_id?: string
+          shares?: number
+          total_cost_basis?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stock_holdings_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      stock_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          shares: number
+          price_per_share: number
+          total_amount: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          shares: number
+          price_per_share: number
+          total_amount: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          shares?: number
+          price_per_share?: number
+          total_amount?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_transactions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      lottery_tickets: {
+        Row: {
+          id: string
+          user_id: string
+          ticket_type: string
+          cost_amount: number
+          cost_currency: string
+          is_winner: boolean
+          prize_amount: number
+          prize_currency: string | null
+          scratched: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          ticket_type: string
+          cost_amount: number
+          cost_currency: string
+          is_winner: boolean
+          prize_amount?: number
+          prize_currency?: string | null
+          scratched?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          ticket_type?: string
+          cost_amount?: number
+          cost_currency?: string | null
+          is_winner?: boolean
+          prize_amount?: number
+          prize_currency?: string | null
+          scratched?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lottery_tickets_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -884,6 +1029,10 @@ export type XPTransaction = Database['public']['Tables']['xp_transactions']['Row
 export type UserBookmark = Database['public']['Tables']['user_bookmarks']['Row']
 export type UserBuff = Database['public']['Tables']['user_buffs']['Row']
 export type SprayPaint = Database['public']['Tables']['spray_paints']['Row']
+export type BankDeposit = Database['public']['Tables']['bank_deposits']['Row']
+export type UserStockHolding = Database['public']['Tables']['user_stock_holdings']['Row']
+export type StockTransaction = Database['public']['Tables']['stock_transactions']['Row']
+export type LotteryTicket = Database['public']['Tables']['lottery_tickets']['Row']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {

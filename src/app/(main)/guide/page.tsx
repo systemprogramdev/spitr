@@ -13,6 +13,7 @@ const sections = [
   { id: 'chests', label: 'Treasure Chests' },
   { id: 'like-rewards', label: 'Like Rewards' },
   { id: 'transfers', label: 'Sending Spits' },
+  { id: 'bank', label: 'Bank & Investments' },
   { id: 'xp-levels', label: 'XP & Levels' },
   { id: 'bookmarks', label: 'Bookmarks' },
   { id: 'quote-respits', label: 'Quote Respits' },
@@ -489,6 +490,68 @@ export default function GuidePage() {
             <div>
               <strong>Warning:</strong> The HP penalty for exceeding daily limits is severe.
               Sending 10 spits over the limit costs 1,000 HP. Abuse will get your account destroyed!
+            </div>
+          </div>
+        </section>
+
+        {/* Bank & Investments */}
+        <section id="bank" className="guide-section">
+          <h2 className="guide-heading">Bank & Investments</h2>
+          <p>
+            The SPITr Bank lets you deposit spits and gold to earn interest, trade stocks, and
+            try your luck with scratch-off lottery tickets.
+          </p>
+
+          <h3 className="guide-subheading">Deposits & Interest</h3>
+          <div className="guide-list">
+            <ul>
+              <li>Deposit spits or gold from your wallet into the bank</li>
+              <li>The interest rate oscillates between <strong>0.50%</strong> and <strong>1.00%</strong> per year</li>
+              <li>Your rate is <strong>locked at deposit time</strong> — it never changes</li>
+              <li>Interest accrues continuously and shows in real-time</li>
+              <li>Withdrawals floor to integers (no free fractions!)</li>
+            </ul>
+          </div>
+
+          <h3 className="guide-subheading">Stock Market ($SPIT)</h3>
+          <div className="guide-list">
+            <ul>
+              <li>Buy and sell shares of $SPIT stock using your bank spit balance</li>
+              <li>Stock price is deterministic — same for all users at any moment</li>
+              <li>Sell proceeds go to your bank as a 0% interest deposit</li>
+              <li>Track your portfolio P&L with the built-in chart</li>
+            </ul>
+          </div>
+
+          <h3 className="guide-subheading">Scratch-Off Lottery</h3>
+          <p>Buy tickets from your bank balance. Outcomes are pre-determined at purchase — scratching just reveals the result.</p>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span>🎣 Phishing Scratch</span>
+              <span>10 spits</span>
+            </div>
+            <div className="guide-table-row">
+              <span>💾 Buffer Overflow</span>
+              <span>50 spits</span>
+            </div>
+            <div className="guide-table-row">
+              <span>🔓 Backdoor Access</span>
+              <span>5 gold</span>
+            </div>
+            <div className="guide-table-row">
+              <span>🐛 Zero Day Exploit</span>
+              <span>25 gold</span>
+            </div>
+            <div className="guide-table-row">
+              <span>🏛️ Mainframe Jackpot</span>
+              <span>100 gold</span>
+            </div>
+          </div>
+          <div className="guide-callout">
+            <span className="guide-callout-icon">🎰</span>
+            <div>
+              <strong>Odds:</strong> 20% chance to win. Prizes range from 1x to 100x your ticket cost.
+              Lottery wins are deposited into your bank at 0% interest.
             </div>
           </div>
         </section>

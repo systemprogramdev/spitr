@@ -4824,3 +4824,556 @@ a:hover {
   filter: drop-shadow(0 0 4px rgba(255, 0, 0, 0.5));
 }
 
+/* ============================================ */
+/* BANK */
+/* ============================================ */
+
+.bank-content {
+  padding: 0 1rem 2rem;
+}
+
+.bank-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--sys-border);
+}
+
+.bank-section:last-child {
+  border-bottom: none;
+}
+
+.bank-section-heading {
+  font-family: var(--sys-font-display);
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: var(--sys-text);
+}
+
+.bank-section-sub {
+  color: var(--sys-text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* Overview Grid */
+.bank-overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.bank-overview-card {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 0.875rem;
+}
+
+.bank-overview-card-highlight {
+  border-color: var(--sys-primary);
+  background: rgba(var(--sys-primary-rgb, 34, 211, 238), 0.05);
+}
+
+.bank-overview-label {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.bank-overview-value {
+  font-family: var(--sys-font-mono);
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--sys-text);
+}
+
+.bank-ticker-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--spit-green);
+}
+
+/* Rate Display */
+.bank-rate-display {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 0.875rem;
+}
+
+.bank-rate-label {
+  color: var(--sys-text-muted);
+  font-size: 0.85rem;
+}
+
+.bank-rate-value {
+  font-family: var(--sys-font-display);
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.bank-rate-sub {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  margin-left: auto;
+}
+
+/* Tabs */
+.bank-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.bank-tab {
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--sys-border);
+  background: transparent;
+  color: var(--sys-text-muted);
+  font-family: var(--sys-font-display);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bank-tab:hover {
+  background: var(--sys-surface);
+}
+
+.bank-tab.active {
+  background: var(--sys-primary);
+  color: var(--sys-bg);
+  border-color: var(--sys-primary);
+}
+
+/* Form Cards */
+.bank-forms-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.bank-form-card {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.bank-form-title {
+  font-family: var(--sys-font-display);
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.bank-form-sub {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.bank-form-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bank-form-input-row .sys-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.bank-form-balance {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.bank-form-preview {
+  color: var(--spit-cyan);
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-family: var(--sys-font-mono);
+}
+
+/* Deposits List */
+.bank-deposits-list {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.bank-deposits-list-title {
+  font-family: var(--sys-font-display);
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  color: var(--sys-text-muted);
+}
+
+.bank-deposit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--sys-border);
+  font-size: 0.85rem;
+}
+
+.bank-deposit-row:last-child {
+  border-bottom: none;
+}
+
+.bank-deposit-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bank-deposit-principal {
+  font-family: var(--sys-font-mono);
+  font-weight: bold;
+}
+
+.bank-deposit-rate {
+  color: var(--spit-green);
+  font-size: 0.75rem;
+}
+
+.bank-deposit-time {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+}
+
+.bank-deposit-interest {
+  color: var(--spit-green);
+  font-family: var(--sys-font-mono);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Stock Market */
+.bank-stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.bank-stock-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.bank-stock-symbol {
+  font-family: var(--sys-font-display);
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: var(--spit-cyan);
+}
+
+.bank-stock-current {
+  font-family: var(--sys-font-mono);
+  font-size: 1.5rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.bank-stock-unit {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+}
+
+.bank-chart-period-tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.bank-chart-period-btn {
+  padding: 0.25rem 0.625rem;
+  border-radius: 6px;
+  border: 1px solid var(--sys-border);
+  background: transparent;
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bank-chart-period-btn.active {
+  background: var(--sys-primary);
+  color: var(--sys-bg);
+  border-color: var(--sys-primary);
+}
+
+.bank-chart-wrapper {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.stock-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Portfolio */
+.bank-portfolio {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.bank-portfolio-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.375rem 0;
+  font-size: 0.85rem;
+}
+
+.bank-portfolio-row span:first-child {
+  color: var(--sys-text-muted);
+}
+
+.bank-portfolio-row span:last-child {
+  font-family: var(--sys-font-mono);
+}
+
+.bank-portfolio-pnl {
+  font-weight: bold;
+  border-top: 1px solid var(--sys-border);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.bank-portfolio-pnl.positive span:last-child {
+  color: var(--spit-green);
+}
+
+.bank-portfolio-pnl.negative span:last-child {
+  color: var(--spit-pink);
+}
+
+/* Ticket Grid */
+.bank-ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.bank-ticket-card {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.bank-ticket-emoji {
+  font-size: 2rem;
+}
+
+.bank-ticket-name {
+  font-family: var(--sys-font-display);
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.bank-ticket-cost {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  font-family: var(--sys-font-mono);
+}
+
+.bank-ticket-buy-btn {
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  padding: 0.375rem 0.5rem;
+}
+
+/* Scratch Card */
+.bank-scratch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.scratch-card {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.scratch-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--sys-border);
+  font-size: 0.8rem;
+  font-family: var(--sys-font-display);
+}
+
+.scratch-card-body {
+  position: relative;
+  height: 120px;
+  overflow: hidden;
+}
+
+.scratch-card-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scratch-card-result.revealed {
+  opacity: 1;
+}
+
+.scratch-card-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  z-index: 2;
+}
+
+.scratch-card-canvas:active {
+  cursor: grabbing;
+}
+
+.scratch-card-win {
+  text-align: center;
+}
+
+.scratch-card-win-label {
+  font-family: var(--sys-font-display);
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--spit-yellow);
+  text-shadow: 0 0 10px var(--spit-yellow);
+}
+
+.scratch-card-win-amount {
+  font-family: var(--sys-font-mono);
+  font-size: 1rem;
+  color: var(--spit-green);
+  margin-top: 0.25rem;
+}
+
+.scratch-card-lose {
+  text-align: center;
+}
+
+.scratch-card-lose-label {
+  font-family: var(--sys-font-display);
+  font-size: 1.1rem;
+  color: var(--sys-text-muted);
+}
+
+.scratch-card-lose-sub {
+  font-size: 0.8rem;
+  color: var(--sys-text-muted);
+}
+
+.scratch-card-pending {
+  font-family: var(--sys-font-display);
+  font-size: 1.5rem;
+  color: var(--sys-text-muted);
+}
+
+/* Interest Ticker */
+.interest-ticker-label {
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  margin-bottom: 0.125rem;
+}
+
+.interest-ticker-value {
+  font-family: var(--sys-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--spit-green);
+}
+
+/* Bank My Tickets */
+.bank-my-tickets {
+  margin-top: 1.5rem;
+}
+
+/* ============================================ */
+/* BANK RESPONSIVE */
+/* ============================================ */
+
+@media (max-width: 600px) {
+  .bank-content {
+    padding: 0 0.5rem 1.5rem;
+  }
+
+  .bank-overview-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .bank-overview-value {
+    font-size: 1rem;
+  }
+
+  .bank-forms-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-rate-display {
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .bank-rate-sub {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .bank-ticket-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .bank-scratch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-stock-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
