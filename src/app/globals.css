@@ -6313,5 +6313,60 @@ a:hover {
   .dc-bot-panel {
     padding: 0.625rem 0.75rem 0.875rem;
   }
+
+  .dc-banner-upload {
+    height: 80px !important;
+  }
+
+  .dc-avatar-upload {
+    width: 52px !important;
+    height: 52px !important;
+    margin-top: -26px !important;
+  }
+}
+
+/* Bot profile upload areas in datacenter */
+.dc-profile-section {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--sys-border);
+}
+
+.dc-banner-upload {
+  height: 100px;
+  background: var(--sys-surface);
+  background-size: cover;
+  background-position: center;
+  border-radius: 6px;
+  border: 1px solid var(--sys-border);
+}
+
+.dc-avatar-upload {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--sys-primary);
+  background-size: cover;
+  background-position: center;
+  border: 3px solid var(--sys-bg);
+  margin-top: -32px;
+  margin-left: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dc-profile-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .dc-profile-fields {
+    grid-template-columns: 1fr;
+  }
 }
 

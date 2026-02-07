@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const { data: bots, error } = await supabaseAdmin
       .from('bots')
-      .select('*, bot_configs(*)')
+      .select('*, bot_configs(*), users!bots_user_id_fkey(avatar_url, banner_url, bio, name)')
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false })
 

@@ -46,7 +46,7 @@ export async function validateBotRequest(request: NextRequest): Promise<Validate
   const { data: bot, error: botErr } = await supabaseAdmin
     .from('bots')
     .select('id, owner_id, user_id, name, handle, personality, is_active')
-    .eq('id', botId)
+    .eq('user_id', botId)
     .single()
 
   if (botErr || !bot) {

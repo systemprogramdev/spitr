@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuthStore } from '@/stores/authStore'
 import { useCredits } from '@/hooks/useCredits'
 import { useGold } from '@/hooks/useGold'
@@ -18,6 +18,13 @@ interface BotConfig {
   custom_prompt: string | null
 }
 
+interface BotUserProfile {
+  avatar_url: string | null
+  banner_url: string | null
+  bio: string | null
+  name: string | null
+}
+
 interface Bot {
   id: string
   owner_id: string
@@ -28,6 +35,7 @@ interface Bot {
   is_active: boolean
   created_at: string
   bot_configs: BotConfig[]
+  users: BotUserProfile | null
 }
 
 const PERSONALITIES = [
@@ -74,6 +82,19 @@ export default function DatacenterPage() {
   const [editBankingStrategy, setEditBankingStrategy] = useState('')
   const [editAutoHeal, setEditAutoHeal] = useState(50)
   const [editCustomPrompt, setEditCustomPrompt] = useState('')
+
+  // Profile editing state
+  const [editName, setEditName] = useState('')
+  const [editBio, setEditBio] = useState('')
+  const [editAvatarUrl, setEditAvatarUrl] = useState('')
+  const [editBannerUrl, setEditBannerUrl] = useState('')
+  const [avatarPreview, setAvatarPreview] = useState('')
+  const [bannerPreview, setBannerPreview] = useState('')
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [savingProfile, setSavingProfile] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const bannerInputRef = useRef<HTMLInputElement>(null)
 
   const fetchBots = useCallback(async () => {
     try {
@@ -162,6 +183,17 @@ export default function DatacenterPage() {
     setEditBankingStrategy(config?.banking_strategy || 'none')
     setEditAutoHeal(config?.auto_heal_threshold ?? 50)
     setEditCustomPrompt(config?.custom_prompt || '')
+
+    // Profile fields
+    const profile = bot.users
+    setEditName(profile?.name || bot.name)
+    setEditBio(profile?.bio || '')
+    setEditAvatarUrl(profile?.avatar_url || '')
+    setEditBannerUrl(profile?.banner_url || '')
+    setAvatarPreview('')
+    setBannerPreview('')
+    setAvatarFile(null)
+    setBannerFile(null)
   }
 
   const handleToggleActive = async (bot: Bot) => {
@@ -206,6 +238,52 @@ export default function DatacenterPage() {
       toast.error('Save failed')
     } finally {
       setSavingConfig(null)
+    }
+  }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { toast.warning('Must be an image'); return }
+    if (file.size > 2 * 1024 * 1024) { toast.warning('Avatar must be under 2MB'); return }
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
+  }
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { toast.warning('Must be an image'); return }
+    if (file.size > 4 * 1024 * 1024) { toast.warning('Banner must be under 4MB'); return }
+    setBannerFile(file)
+    setBannerPreview(URL.createObjectURL(file))
+  }
+
+  const handleSaveProfile = async (botId: string) => {
+    setSavingProfile(botId)
+    try {
+      const form = new FormData()
+      form.append('name', editName)
+      form.append('bio', editBio)
+      if (avatarFile) form.append('avatar', avatarFile)
+      if (bannerFile) form.append('banner', bannerFile)
+
+      const res = await fetch(`/api/bot/${botId}/profile`, {
+        method: 'PATCH',
+        body: form,
+      })
+
+      if (res.ok) {
+        toast.success('Profile saved')
+        fetchBots()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Save failed')
+      }
+    } catch {
+      toast.error('Save failed')
+    } finally {
+      setSavingProfile(null)
     }
   }
 
@@ -302,8 +380,13 @@ export default function DatacenterPage() {
                 <div key={bot.id} className={`dc-bot ${expandedBot === bot.id ? 'dc-bot-expanded' : ''}`}>
                   <div className="dc-bot-row" onClick={() => expandBot(bot)}>
                     <div className="dc-bot-left">
-                      <div className="dc-bot-avatar">
-                        {bot.name[0]?.toUpperCase() || '?'}
+                      <div className="dc-bot-avatar" style={bot.users?.avatar_url ? {
+                        backgroundImage: `url(${bot.users.avatar_url})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        fontSize: 0,
+                      } : undefined}>
+                        {bot.users?.avatar_url ? '' : (bot.name[0]?.toUpperCase() || '?')}
                       </div>
                       <div className="dc-bot-meta">
                         <span className="dc-bot-name">{bot.name}</span>
@@ -333,6 +416,100 @@ export default function DatacenterPage() {
 
                   {expandedBot === bot.id && (
                     <div className="dc-bot-panel">
+                      {/* Profile Section */}
+                      <div className="dc-profile-section">
+                        <label className="dc-label" style={{ marginBottom: '0.5rem' }}>Profile</label>
+
+                        {/* Banner */}
+                        <div
+                          className="image-upload dc-banner-upload"
+                          style={{
+                            backgroundImage: (bannerPreview || editBannerUrl) ? `url(${bannerPreview || editBannerUrl})` : undefined,
+                          }}
+                          onClick={() => bannerInputRef.current?.click()}
+                        >
+                          <input
+                            ref={bannerInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleBannerChange}
+                            style={{ display: 'none' }}
+                          />
+                          {!editBannerUrl && !bannerPreview && (
+                            <div className="banner-upload-placeholder">
+                              <span style={{ fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>Click to upload banner</span>
+                            </div>
+                          )}
+                          <div className="image-upload-overlay">
+                            <div className="image-upload-icon" style={{ width: '28px', height: '28px' }}>
+                              <span className="sys-icon sys-icon-camera" style={{ fontSize: '0.75rem' }}></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Avatar */}
+                        <div
+                          className="image-upload dc-avatar-upload"
+                          style={{
+                            backgroundImage: (avatarPreview || editAvatarUrl) ? `url(${avatarPreview || editAvatarUrl})` : undefined,
+                          }}
+                          onClick={() => avatarInputRef.current?.click()}
+                        >
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            style={{ display: 'none' }}
+                          />
+                          {!editAvatarUrl && !avatarPreview && (
+                            <span className="avatar-upload-letter" style={{ fontSize: '1.5rem' }}>
+                              {editName[0]?.toUpperCase() || '?'}
+                            </span>
+                          )}
+                          <div className="image-upload-overlay" style={{ borderRadius: '50%' }}>
+                            <div className="image-upload-icon" style={{ width: '24px', height: '24px' }}>
+                              <span className="sys-icon sys-icon-camera" style={{ fontSize: '0.65rem' }}></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Name + Bio */}
+                        <div className="dc-profile-fields">
+                          <div className="dc-field">
+                            <label className="dc-label">Name</label>
+                            <input
+                              type="text"
+                              className="dc-input"
+                              value={editName}
+                              onChange={e => setEditName(e.target.value)}
+                              maxLength={30}
+                              placeholder="Bot name"
+                            />
+                          </div>
+                          <div className="dc-field">
+                            <label className="dc-label">Bio</label>
+                            <textarea
+                              className="dc-input dc-textarea"
+                              value={editBio}
+                              onChange={e => setEditBio(e.target.value)}
+                              maxLength={160}
+                              rows={2}
+                              placeholder="Bot bio..."
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          className="btn btn-primary dc-save-btn"
+                          onClick={() => handleSaveProfile(bot.id)}
+                          disabled={savingProfile === bot.id}
+                          style={{ marginBottom: '0.75rem' }}
+                        >
+                          {savingProfile === bot.id ? 'Saving...' : 'Save Profile'}
+                        </button>
+                      </div>
+
                       <div className="dc-panel-grid">
                         <div className="dc-field">
                           <label className="dc-label">Personality</label>
