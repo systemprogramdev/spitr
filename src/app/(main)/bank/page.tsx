@@ -13,13 +13,11 @@ import {
   calculateBankBalance,
   getStockPrice,
   TICKET_TIERS,
-  TICKET_MAP,
   BankBalance,
 } from '@/lib/bank'
-import { InterestTicker } from '@/components/bank/InterestTicker'
+import { InterestTicker, DepositRowTicker } from '@/components/bank/InterestTicker'
 import { StockChart } from '@/components/bank/StockChart'
 import { ScratchCard } from '@/components/bank/ScratchCard'
-import { LotteryTicket } from '@/types'
 
 function timeAgo(dateStr: string) {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
@@ -48,9 +46,11 @@ export default function BankPage() {
   } = useBank()
   const { playSound } = useSound()
 
-  // Current rate (updates every second)
+  // Ticking state
   const [currentRate, setCurrentRate] = useState(getCurrentDailyRate())
   const [stockPrice, setStockPrice] = useState(getStockPrice())
+  const [spitBank, setSpitBank] = useState<BankBalance>({ totalPrincipal: 0, totalInterest: 0, totalBalance: 0, totalWithdrawn: 0 })
+  const [goldBank, setGoldBank] = useState<BankBalance>({ totalPrincipal: 0, totalInterest: 0, totalBalance: 0, totalWithdrawn: 0 })
 
   // Forms
   const [depositTab, setDepositTab] = useState<'spit' | 'gold'>('spit')
@@ -64,15 +64,9 @@ export default function BankPage() {
   const [isSellingStock, setIsSellingStock] = useState(false)
   const [buyingTicket, setBuyingTicket] = useState<string | null>(null)
   const [chartDays, setChartDays] = useState(30)
-
-  // Scratched tickets (recently revealed)
   const [scratchedIds, setScratchedIds] = useState<Set<string>>(new Set())
 
-  // Ticking balances
-  const [spitBank, setSpitBank] = useState<BankBalance>({ totalPrincipal: 0, totalInterest: 0, totalBalance: 0, totalWithdrawn: 0 })
-  const [goldBank, setGoldBank] = useState<BankBalance>({ totalPrincipal: 0, totalInterest: 0, totalBalance: 0, totalWithdrawn: 0 })
-
-  // Update rate + stock price every second
+  // Tick rate + stock price every second
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentRate(getCurrentDailyRate())
@@ -81,7 +75,7 @@ export default function BankPage() {
     return () => clearInterval(interval)
   }, [])
 
-  // Tick bank balances every 100ms
+  // Tick bank balances every 100ms for real-time yield
   useEffect(() => {
     const tick = () => {
       setSpitBank(getSpitBankBalance())
@@ -92,7 +86,8 @@ export default function BankPage() {
     return () => clearInterval(interval)
   }, [spitDeposits, goldDeposits])
 
-  // Deposit
+  // ---- Handlers ----
+
   const handleDeposit = async () => {
     const amount = parseInt(depositAmount)
     if (!amount || amount <= 0) return
@@ -121,7 +116,6 @@ export default function BankPage() {
     }
   }
 
-  // Withdraw
   const handleWithdraw = async () => {
     const amount = parseInt(withdrawAmount)
     if (!amount || amount <= 0) return
@@ -150,7 +144,6 @@ export default function BankPage() {
     }
   }
 
-  // Buy stock
   const handleBuyStock = async () => {
     const amount = parseFloat(buyStockAmount)
     if (!amount || amount <= 0) return
@@ -177,7 +170,6 @@ export default function BankPage() {
     }
   }
 
-  // Sell stock
   const handleSellStock = async () => {
     const shares = parseFloat(sellSharesAmount)
     if (!shares || shares <= 0) return
@@ -204,7 +196,6 @@ export default function BankPage() {
     }
   }
 
-  // Buy ticket
   const handleBuyTicket = async (ticketType: string) => {
     setBuyingTicket(ticketType)
     try {
@@ -233,19 +224,22 @@ export default function BankPage() {
     refreshBank()
   }
 
-  // Stock P&L
+  // ---- Computed ----
+
   const currentShares = stockHolding?.shares || 0
   const costBasis = stockHolding?.total_cost_basis || 0
   const currentValue = currentShares * stockPrice
   const pnl = currentValue - costBasis
   const pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0
 
-  // Active deposits for current tab
   const activeDeposits = depositTab === 'spit' ? spitDeposits : goldDeposits
   const bankBalance = depositTab === 'spit' ? spitBank : goldBank
+  const walletBalance = depositTab === 'spit' ? walletSpits : walletGold
 
-  // Tickets to show (unscratched and not yet revealed in this session)
   const ticketsToScratch = unscratchedTickets.filter(t => !scratchedIds.has(t.id))
+
+  // Rate wave indicator (0-1 where in cycle)
+  const ratePosition = (currentRate - 0.005) / (0.01 - 0.005)
 
   if (!loaded) {
     return (
@@ -273,37 +267,57 @@ export default function BankPage() {
       </header>
 
       <div className="bank-content">
+
         {/* ============================================ */}
         {/* BALANCE OVERVIEW */}
         {/* ============================================ */}
         <section className="bank-section">
-          <h2 className="bank-section-heading">Balance Overview</h2>
-          <div className="bank-overview-grid">
-            <div className="bank-overview-card">
-              <div className="bank-overview-label">Wallet (Spits)</div>
-              <div className="bank-overview-value">{walletSpits.toLocaleString()}</div>
-            </div>
-            <div className="bank-overview-card">
-              <div className="bank-overview-label">Wallet (Gold)</div>
-              <div className="bank-overview-value">{walletGold.toLocaleString()}</div>
-            </div>
-            <div className="bank-overview-card bank-overview-card-highlight">
-              <div className="bank-overview-label">Bank (Spits)</div>
-              <div className="bank-overview-value bank-ticker-value">
+          <div className="bank-hero">
+            <div className="bank-hero-col">
+              <div className="bank-hero-label">Bank Balance (Spits)</div>
+              <div className="bank-hero-value bank-hero-value-live">
                 {spitBank.totalBalance.toFixed(5)}
               </div>
+              {spitBank.totalInterest > 0 && (
+                <div className="bank-hero-yield">+{spitBank.totalInterest.toFixed(5)} earned</div>
+              )}
             </div>
-            <div className="bank-overview-card bank-overview-card-highlight">
-              <div className="bank-overview-label">Bank (Gold)</div>
-              <div className="bank-overview-value bank-ticker-value">
+            <div className="bank-hero-col">
+              <div className="bank-hero-label">Bank Balance (Gold)</div>
+              <div className="bank-hero-value bank-hero-value-live">
                 {goldBank.totalBalance.toFixed(5)}
               </div>
+              {goldBank.totalInterest > 0 && (
+                <div className="bank-hero-yield">+{goldBank.totalInterest.toFixed(5)} earned</div>
+              )}
             </div>
           </div>
-          <div className="bank-rate-display">
-            <span className="bank-rate-label">Current Interest Rate</span>
-            <span className="bank-rate-value text-glow">{formatRate(currentRate)}</span>
-            <span className="bank-rate-sub">per year (locked at deposit time)</span>
+
+          <div className="bank-wallets">
+            <div className="bank-wallet-chip">
+              <span className="bank-wallet-chip-label">Wallet</span>
+              <span className="bank-wallet-chip-val">{walletSpits.toLocaleString()} spits</span>
+            </div>
+            <div className="bank-wallet-chip">
+              <span className="bank-wallet-chip-label">Wallet</span>
+              <span className="bank-wallet-chip-val">{walletGold.toLocaleString()} gold</span>
+            </div>
+          </div>
+
+          {/* Rate */}
+          <div className="bank-rate-bar">
+            <div className="bank-rate-bar-info">
+              <span className="bank-rate-bar-label">Interest Rate</span>
+              <span className="bank-rate-bar-value">{formatRate(currentRate)}/yr</span>
+            </div>
+            <div className="bank-rate-bar-track">
+              <div className="bank-rate-bar-fill" style={{ width: `${ratePosition * 100}%` }} />
+            </div>
+            <div className="bank-rate-bar-range">
+              <span>0.50%</span>
+              <span>locked at deposit</span>
+              <span>1.00%</span>
+            </div>
           </div>
         </section>
 
@@ -313,7 +327,6 @@ export default function BankPage() {
         <section className="bank-section">
           <h2 className="bank-section-heading">Deposits & Withdrawals</h2>
 
-          {/* Currency tabs */}
           <div className="bank-tabs">
             <button
               className={`bank-tab ${depositTab === 'spit' ? 'active' : ''}`}
@@ -330,79 +343,107 @@ export default function BankPage() {
           </div>
 
           <div className="bank-forms-row">
-            {/* Deposit form */}
+            {/* Deposit */}
             <div className="bank-form-card">
-              <h3 className="bank-form-title">Deposit {depositTab}</h3>
-              <p className="bank-form-sub">Lock rate: {formatRate(currentRate)}</p>
-              <div className="bank-form-input-row">
-                <input
-                  type="number"
-                  className="sys-input"
-                  placeholder="Amount"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  min="1"
-                />
+              <div className="bank-form-header">
+                <div className="bank-form-icon">+</div>
+                <div>
+                  <h3 className="bank-form-title">Deposit</h3>
+                  <p className="bank-form-sub">Locks at {formatRate(currentRate)}/yr</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Amount ({depositTab})</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder="0"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    min="1"
+                  />
+                  <button
+                    className="bank-form-max-btn"
+                    onClick={() => setDepositAmount(String(walletBalance))}
+                  >
+                    MAX
+                  </button>
+                </div>
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary bank-form-submit"
                   onClick={handleDeposit}
-                  disabled={isDepositing || !depositAmount}
+                  disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0 || Number(depositAmount) > walletBalance}
                 >
                   {isDepositing ? 'Depositing...' : 'Deposit'}
                 </button>
-              </div>
-              <div className="bank-form-balance">
-                Wallet: {depositTab === 'spit' ? walletSpits.toLocaleString() : walletGold.toLocaleString()} {depositTab}
+                <div className="bank-form-footer">
+                  Wallet: <strong>{walletBalance.toLocaleString()}</strong> {depositTab}
+                </div>
               </div>
             </div>
 
-            {/* Withdraw form */}
+            {/* Withdraw */}
             <div className="bank-form-card">
-              <h3 className="bank-form-title">Withdraw {depositTab}</h3>
-              <p className="bank-form-sub">Floored to integer</p>
-              <div className="bank-form-input-row">
-                <input
-                  type="number"
-                  className="sys-input"
-                  placeholder="Amount"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  min="1"
-                />
+              <div className="bank-form-header">
+                <div className="bank-form-icon bank-form-icon-withdraw">-</div>
+                <div>
+                  <h3 className="bank-form-title">Withdraw</h3>
+                  <p className="bank-form-sub">Floored to integer</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Amount ({depositTab})</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder="0"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    min="1"
+                  />
+                  <button
+                    className="bank-form-max-btn"
+                    onClick={() => setWithdrawAmount(String(Math.floor(bankBalance.totalBalance)))}
+                  >
+                    MAX
+                  </button>
+                </div>
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary bank-form-submit"
                   onClick={handleWithdraw}
-                  disabled={isWithdrawing || !withdrawAmount}
+                  disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > bankBalance.totalBalance}
                 >
                   {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
                 </button>
-              </div>
-              <div className="bank-form-balance">
-                Bank: {bankBalance.totalBalance.toFixed(2)} {depositTab}
+                <div className="bank-form-footer">
+                  Bank: <strong>{bankBalance.totalBalance.toFixed(2)}</strong> {depositTab}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Active deposits list */}
+          {/* Active deposits with live ticking per row */}
           {activeDeposits.length > 0 && (
             <div className="bank-deposits-list">
-              <h3 className="bank-deposits-list-title">Active Deposits ({depositTab})</h3>
-              {activeDeposits.map((d) => {
-                const interest = calculateBankBalance([d])
-                const remaining = d.principal + interest.totalInterest - d.withdrawn
-                return (
-                  <div key={d.id} className="bank-deposit-row">
-                    <div className="bank-deposit-info">
-                      <span className="bank-deposit-principal">{d.principal.toFixed(2)}</span>
-                      <span className="bank-deposit-rate">@ {formatRate(d.locked_rate)}</span>
-                      <span className="bank-deposit-time">{timeAgo(d.deposited_at)}</span>
-                    </div>
-                    <div className="bank-deposit-interest">
-                      +{interest.totalInterest.toFixed(5)} earned
-                    </div>
-                  </div>
-                )
-              })}
+              <h3 className="bank-deposits-list-title">
+                Active Deposits ({activeDeposits.length})
+              </h3>
+              <div className="bank-deposits-table-header">
+                <span>Principal</span>
+                <span>Rate</span>
+                <span>Age</span>
+                <span>Value</span>
+              </div>
+              {activeDeposits.map((d) => (
+                <div key={d.id} className="bank-deposit-row">
+                  <span className="bank-deposit-principal">{d.principal.toFixed(2)}</span>
+                  <span className="bank-deposit-rate">{formatRate(d.locked_rate)}</span>
+                  <span className="bank-deposit-time">{timeAgo(d.deposited_at)}</span>
+                  <DepositRowTicker deposit={d} />
+                </div>
+              ))}
             </div>
           )}
         </section>
@@ -459,61 +500,89 @@ export default function BankPage() {
           )}
 
           <div className="bank-forms-row">
-            {/* Buy stock */}
             <div className="bank-form-card">
-              <h3 className="bank-form-title">Buy Shares</h3>
-              <p className="bank-form-sub">Uses bank spit balance</p>
-              <div className="bank-form-input-row">
-                <input
-                  type="number"
-                  className="sys-input"
-                  placeholder="Spit amount"
-                  value={buyStockAmount}
-                  onChange={(e) => setBuyStockAmount(e.target.value)}
-                  min="1"
-                />
+              <div className="bank-form-header">
+                <div className="bank-form-icon bank-form-icon-buy">B</div>
+                <div>
+                  <h3 className="bank-form-title">Buy Shares</h3>
+                  <p className="bank-form-sub">From bank spit balance</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Spend (spits)</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder="0"
+                    value={buyStockAmount}
+                    onChange={(e) => setBuyStockAmount(e.target.value)}
+                    min="1"
+                  />
+                  <button
+                    className="bank-form-max-btn"
+                    onClick={() => setBuyStockAmount(String(Math.floor(spitBank.totalBalance)))}
+                  >
+                    MAX
+                  </button>
+                </div>
+                {buyStockAmount && Number(buyStockAmount) > 0 && (
+                  <div className="bank-form-preview">
+                    ≈ {(Number(buyStockAmount) / stockPrice).toFixed(4)} shares
+                  </div>
+                )}
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary bank-form-submit"
                   onClick={handleBuyStock}
-                  disabled={isBuyingStock || !buyStockAmount}
+                  disabled={isBuyingStock || !buyStockAmount || Number(buyStockAmount) <= 0}
                 >
                   {isBuyingStock ? 'Buying...' : 'Buy'}
                 </button>
               </div>
-              {buyStockAmount && Number(buyStockAmount) > 0 && (
-                <div className="bank-form-preview">
-                  ~{(Number(buyStockAmount) / stockPrice).toFixed(2)} shares
-                </div>
-              )}
             </div>
 
-            {/* Sell stock */}
             <div className="bank-form-card">
-              <h3 className="bank-form-title">Sell Shares</h3>
-              <p className="bank-form-sub">Proceeds go to bank (0% rate)</p>
-              <div className="bank-form-input-row">
-                <input
-                  type="number"
-                  className="sys-input"
-                  placeholder="Shares"
-                  value={sellSharesAmount}
-                  onChange={(e) => setSellSharesAmount(e.target.value)}
-                  min="0.00001"
-                  step="0.00001"
-                />
+              <div className="bank-form-header">
+                <div className="bank-form-icon bank-form-icon-sell">S</div>
+                <div>
+                  <h3 className="bank-form-title">Sell Shares</h3>
+                  <p className="bank-form-sub">Proceeds to bank (0% rate)</p>
+                </div>
+              </div>
+              <div className="bank-form-body">
+                <label className="bank-form-label">Shares</label>
+                <div className="bank-form-input-group">
+                  <input
+                    type="number"
+                    className="input bank-form-input"
+                    placeholder="0"
+                    value={sellSharesAmount}
+                    onChange={(e) => setSellSharesAmount(e.target.value)}
+                    min="0.00001"
+                    step="0.00001"
+                  />
+                  {currentShares > 0 && (
+                    <button
+                      className="bank-form-max-btn"
+                      onClick={() => setSellSharesAmount(String(currentShares))}
+                    >
+                      MAX
+                    </button>
+                  )}
+                </div>
+                {sellSharesAmount && Number(sellSharesAmount) > 0 && (
+                  <div className="bank-form-preview">
+                    ≈ {(Number(sellSharesAmount) * stockPrice).toFixed(2)} spits
+                  </div>
+                )}
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary bank-form-submit"
                   onClick={handleSellStock}
-                  disabled={isSellingStock || !sellSharesAmount}
+                  disabled={isSellingStock || !sellSharesAmount || Number(sellSharesAmount) <= 0 || Number(sellSharesAmount) > currentShares}
                 >
                   {isSellingStock ? 'Selling...' : 'Sell'}
                 </button>
               </div>
-              {sellSharesAmount && Number(sellSharesAmount) > 0 && (
-                <div className="bank-form-preview">
-                  ~{(Number(sellSharesAmount) * stockPrice).toFixed(2)} spits
-                </div>
-              )}
             </div>
           </div>
         </section>
@@ -530,7 +599,7 @@ export default function BankPage() {
               const bankBal = tier.currency === 'spit' ? spitBank : goldBank
               const canAfford = bankBal.totalBalance >= tier.cost
               return (
-                <div key={tier.type} className="bank-ticket-card">
+                <div key={tier.type} className={`bank-ticket-card ${canAfford ? '' : 'bank-ticket-card-disabled'}`}>
                   <div className="bank-ticket-emoji">{tier.emoji}</div>
                   <div className="bank-ticket-name">{tier.name}</div>
                   <div className="bank-ticket-cost">
@@ -541,14 +610,13 @@ export default function BankPage() {
                     onClick={() => handleBuyTicket(tier.type)}
                     disabled={buyingTicket === tier.type || !canAfford}
                   >
-                    {buyingTicket === tier.type ? 'Buying...' : canAfford ? 'Buy' : 'Insufficient'}
+                    {buyingTicket === tier.type ? '...' : 'Buy'}
                   </button>
                 </div>
               )
             })}
           </div>
 
-          {/* Unscratched tickets */}
           {ticketsToScratch.length > 0 && (
             <div className="bank-my-tickets">
               <h3 className="bank-deposits-list-title">My Tickets ({ticketsToScratch.length})</h3>
