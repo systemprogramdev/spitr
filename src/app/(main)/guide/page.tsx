@@ -527,12 +527,24 @@ export default function GuidePage() {
           <p>Buy tickets from your bank balance. Outcomes are pre-determined at purchase — scratching just reveals the result.</p>
           <div className="guide-table">
             <div className="guide-table-row">
+              <span>📡 Ping Scratch</span>
+              <span>1 spit</span>
+            </div>
+            <div className="guide-table-row">
               <span>🎣 Phishing Scratch</span>
               <span>10 spits</span>
             </div>
             <div className="guide-table-row">
               <span>💾 Buffer Overflow</span>
               <span>50 spits</span>
+            </div>
+            <div className="guide-table-row">
+              <span>🌊 DDoS Deluxe</span>
+              <span>100 spits</span>
+            </div>
+            <div className="guide-table-row">
+              <span>🪙 Token Flip</span>
+              <span>1 gold</span>
             </div>
             <div className="guide-table-row">
               <span>🔓 Backdoor Access</span>
