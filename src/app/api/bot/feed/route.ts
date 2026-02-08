@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const { data: spits, error: feedErr } = await supabaseAdmin
       .from('spits')
-      .select('id, user_id, content, reply_to_id, created_at, users(handle, name)')
+      .select('id, user_id, content, reply_to_id, created_at, users!spits_user_id_fkey(handle, name)')
       .order('created_at', { ascending: false })
       .limit(20)
 
