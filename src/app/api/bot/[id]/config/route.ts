@@ -64,40 +64,13 @@ export async function PATCH(
     if (body.custom_prompt !== undefined) configUpdates.custom_prompt = body.custom_prompt
 
     if (Object.keys(configUpdates).length > 0) {
-      // Ensure bot_configs row exists (may be missing if purchase insert failed)
-      const { data: existingConfig } = await supabaseAdmin
-        .from('bot_configs')
-        .select('id')
-        .eq('bot_id', botId)
-        .single()
-
-      if (!existingConfig) {
-        // Insert with sensible defaults + the values being set
-        const { error: insertErr } = await supabaseAdmin
-          .from('bot_configs')
-          .insert({
-            bot_id: botId,
-            combat_strategy: 'passive',
-            banking_strategy: 'balanced',
-            target_mode: 'random',
-            auto_heal_threshold: 50,
-            enabled_actions: ['post', 'reply', 'like'],
-            ...configUpdates,
-          })
-        if (insertErr) {
-          console.error('Insert bot config error:', insertErr)
-          return NextResponse.json({ error: `Config error: ${insertErr.message} [${insertErr.code}]` }, { status: 500 })
-        }
-        return NextResponse.json({ success: true })
-      }
-
-      const { error } = await supabaseAdmin
+      const { error, count } = await supabaseAdmin
         .from('bot_configs')
         .update(configUpdates)
         .eq('bot_id', botId)
       if (error) {
         console.error('Update bot config error:', error)
-        return NextResponse.json({ error: `Config error: ${error.message} [${error.code}]` }, { status: 500 })
+        return NextResponse.json({ error: `Config error: ${error.message} [${error.code}] updates=${JSON.stringify(configUpdates)}` }, { status: 500 })
       }
     }
 
