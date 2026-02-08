@@ -64,10 +64,27 @@ export async function PATCH(
     if (body.custom_prompt !== undefined) configUpdates.custom_prompt = body.custom_prompt
 
     if (Object.keys(configUpdates).length > 0) {
-      // Use upsert to handle case where bot_configs row wasn't created
+      // Ensure bot_configs row exists (may be missing if purchase insert failed)
+      const { data: existingConfig } = await supabaseAdmin
+        .from('bot_configs')
+        .select('id')
+        .eq('bot_id', botId)
+        .single()
+
+      if (!existingConfig) {
+        const { error: insertErr } = await supabaseAdmin
+          .from('bot_configs')
+          .insert({ bot_id: botId })
+        if (insertErr) {
+          console.error('Insert bot config error:', insertErr)
+          return NextResponse.json({ error: `Config error: ${insertErr.message} [${insertErr.code}]` }, { status: 500 })
+        }
+      }
+
       const { error } = await supabaseAdmin
         .from('bot_configs')
-        .upsert({ bot_id: botId, ...configUpdates }, { onConflict: 'bot_id' })
+        .update(configUpdates)
+        .eq('bot_id', botId)
       if (error) {
         console.error('Update bot config error:', error)
         return NextResponse.json({ error: `Config error: ${error.message} [${error.code}]` }, { status: 500 })
