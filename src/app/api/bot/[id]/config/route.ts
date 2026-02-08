@@ -50,7 +50,7 @@ export async function PATCH(
         .eq('id', botId)
       if (error) {
         console.error('Update bot error:', error)
-        return NextResponse.json({ error: 'Failed to update bot' }, { status: 500 })
+        return NextResponse.json({ error: `Bot error: ${error.message} [${error.code}]` }, { status: 500 })
       }
     }
 
@@ -70,7 +70,7 @@ export async function PATCH(
         .upsert({ bot_id: botId, ...configUpdates }, { onConflict: 'bot_id' })
       if (error) {
         console.error('Update bot config error:', error)
-        return NextResponse.json({ error: 'Failed to update config' }, { status: 500 })
+        return NextResponse.json({ error: `Config error: ${error.message} [${error.code}]` }, { status: 500 })
       }
     }
 
