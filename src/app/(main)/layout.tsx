@@ -17,6 +17,7 @@ import { useModalStore } from '@/stores/modalStore'
 import { SpitModal } from '@/components/spit'
 import { ChestClaimModal } from '@/components/chest/ChestClaimModal'
 import { ChestOpenModal } from '@/components/chest/ChestOpenModal'
+import { PaycheckModal } from '@/components/paycheck/PaycheckModal'
 import { useDailyChest } from '@/hooks/useDailyChest'
 import { createClient } from '@/lib/supabase/client'
 import { User } from '@/types'
@@ -470,6 +471,7 @@ export default function MainLayout({
         <SpitModal />
         <ChestClaimModal />
         <ChestOpenModal />
+        <PaycheckModal />
       </div>
     </div>
   )

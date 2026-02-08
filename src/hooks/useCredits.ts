@@ -38,9 +38,8 @@ export function useCredits() {
       try {
         const res = await fetch('/api/paycheck', { method: 'POST' })
         if (res.ok) {
-          // Import toast dynamically to avoid circular deps
-          const { toast } = await import('@/stores/toastStore')
-          toast.success('Your weekly paycheck of 1,000 spits has been deposited to your bank!')
+          const { useModalStore } = await import('@/stores/modalStore')
+          useModalStore.getState().openPaycheckModal()
         }
       } catch {
         // Silently ignore — server will reject if not eligible

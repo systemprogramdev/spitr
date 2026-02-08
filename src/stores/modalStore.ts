@@ -17,6 +17,10 @@ interface ModalState {
   openingChestId: string | null
   openChestOpenModal: (chestId: string) => void
   closeChestOpenModal: () => void
+  // Paycheck modal
+  isPaycheckModalOpen: boolean
+  openPaycheckModal: () => void
+  closePaycheckModal: () => void
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -55,4 +59,8 @@ export const useModalStore = create<ModalState>((set) => ({
     set({ isChestOpenModalOpen: true, openingChestId: chestId }),
   closeChestOpenModal: () =>
     set({ isChestOpenModalOpen: false, openingChestId: null }),
+  // Paycheck modal
+  isPaycheckModalOpen: false,
+  openPaycheckModal: () => set({ isPaycheckModalOpen: true }),
+  closePaycheckModal: () => set({ isPaycheckModalOpen: false }),
 }))

@@ -157,7 +157,7 @@ export default function DatacenterPage() {
         return
       }
 
-      playSound('chest')
+      playSound('robot')
       toast.success(`Bot @${botHandle} created!`)
       setBotName('')
       setBotHandle('')

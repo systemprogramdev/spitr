@@ -4345,6 +4345,25 @@ a:hover {
   50% { transform: translateY(-12px); }
 }
 
+/* Paycheck Modal */
+.paycheck-modal {
+  text-align: center;
+  max-width: 420px;
+}
+
+.paycheck-image-wrapper {
+  padding: 1rem 0 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.paycheck-image {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 6px;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15), 0 0 40px rgba(0, 255, 136, 0.05);
+}
+
 /* Chest Open Modal */
 .chest-open-modal {
   text-align: center;
