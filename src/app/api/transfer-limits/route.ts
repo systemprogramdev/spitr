@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-    // Get sender's total sent in last 24h
+    // Get sender's total spits sent in last 24h
     const { data: sentData } = await supabaseAdmin
       .from('credit_transactions')
       .select('amount')
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const sentToday = sentData?.reduce((sum, t) => sum + Math.abs(t.amount), 0) ?? 0
 
-    // Get recipient's total received in last 24h
+    // Get recipient's total spits received in last 24h
     const { data: receivedData } = await supabaseAdmin
       .from('credit_transactions')
       .select('amount')
@@ -42,10 +42,22 @@ export async function POST(request: NextRequest) {
 
     const receivedToday = receivedData?.reduce((sum, t) => sum + t.amount, 0) ?? 0
 
+    // Get sender's gold sent in last 24h
+    const { data: goldSentData } = await supabaseAdmin
+      .from('gold_transactions')
+      .select('amount')
+      .eq('user_id', user.id)
+      .eq('type', 'transfer_sent')
+      .gte('created_at', cutoff)
+
+    const goldSentToday = goldSentData?.reduce((sum, t) => sum + Math.abs(t.amount), 0) ?? 0
+
     return NextResponse.json({
       sentToday,
       receivedToday,
       dailyLimit: 100,
+      goldSentToday,
+      goldDailyLimit: 10,
     })
   } catch (error) {
     console.error('Transfer limits error:', error)

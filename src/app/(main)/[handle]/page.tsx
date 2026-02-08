@@ -8,7 +8,6 @@ import { useAuthStore } from '@/stores/authStore'
 import { User, SpitWithAuthor } from '@/types'
 import { Spit, AttackModal } from '@/components/spit'
 import { TransferModal } from '@/components/transfer/TransferModal'
-import { GoldTransferModal } from '@/components/transfer/GoldTransferModal'
 import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 import { HPBar } from '@/components/ui/HPBar'
 import { XPBar } from '@/components/ui/XPBar'
@@ -43,7 +42,6 @@ export default function ProfilePage() {
   const [profileDestroyed, setProfileDestroyed] = useState(false)
   const [showAttackModal, setShowAttackModal] = useState(false)
   const [showTransferModal, setShowTransferModal] = useState(false)
-  const [showGoldTransferModal, setShowGoldTransferModal] = useState(false)
   const [userXp, setUserXp] = useState(0)
   const [userLevel, setUserLevel] = useState(1)
   const [activeBuffs, setActiveBuffs] = useState<{ buff_type: string; charges_remaining: number }[]>([])
@@ -424,16 +422,6 @@ export default function ProfilePage() {
                 &#x1F4B8;
               </button>
             )}
-            {!isOwnProfile && currentUser && (
-              <button
-                className="btn btn-outline"
-                onClick={() => setShowGoldTransferModal(true)}
-                title="Send Gold"
-                style={{ color: '#f0b232' }}
-              >
-                &#x1FA99;
-              </button>
-            )}
             {!isOwnProfile && currentUser && !profileDestroyed && (
               <button
                 className="btn"
@@ -657,16 +645,6 @@ export default function ProfilePage() {
           recipientHandle={profile.handle}
           recipientName={profile.name}
           onClose={() => setShowTransferModal(false)}
-        />
-      )}
-
-      {/* Gold Transfer Modal */}
-      {showGoldTransferModal && profile && (
-        <GoldTransferModal
-          recipientId={profile.id}
-          recipientHandle={profile.handle}
-          recipientName={profile.name}
-          onClose={() => setShowGoldTransferModal(false)}
         />
       )}
 

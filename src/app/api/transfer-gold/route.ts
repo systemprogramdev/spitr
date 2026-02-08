@@ -7,6 +7,8 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const GOLD_DAILY_LIMIT = 10
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient()
@@ -23,6 +25,24 @@ export async function POST(request: NextRequest) {
 
     if (typeof amount !== 'number' || amount < 1 || !Number.isInteger(amount)) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+    }
+
+    // Check daily gold send limit
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const { data: sentData } = await supabaseAdmin
+      .from('gold_transactions')
+      .select('amount')
+      .eq('user_id', user.id)
+      .eq('type', 'transfer_sent')
+      .gte('created_at', cutoff)
+
+    const goldSentToday = sentData?.reduce((sum, t) => sum + Math.abs(t.amount), 0) ?? 0
+
+    if (goldSentToday + amount > GOLD_DAILY_LIMIT) {
+      const remaining = Math.max(0, GOLD_DAILY_LIMIT - goldSentToday)
+      return NextResponse.json({
+        error: `Daily gold transfer limit is ${GOLD_DAILY_LIMIT}. You've sent ${goldSentToday} today${remaining > 0 ? `, ${remaining} remaining` : ''}.`,
+      }, { status: 400 })
     }
 
     const { data, error } = await supabaseAdmin.rpc('transfer_gold', {
