@@ -72,13 +72,23 @@ export async function PATCH(
         .single()
 
       if (!existingConfig) {
+        // Insert with sensible defaults + the values being set
         const { error: insertErr } = await supabaseAdmin
           .from('bot_configs')
-          .insert({ bot_id: botId })
+          .insert({
+            bot_id: botId,
+            combat_strategy: 'passive',
+            banking_strategy: 'balanced',
+            target_mode: 'random',
+            auto_heal_threshold: 50,
+            enabled_actions: ['post', 'reply', 'like'],
+            ...configUpdates,
+          })
         if (insertErr) {
           console.error('Insert bot config error:', insertErr)
           return NextResponse.json({ error: `Config error: ${insertErr.message} [${insertErr.code}]` }, { status: 500 })
         }
+        return NextResponse.json({ success: true })
       }
 
       const { error } = await supabaseAdmin

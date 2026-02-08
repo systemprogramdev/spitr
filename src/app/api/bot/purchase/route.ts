@@ -199,6 +199,11 @@ export async function POST(request: NextRequest) {
       // Create bot_configs with defaults
       await supabaseAdmin.from('bot_configs').insert({
         bot_id: bot.id,
+        combat_strategy: 'passive',
+        banking_strategy: 'balanced',
+        target_mode: 'random',
+        auto_heal_threshold: 50,
+        enabled_actions: ['post', 'reply', 'like'],
       })
 
       return NextResponse.json({
