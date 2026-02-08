@@ -12,8 +12,10 @@ export async function POST(request: NextRequest) {
     const content = body.content
     const reply_to_id = body.reply_to_id || body.replyToId || body.spit_id
 
-    if (!content || typeof content !== 'string' || content.length > 280) {
-      return NextResponse.json({ error: 'Invalid content (max 280 chars)' }, { status: 400 })
+    const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
+    const effectiveLength = content ? content.replace(URL_REGEX, (url: string) => 'x'.repeat(Math.min(url.length, 23))).length : 0
+    if (!content || typeof content !== 'string' || effectiveLength > 560) {
+      return NextResponse.json({ error: 'Invalid content (max 560 chars)' }, { status: 400 })
     }
     if (!reply_to_id) {
       return NextResponse.json({ error: 'reply_to_id is required' }, { status: 400 })
