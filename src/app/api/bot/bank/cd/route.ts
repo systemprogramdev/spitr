@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 import { CD_TIERS } from '@/lib/bank'
 
 export async function POST(request: NextRequest) {
@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: data.error }, { status: 400 })
       }
 
+      awardBotXP(botUserId, 'cd_buy')
+
       return NextResponse.json({
         success: true,
         cdId: data.cd_id,
@@ -74,6 +76,8 @@ export async function POST(request: NextRequest) {
       if (!data.success) {
         return NextResponse.json({ error: data.error }, { status: 400 })
       }
+
+      awardBotXP(botUserId, 'cd_redeem')
 
       return NextResponse.json({
         success: true,

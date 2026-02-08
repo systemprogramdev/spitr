@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 import { rollChestLoot } from '@/lib/items'
 
 export async function POST(request: NextRequest) {
@@ -79,6 +79,8 @@ export async function POST(request: NextRequest) {
           )
       }
     }
+
+    awardBotXP(botUserId, 'chest_open')
 
     return NextResponse.json({ success: true, loot })
   } catch (err) {

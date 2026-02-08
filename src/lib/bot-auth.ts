@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
+import { XP_AMOUNTS } from '@/lib/xp'
 
 export const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,5 +63,30 @@ export async function validateBotRequest(request: NextRequest): Promise<Validate
       bot,
       botUserId: bot.user_id,
     },
+  }
+}
+
+export async function awardBotXP(botUserId: string, action: string, referenceId?: string) {
+  const amount = XP_AMOUNTS[action]
+  if (!amount) return
+
+  try {
+    const { data } = await supabaseAdmin.rpc('award_xp', {
+      p_user_id: botUserId,
+      p_amount: amount,
+      p_action: action,
+      p_reference_id: referenceId || null,
+    })
+
+    if (data?.leveled_up) {
+      await supabaseAdmin.from('notifications').insert({
+        user_id: botUserId,
+        actor_id: botUserId,
+        type: 'level_up',
+        reference_id: String(data.level),
+      })
+    }
+  } catch {
+    // XP award is non-critical, don't fail the request
   }
 }

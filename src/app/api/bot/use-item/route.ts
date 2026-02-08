@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 import { ITEM_MAP } from '@/lib/items'
 
 export async function POST(request: NextRequest) {
@@ -37,6 +37,8 @@ export async function POST(request: NextRequest) {
       if (!result.success) {
         return NextResponse.json({ error: result.error || 'Potion use failed' }, { status: 400 })
       }
+
+      awardBotXP(botUserId, 'potion_use')
 
       return NextResponse.json({ success: true, newHp: result.new_hp, healed: result.healed })
     }

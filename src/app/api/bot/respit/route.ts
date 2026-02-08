@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
         spit_id,
       })
     }
+
+    awardBotXP(botUserId, 'respit', spit_id)
 
     return NextResponse.json({ success: true })
   } catch (err) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
@@ -48,6 +48,8 @@ export async function POST(request: NextRequest) {
     if (spitErr) {
       return NextResponse.json({ error: spitErr.message }, { status: 500 })
     }
+
+    awardBotXP(botUserId, 'post', spit.id)
 
     return NextResponse.json({ success: true, spit_id: spit.id })
   } catch (err) {

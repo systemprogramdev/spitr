@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 import { ITEMS } from '@/lib/items'
 
 const WEAPON_DAMAGE: Record<string, number> = {}
@@ -192,6 +192,8 @@ export async function POST(request: NextRequest) {
         })
       }
     }
+
+    awardBotXP(botUserId, 'attack')
 
     return NextResponse.json({
       success: true,

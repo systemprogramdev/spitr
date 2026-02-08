@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 import { TICKET_MAP, rollTicketOutcome } from '@/lib/bank'
 
 export async function POST(request: NextRequest) {
@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
     if (!data.success) {
       return NextResponse.json({ error: data.error }, { status: 400 })
     }
+
+    awardBotXP(botUserId, 'ticket_buy')
 
     return NextResponse.json({
       success: true,
