@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
         email: `bot_${handle}@spitr.bot`,
         password: crypto.randomUUID(),
         email_confirm: true,
+        user_metadata: { name, handle },
       })
 
       if (authErr || !authData.user) {
