@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import { XP_AMOUNTS } from '@/lib/xp'
+import { getCurrentDailyRate } from '@/lib/bank'
 
 export const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -58,11 +59,76 @@ export async function validateBotRequest(request: NextRequest): Promise<Validate
     return { error: 'Bot is deactivated', status: 403 }
   }
 
+  // Check weekly paycheck on every bot action (fire-and-forget)
+  checkBotPaycheck(bot.user_id)
+
   return {
     context: {
       bot,
       botUserId: bot.user_id,
     },
+  }
+}
+
+const WEEKLY_FREE_CREDITS = 1000
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+
+export async function checkBotPaycheck(botUserId: string) {
+  try {
+    const { data: credits } = await supabaseAdmin
+      .from('user_credits')
+      .select('balance, free_credits_at')
+      .eq('user_id', botUserId)
+      .single()
+
+    if (!credits) return
+
+    const lastFreeCredits = credits.free_credits_at
+      ? new Date(credits.free_credits_at).getTime()
+      : 0
+
+    if (Date.now() - lastFreeCredits < SEVEN_DAYS_MS) return
+
+    // Atomic claim
+    const tempBalance = credits.balance + WEEKLY_FREE_CREDITS
+    const { data: claimed } = await supabaseAdmin
+      .from('user_credits')
+      .update({
+        balance: tempBalance,
+        free_credits_at: new Date().toISOString(),
+      })
+      .eq('user_id', botUserId)
+      .is('free_credits_at', credits.free_credits_at)
+      .select('user_id')
+
+    if (!claimed || claimed.length === 0) return
+
+    // Deposit to bank
+    const lockedRate = getCurrentDailyRate()
+    const { data: depositResult, error: depositErr } = await supabaseAdmin.rpc('bank_deposit', {
+      p_user_id: botUserId,
+      p_currency: 'spit',
+      p_amount: WEEKLY_FREE_CREDITS,
+      p_locked_rate: lockedRate,
+    })
+
+    if (depositErr) {
+      // Rollback
+      await supabaseAdmin
+        .from('user_credits')
+        .update({ balance: credits.balance })
+        .eq('user_id', botUserId)
+      return
+    }
+
+    await supabaseAdmin.from('credit_transactions').insert({
+      user_id: botUserId,
+      type: 'free_weekly',
+      amount: WEEKLY_FREE_CREDITS,
+      balance_after: depositResult.new_wallet_balance,
+    })
+  } catch {
+    // Non-critical
   }
 }
 
