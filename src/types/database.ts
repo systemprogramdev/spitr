@@ -505,7 +505,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          type: 'purchase' | 'convert' | 'item_purchase'
+          type: 'purchase' | 'convert' | 'item_purchase' | 'transfer_sent' | 'transfer_received'
           amount: number
           balance_after: number
           reference_id: string | null
@@ -514,7 +514,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          type: 'purchase' | 'convert' | 'item_purchase'
+          type: 'purchase' | 'convert' | 'item_purchase' | 'transfer_sent' | 'transfer_received'
           amount: number
           balance_after: number
           reference_id?: string | null
@@ -523,7 +523,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          type?: 'purchase' | 'convert' | 'item_purchase'
+          type?: 'purchase' | 'convert' | 'item_purchase' | 'transfer_sent' | 'transfer_received'
           amount?: number
           balance_after?: number
           reference_id?: string | null
@@ -1039,7 +1039,7 @@ export type Database = {
     Enums: {
       notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray' | 'level_up' | 'spray' | 'level_up'
       transaction_type: 'free_monthly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received' | 'chest_purchase'
-      gold_transaction_type: 'purchase' | 'convert' | 'item_purchase'
+      gold_transaction_type: 'purchase' | 'convert' | 'item_purchase' | 'transfer_sent' | 'transfer_received'
       item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
     }
     CompositeTypes: {
