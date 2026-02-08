@@ -99,7 +99,10 @@ export function SpitComposer({ replyTo, onSuccess, placeholder = "What's happeni
     }, 0)
   }
 
-  const charCount = content.length
+  // URLs count as 23 chars regardless of actual length
+  const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi
+  const URL_CHAR_LENGTH = 23
+  const charCount = content.replace(URL_REGEX, (url) => 'x'.repeat(Math.min(url.length, URL_CHAR_LENGTH))).length
   const maxChars = 280
   const isOverLimit = charCount > maxChars
   const totalCost = 1 + (selectedEffect ? EFFECT_COST : 0) + (imageFile ? IMAGE_COST : 0)
