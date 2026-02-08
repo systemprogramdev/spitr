@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useCreditsStore } from '@/stores/creditsStore'
@@ -19,16 +19,18 @@ export const CREDIT_COSTS = {
 // Weekly paycheck
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
+// Module-level flag — shared across all hook instances to prevent double-fire
+let paycheckChecked = false
+
 export function useCredits() {
   const { user } = useAuthStore()
   const { balance, setBalance, deduct } = useCreditsStore()
-  const renewalCheckedRef = useRef(false)
 
   const checkAndApplyWeeklyPaycheck = async (userId: string, currentBalance: number, freeCreditsAt: string | null) => {
     // Only check once per session to avoid race conditions
-    if (renewalCheckedRef.current) return currentBalance
+    if (paycheckChecked) return currentBalance
 
-    renewalCheckedRef.current = true
+    paycheckChecked = true
 
     const lastFreeCredits = freeCreditsAt ? new Date(freeCreditsAt).getTime() : 0
     const now = Date.now()

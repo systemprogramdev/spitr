@@ -39,15 +39,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not eligible yet' }, { status: 400 })
     }
 
-    // Step A: Temporarily add 1000 to wallet (bank_deposit will deduct it)
+    // Atomic claim: only update if still eligible (prevents race condition)
+    const claimCondition = credits.free_credits_at
+      ? `free_credits_at = '${credits.free_credits_at}'`
+      : 'free_credits_at IS NULL'
+
     const tempBalance = credits.balance + WEEKLY_FREE_CREDITS
-    await supabaseAdmin
+    const { data: claimed, error: claimErr } = await supabaseAdmin
       .from('user_credits')
       .update({
         balance: tempBalance,
         free_credits_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
+      .or(claimCondition)
+      .select('user_id')
+
+    if (claimErr || !claimed || claimed.length === 0) {
+      return NextResponse.json({ error: 'Already claimed' }, { status: 400 })
+    }
 
     // Step B: Deposit to bank (deducts from wallet, creates bank deposit)
     const lockedRate = getCurrentDailyRate()
