@@ -234,9 +234,7 @@ export default function DatacenterPage() {
         fetchBots()
       } else {
         const data = await res.json()
-        const errMsg = data.error || 'Save failed'
-        toast.error(errMsg)
-        alert(errMsg)
+        toast.error(data.error || 'Save failed')
       }
     } catch {
       toast.error('Save failed')

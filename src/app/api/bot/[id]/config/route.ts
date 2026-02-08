@@ -50,7 +50,7 @@ export async function PATCH(
         .eq('id', botId)
       if (error) {
         console.error('Update bot error:', error)
-        return NextResponse.json({ error: `Bot error: ${error.message} [${error.code}]` }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to update bot' }, { status: 500 })
       }
     }
 
@@ -59,7 +59,7 @@ export async function PATCH(
     if (body.enabled_actions !== undefined) configUpdates.enabled_actions = body.enabled_actions
     if (body.target_mode !== undefined) configUpdates.target_mode = body.target_mode
     if (body.combat_strategy !== undefined) configUpdates.combat_strategy = body.combat_strategy
-    if (body.banking_strategy !== undefined) configUpdates.banking_strategy = body.banking_strategy
+    if (body.banking_strategy !== undefined && body.banking_strategy !== 'none') configUpdates.banking_strategy = body.banking_strategy
     if (body.auto_heal_threshold !== undefined) configUpdates.auto_heal_threshold = body.auto_heal_threshold
     if (body.custom_prompt !== undefined) configUpdates.custom_prompt = body.custom_prompt
 
@@ -70,7 +70,7 @@ export async function PATCH(
         .eq('bot_id', botId)
       if (error) {
         console.error('Update bot config error:', error)
-        return NextResponse.json({ error: `Config error: ${error.message} [${error.code}] updates=${JSON.stringify(configUpdates)}` }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to update config' }, { status: 500 })
       }
     }
 
