@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
   const { botUserId } = context
 
   try {
-    const { itemType } = await request.json()
+    const body = await request.json()
+    const { itemType } = body
 
     if (!itemType) {
       return NextResponse.json({ error: 'itemType is required' }, { status: 400 })
@@ -89,6 +90,54 @@ export async function POST(request: NextRequest) {
       })
 
       return NextResponse.json({ success: true, buffType: itemType, charges })
+    }
+
+    if (itemType === 'spray_paint') {
+      const targetId = body.target_user_id || body.targetUserId
+
+      if (!targetId) {
+        return NextResponse.json({ error: 'target_user_id is required for spray paint' }, { status: 400 })
+      }
+
+      if (targetId === botUserId) {
+        return NextResponse.json({ error: 'Cannot spray yourself' }, { status: 400 })
+      }
+
+      // Check inventory
+      const { data: inv } = await supabaseAdmin
+        .from('user_inventory')
+        .select('quantity')
+        .eq('user_id', botUserId)
+        .eq('item_type', 'spray_paint')
+        .single()
+
+      if (!inv || inv.quantity < 1) {
+        return NextResponse.json({ error: 'No spray paint in inventory' }, { status: 400 })
+      }
+
+      // Deduct from inventory
+      if (inv.quantity === 1) {
+        await supabaseAdmin.from('user_inventory').delete().eq('user_id', botUserId).eq('item_type', 'spray_paint')
+      } else {
+        await supabaseAdmin.from('user_inventory').update({ quantity: inv.quantity - 1 }).eq('user_id', botUserId).eq('item_type', 'spray_paint')
+      }
+
+      // Create spray paint with 24h expiry
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      await supabaseAdmin.from('spray_paints').insert({
+        sprayer_id: botUserId,
+        target_user_id: targetId,
+        expires_at: expiresAt,
+      })
+
+      // Notify target
+      await supabaseAdmin.from('notifications').insert({
+        user_id: targetId,
+        type: 'spray',
+        actor_id: botUserId,
+      })
+
+      return NextResponse.json({ success: true, target: targetId, expires_at: expiresAt })
     }
 
     return NextResponse.json({ error: 'Cannot use this item type' }, { status: 400 })
