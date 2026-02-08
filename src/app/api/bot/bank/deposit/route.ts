@@ -9,10 +9,12 @@ export async function POST(request: NextRequest) {
   const { botUserId } = context
 
   try {
-    const { currency, amount } = await request.json()
+    const body = await request.json()
+    const currency = body.currency || 'spit'
+    const amount = body.amount
 
-    if (!currency || !amount || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    if (!amount || amount <= 0) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
     }
 
     if (currency !== 'spit' && currency !== 'gold') {

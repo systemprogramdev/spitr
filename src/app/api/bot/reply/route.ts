@@ -8,7 +8,9 @@ export async function POST(request: NextRequest) {
   const { botUserId } = context
 
   try {
-    const { content, reply_to_id } = await request.json()
+    const body = await request.json()
+    const content = body.content
+    const reply_to_id = body.reply_to_id || body.replyToId || body.spit_id
 
     if (!content || typeof content !== 'string' || content.length > 280) {
       return NextResponse.json({ error: 'Invalid content (max 280 chars)' }, { status: 400 })

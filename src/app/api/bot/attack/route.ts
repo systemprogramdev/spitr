@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { ITEMS } from '@/lib/items'
+
+const WEAPON_DAMAGE: Record<string, number> = {}
+for (const item of ITEMS) {
+  if (item.category === 'weapon' && item.damage) {
+    WEAPON_DAMAGE[item.type] = item.damage
+  }
+}
 
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
@@ -8,15 +16,43 @@ export async function POST(request: NextRequest) {
   const { botUserId } = context
 
   try {
-    const { targetUserId, targetSpitId, itemType, damage } = await request.json()
+    const body = await request.json()
 
-    if (!itemType || !damage) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+    // Accept both camelCase and snake_case
+    const targetUserId = body.targetUserId || body.target_user_id || null
+    const targetSpitId = body.targetSpitId || body.target_spit_id || null
+    let itemType = body.itemType || body.item_type || null
+    let damage = body.damage || null
 
     if (!targetUserId && !targetSpitId) {
       return NextResponse.json({ error: 'Must specify a target' }, { status: 400 })
     }
+
+    // Auto-pick weapon from inventory if not specified
+    if (!itemType) {
+      const { data: inventory } = await supabaseAdmin
+        .from('user_inventory')
+        .select('item_type, quantity')
+        .eq('user_id', botUserId)
+        .in('item_type', Object.keys(WEAPON_DAMAGE))
+        .gt('quantity', 0)
+        .order('item_type')
+
+      if (!inventory || inventory.length === 0) {
+        return NextResponse.json({ error: 'No weapons in inventory' }, { status: 400 })
+      }
+
+      // Pick the best weapon available
+      const weaponPriority = ['nuke', 'drone', 'soldier', 'gun', 'knife']
+      const picked = weaponPriority.find(w => inventory.some(i => i.item_type === w)) || inventory[0].item_type
+      itemType = picked
+    }
+
+    if (!WEAPON_DAMAGE[itemType]) {
+      return NextResponse.json({ error: 'Invalid weapon type' }, { status: 400 })
+    }
+
+    damage = damage || WEAPON_DAMAGE[itemType]
 
     // Check target user's defensive buffs
     if (targetUserId) {
