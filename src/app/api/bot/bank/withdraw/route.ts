@@ -8,20 +8,22 @@ export async function POST(request: NextRequest) {
   const { botUserId } = context
 
   try {
-    const { currency, amount } = await request.json()
+    const body = await request.json()
+    const { currency, amount } = body
 
-    if (!currency || !amount || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    if (!currency || currency !== 'spit' && currency !== 'gold') {
+      return NextResponse.json({ error: `Invalid currency: ${currency}. Must be 'spit' or 'gold'` }, { status: 400 })
     }
 
-    if (currency !== 'spit' && currency !== 'gold') {
-      return NextResponse.json({ error: 'Invalid currency' }, { status: 400 })
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+    if (typeof numAmount !== 'number' || isNaN(numAmount) || numAmount <= 0) {
+      return NextResponse.json({ error: `Invalid amount: ${amount}. Must be a positive number` }, { status: 400 })
     }
 
     const { data, error: rpcErr } = await supabaseAdmin.rpc('bank_withdraw', {
       p_user_id: botUserId,
       p_currency: currency,
-      p_amount: Math.floor(amount),
+      p_amount: Math.floor(numAmount),
     })
 
     if (rpcErr) {
