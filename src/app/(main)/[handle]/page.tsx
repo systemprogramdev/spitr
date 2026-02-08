@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const { user: currentUser } = useAuthStore()
   const [profile, setProfile] = useState<User | null>(null)
   const [spits, setSpits] = useState<SpitWithAuthor[]>([])
-  const [stats, setStats] = useState({ followers: 0, following: 0, spits: 0, credits: 0 })
+  const [stats, setStats] = useState({ followers: 0, following: 0, spits: 0, credits: 0, gold: 0 })
   const [isFollowing, setIsFollowing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isTabLoading, setIsTabLoading] = useState(false)
@@ -199,11 +199,12 @@ export default function ProfilePage() {
       setProfileHp(profileData.hp ?? getMaxHp(1))
       setProfileDestroyed(profileData.is_destroyed ?? false)
 
-      const [followersRes, followingRes, spitsRes, creditsRes, pinnedRes, xpRes, buffsRes] = await Promise.all([
+      const [followersRes, followingRes, spitsRes, creditsRes, goldRes, pinnedRes, xpRes, buffsRes] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         supabase.from('spits').select('*', { count: 'exact', head: true }).eq('user_id', profileData.id).is('reply_to_id', null),
         supabase.from('user_credits').select('balance').eq('user_id', profileData.id).single(),
+        supabase.from('user_gold').select('balance').eq('user_id', profileData.id).single(),
         supabase.from('pinned_spits')
           .select('spit:spits!pinned_spits_spit_id_fkey(*, author:users!spits_user_id_fkey(*))')
           .eq('user_id', profileData.id)
@@ -225,6 +226,7 @@ export default function ProfilePage() {
         following: followingRes.count || 0,
         spits: spitsRes.count || 0,
         credits: creditsRes.data?.balance || 0,
+        gold: goldRes.data?.balance || 0,
       })
 
       // Set pinned spit if exists
@@ -545,6 +547,9 @@ export default function ProfilePage() {
             </button>
             <span className="stat-button" style={{ cursor: 'default' }}>
               <strong style={{ color: 'var(--sys-primary)' }}>{stats.credits.toLocaleString()}</strong> Spits
+            </span>
+            <span className="stat-button" style={{ cursor: 'default' }}>
+              <strong style={{ color: '#FFD700' }}>{stats.gold.toLocaleString()}</strong> Gold
             </span>
           </div>
         </div>
