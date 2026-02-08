@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
@@ -9,57 +9,20 @@ import { Spit } from '@/components/spit'
 import { enrichSpitsWithCounts } from '@/lib/spitUtils'
 import { LeaderboardTab } from '@/components/explore/LeaderboardTab'
 import { KillFeedTab } from '@/components/explore/KillFeedTab'
+import { ActivityFeedTab } from '@/components/explore/ActivityFeedTab'
 
-type ExploreTab = 'discover' | 'leaderboard' | 'killfeed'
+type ExploreTab = 'activity' | 'leaderboard' | 'killfeed'
 
 export default function SearchPage() {
   const { user } = useAuthStore()
   const [query, setQuery] = useState('')
   const [searchTab, setSearchTab] = useState<'users' | 'spits'>('users')
-  const [exploreTab, setExploreTab] = useState<ExploreTab>('discover')
+  const [exploreTab, setExploreTab] = useState<ExploreTab>('activity')
   const [users, setUsers] = useState<User[]>([])
   const [spits, setSpits] = useState<SpitWithAuthor[]>([])
-  const [discoverSpits, setDiscoverSpits] = useState<SpitWithAuthor[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingDiscover, setIsLoadingDiscover] = useState(true)
   const [hasSearched, setHasSearched] = useState(false)
   const supabase = useMemo(() => createClient(), [])
-
-  // Fetch discover spits on mount
-  useEffect(() => {
-    const fetchDiscoverSpits = async () => {
-      let followingIds: string[] = []
-      if (user) {
-        const { data: following } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', user.id)
-        followingIds = following?.map(f => f.following_id) || []
-        followingIds.push(user.id)
-      }
-
-      let query = supabase
-        .from('spits')
-        .select(`*, author:users!spits_user_id_fkey(*)`)
-        .is('reply_to_id', null)
-        .order('created_at', { ascending: false })
-        .limit(20)
-
-      if (followingIds.length > 0) {
-        query = query.not('user_id', 'in', `(${followingIds.join(',')})`)
-      }
-
-      const { data } = await query
-
-      if (data) {
-        const enriched = await enrichSpitsWithCounts(data, user?.id)
-        setDiscoverSpits(enriched)
-      }
-      setIsLoadingDiscover(false)
-    }
-
-    fetchDiscoverSpits()
-  }, [user, supabase])
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,7 +65,7 @@ export default function SearchPage() {
   }
 
   const exploreTabs: { key: ExploreTab; label: string; icon: string }[] = [
-    { key: 'discover', label: 'Discover', icon: '🔍' },
+    { key: 'activity', label: 'Activity', icon: '⚡' },
     { key: 'leaderboard', label: 'Leaderboard', icon: '🏆' },
     { key: 'killfeed', label: 'Kill Feed', icon: '⚔️' },
   ]
@@ -254,27 +217,7 @@ export default function SearchPage() {
         ) : exploreTab === 'killfeed' ? (
           <KillFeedTab />
         ) : (
-          // Discover feed
-          <div>
-            <div style={{ padding: '1rem', borderBottom: '1px solid var(--sys-border)' }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--sys-text-muted)' }}>
-                Spits from people you don&apos;t follow
-              </p>
-            </div>
-            {isLoadingDiscover ? (
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <div className="loading-spinner"></div>
-              </div>
-            ) : discoverSpits.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <p style={{ color: 'var(--sys-text-muted)' }}>No new spits to discover</p>
-              </div>
-            ) : (
-              discoverSpits.map((spit) => (
-                <Spit key={spit.id} spit={spit} />
-              ))
-            )}
-          </div>
+          <ActivityFeedTab />
         )
       )}
     </div>

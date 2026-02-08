@@ -6370,3 +6370,63 @@ a:hover {
   }
 }
 
+/* Activity Feed */
+.activity-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  font-family: var(--sys-font-mono);
+}
+
+.activity-icon {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+
+.activity-actor {
+  font-weight: 600;
+  color: var(--sys-primary);
+  white-space: nowrap;
+}
+
+.activity-target {
+  font-weight: 600;
+  color: var(--sys-text);
+  white-space: nowrap;
+}
+
+.activity-detail {
+  color: var(--sys-text-muted);
+  white-space: nowrap;
+}
+
+.activity-time {
+  margin-left: auto;
+  color: var(--sys-text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.activity-attack .activity-actor {
+  color: var(--sys-danger);
+}
+
+.activity-attack .activity-detail {
+  color: var(--sys-danger);
+  font-weight: 700;
+}
+
+.activity-lottery .activity-detail {
+  color: var(--sys-success);
+  font-weight: 700;
+}
+
+.activity-item_purchase .activity-detail {
+  color: #f0b232;
+}
+
+.activity-stock .activity-detail {
+  color: var(--sys-primary);
+}
