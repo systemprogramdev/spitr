@@ -1,11 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { useModalStore } from '@/stores/modalStore'
-
-const supabase = createClient()
 
 export function ChestClaimModal() {
   const { user } = useAuthStore()
@@ -18,33 +15,28 @@ export function ChestClaimModal() {
     if (isClaiming) return
     setIsClaiming(true)
 
-    // Insert chest
-    const { data: chest, error } = await supabase
-      .from('user_chests')
-      .insert({ user_id: user.id })
-      .select('id')
-      .single()
+    try {
+      const res = await fetch('/api/claim-daily-chest', { method: 'POST' })
+      const data = await res.json()
 
-    if (error || !chest) {
-      console.error('Failed to claim chest:', error)
+      if (!res.ok || !data.success) {
+        console.error('Failed to claim chest:', data.error)
+        setIsClaiming(false)
+        return
+      }
+
+      // Dispatch event for shop to pick up
+      window.dispatchEvent(new CustomEvent('chest-claimed'))
+
+      closeChestClaimModal()
       setIsClaiming(false)
-      return
-    }
 
-    // Update last claimed timestamp
-    await supabase
-      .from('users')
-      .update({ last_chest_claimed_at: new Date().toISOString() })
-      .eq('id', user.id)
-
-    // Dispatch event for shop to pick up
-    window.dispatchEvent(new CustomEvent('chest-claimed'))
-
-    closeChestClaimModal()
-    setIsClaiming(false)
-
-    if (openImmediately) {
-      openChestOpenModal(chest.id)
+      if (openImmediately) {
+        openChestOpenModal(data.chestId)
+      }
+    } catch (err) {
+      console.error('Claim chest error:', err)
+      setIsClaiming(false)
     }
   }
 
