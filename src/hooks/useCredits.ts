@@ -16,16 +16,15 @@ export const CREDIT_COSTS = {
   pin_purchase: 500,
 } as const
 
-// Monthly free credits amount
-const MONTHLY_FREE_CREDITS = 1000
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
+// Weekly paycheck
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
 export function useCredits() {
   const { user } = useAuthStore()
   const { balance, setBalance, deduct } = useCreditsStore()
   const renewalCheckedRef = useRef(false)
 
-  const checkAndApplyMonthlyCredits = async (userId: string, currentBalance: number, freeCreditsAt: string | null) => {
+  const checkAndApplyWeeklyPaycheck = async (userId: string, currentBalance: number, freeCreditsAt: string | null) => {
     // Only check once per session to avoid race conditions
     if (renewalCheckedRef.current) return currentBalance
 
@@ -34,29 +33,17 @@ export function useCredits() {
     const lastFreeCredits = freeCreditsAt ? new Date(freeCreditsAt).getTime() : 0
     const now = Date.now()
 
-    // If 30 days have passed since last free credits
-    if (now - lastFreeCredits >= THIRTY_DAYS_MS) {
-      const newBalance = currentBalance + MONTHLY_FREE_CREDITS
-
-      // Update balance and reset free_credits_at
-      const { error } = await supabase
-        .from('user_credits')
-        .update({
-          balance: newBalance,
-          free_credits_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId)
-
-      if (!error) {
-        // Log the transaction
-        await supabase.from('credit_transactions').insert({
-          user_id: userId,
-          type: 'free_monthly',
-          amount: MONTHLY_FREE_CREDITS,
-          balance_after: newBalance,
-        })
-
-        return newBalance
+    // If 7 days have passed since last paycheck
+    if (now - lastFreeCredits >= SEVEN_DAYS_MS) {
+      try {
+        const res = await fetch('/api/paycheck', { method: 'POST' })
+        if (res.ok) {
+          // Import toast dynamically to avoid circular deps
+          const { toast } = await import('@/stores/toastStore')
+          toast.success('Your weekly paycheck of 1,000 spits has been deposited to your bank!')
+        }
+      } catch {
+        // Silently ignore — server will reject if not eligible
       }
     }
 
@@ -83,7 +70,7 @@ export function useCredits() {
       .single()
       .then(async ({ data }) => {
         if (data) {
-          const finalBalance = await checkAndApplyMonthlyCredits(
+          const finalBalance = await checkAndApplyWeeklyPaycheck(
             user.id,
             data.balance,
             data.free_credits_at
