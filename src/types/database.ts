@@ -1089,6 +1089,7 @@ export interface SpitWithAuthor extends Spit {
   is_pinned?: boolean
   is_bookmarked?: boolean
   quoted_spit?: SpitWithAuthor | null
+  reply_to_handle?: string | null
 }
 
 export interface ConversationWithParticipants extends Conversation {

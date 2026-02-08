@@ -123,6 +123,29 @@ export async function enrichSpitsWithCounts(
     }
   })
 
+  // Fetch reply-to handles (look up parent spit authors)
+  const replyToIds = rawSpits
+    .map(s => s.reply_to_id)
+    .filter(Boolean) as string[]
+
+  let replyToHandleMap: Record<string, string> = {}
+  if (replyToIds.length > 0) {
+    const uniqueReplyIds = [...new Set(replyToIds)]
+    const { data: parentSpits } = await supabase
+      .from('spits')
+      .select('id, author:users!spits_user_id_fkey(handle)')
+      .in('id', uniqueReplyIds)
+
+    if (parentSpits) {
+      for (const ps of parentSpits) {
+        const author = ps.author as unknown as { handle: string } | null
+        if (author?.handle) {
+          replyToHandleMap[ps.id] = author.handle
+        }
+      }
+    }
+  }
+
   // Fetch quoted spits
   const quoteIds = rawSpits
     .map(s => (s as any).quote_spit_id)
@@ -156,6 +179,7 @@ export async function enrichSpitsWithCounts(
       is_liked: userLikedSet.has(spit.id),
       is_respit: userRespitSet.has(spit.id),
       is_bookmarked: userBookmarkSet.has(spit.id),
+      reply_to_handle: spit.reply_to_id ? replyToHandleMap[spit.reply_to_id] ?? null : null,
       quoted_spit: quotedRaw ? {
         ...quotedRaw,
         author: quotedRaw.author,

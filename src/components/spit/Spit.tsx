@@ -447,6 +447,16 @@ export function Spit({ spit, showActions = true }: SpitProps) {
             </span>
           </div>
 
+          {spit.reply_to_id && spit.reply_to_handle && (
+            <Link
+              href={`/${spit.reply_to_handle}`}
+              className="spit-reply-to"
+              onClick={(e) => e.stopPropagation()}
+            >
+              replying to @{spit.reply_to_handle}
+            </Link>
+          )}
+
           <Link href={`/${spit.author.handle}/status/${spit.id}`} className="spit-text-link">
             <div className={spit.effect ? getEffectClassName(spit.effect) : ''}>
               <p className="spit-text" data-text={spit.content}>

@@ -2499,6 +2499,19 @@ a:hover {
   color: var(--sys-success);
 }
 
+.spit-reply-to {
+  display: block;
+  color: var(--sys-text-muted);
+  font-size: 0.8rem;
+  font-family: var(--sys-font-mono);
+  text-decoration: none;
+  margin-bottom: 0.25rem;
+}
+
+.spit-reply-to:hover {
+  color: var(--sys-primary);
+}
+
 /* ============================================ */
 /* IMAGE UPLOAD COMPONENTS */
 /* ============================================ */
