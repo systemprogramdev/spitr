@@ -64,10 +64,10 @@ export async function PATCH(
     if (body.custom_prompt !== undefined) configUpdates.custom_prompt = body.custom_prompt
 
     if (Object.keys(configUpdates).length > 0) {
+      // Use upsert to handle case where bot_configs row wasn't created
       const { error } = await supabaseAdmin
         .from('bot_configs')
-        .update(configUpdates)
-        .eq('bot_id', botId)
+        .upsert({ bot_id: botId, ...configUpdates }, { onConflict: 'bot_id' })
       if (error) {
         console.error('Update bot config error:', error)
         return NextResponse.json({ error: 'Failed to update config' }, { status: 500 })
