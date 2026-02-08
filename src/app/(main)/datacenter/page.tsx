@@ -85,6 +85,7 @@ export default function DatacenterPage() {
 
   // Profile editing state
   const [editName, setEditName] = useState('')
+  const [editHandle, setEditHandle] = useState('')
   const [editBio, setEditBio] = useState('')
   const [editAvatarUrl, setEditAvatarUrl] = useState('')
   const [editBannerUrl, setEditBannerUrl] = useState('')
@@ -187,6 +188,7 @@ export default function DatacenterPage() {
     // Profile fields
     const profile = bot.users
     setEditName(profile?.name || bot.name)
+    setEditHandle(bot.handle)
     setEditBio(profile?.bio || '')
     setEditAvatarUrl(profile?.avatar_url || '')
     setEditBannerUrl(profile?.banner_url || '')
@@ -264,6 +266,7 @@ export default function DatacenterPage() {
     try {
       const form = new FormData()
       form.append('name', editName)
+      form.append('handle', editHandle)
       form.append('bio', editBio)
       if (avatarFile) form.append('avatar', avatarFile)
       if (bannerFile) form.append('banner', bannerFile)
@@ -474,7 +477,7 @@ export default function DatacenterPage() {
                           </div>
                         </div>
 
-                        {/* Name + Bio */}
+                        {/* Name + Handle + Bio */}
                         <div className="dc-profile-fields">
                           <div className="dc-field">
                             <label className="dc-label">Name</label>
@@ -488,16 +491,30 @@ export default function DatacenterPage() {
                             />
                           </div>
                           <div className="dc-field">
-                            <label className="dc-label">Bio</label>
-                            <textarea
-                              className="dc-input dc-textarea"
-                              value={editBio}
-                              onChange={e => setEditBio(e.target.value)}
-                              maxLength={160}
-                              rows={2}
-                              placeholder="Bot bio..."
-                            />
+                            <label className="dc-label">Handle</label>
+                            <div className="dc-handle-wrap">
+                              <span className="dc-handle-at">@</span>
+                              <input
+                                type="text"
+                                className="dc-input dc-input-handle"
+                                value={editHandle}
+                                onChange={e => setEditHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                maxLength={20}
+                                placeholder="bot_handle"
+                              />
+                            </div>
                           </div>
+                        </div>
+                        <div className="dc-field" style={{ marginBottom: '0.5rem' }}>
+                          <label className="dc-label">Bio</label>
+                          <textarea
+                            className="dc-input dc-textarea"
+                            value={editBio}
+                            onChange={e => setEditBio(e.target.value)}
+                            maxLength={160}
+                            rows={2}
+                            placeholder="Bot bio..."
+                          />
                         </div>
 
                         <button

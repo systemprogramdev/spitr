@@ -37,6 +37,7 @@ export async function PATCH(
 
     const formData = await request.formData()
     const name = formData.get('name') as string | null
+    const handle = formData.get('handle') as string | null
     const bio = formData.get('bio') as string | null
     const avatarFile = formData.get('avatar') as File | null
     const bannerFile = formData.get('banner') as File | null
@@ -113,6 +114,27 @@ export async function PATCH(
       if (trimmed) {
         userUpdates.name = trimmed
         botUpdates.name = trimmed
+      }
+    }
+
+    if (handle !== null) {
+      const trimmed = handle.trim().toLowerCase()
+      if (trimmed) {
+        if (!/^[a-z0-9_]{3,20}$/.test(trimmed)) {
+          return NextResponse.json({ error: 'Handle must be 3-20 chars, lowercase alphanumeric + underscores' }, { status: 400 })
+        }
+        // Check uniqueness
+        const { data: existing } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .eq('handle', trimmed)
+          .neq('id', bot.user_id)
+          .single()
+        if (existing) {
+          return NextResponse.json({ error: 'Handle already taken' }, { status: 409 })
+        }
+        userUpdates.handle = trimmed
+        botUpdates.handle = trimmed
       }
     }
 
