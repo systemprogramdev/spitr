@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
         combat_strategy: 'passive',
         banking_strategy: 'balanced',
         target_mode: 'random',
-        auto_heal_threshold: 50,
+        auto_heal_threshold: 1000,
         enabled_actions: ['post', 'reply', 'like'],
       })
 

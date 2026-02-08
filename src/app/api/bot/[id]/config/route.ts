@@ -59,7 +59,7 @@ export async function PATCH(
     if (body.enabled_actions !== undefined) configUpdates.enabled_actions = body.enabled_actions
     if (body.target_mode !== undefined) configUpdates.target_mode = body.target_mode
     if (body.combat_strategy !== undefined) configUpdates.combat_strategy = body.combat_strategy
-    if (body.banking_strategy !== undefined && body.banking_strategy !== 'none') configUpdates.banking_strategy = body.banking_strategy
+    if (body.banking_strategy !== undefined) configUpdates.banking_strategy = body.banking_strategy
     if (body.auto_heal_threshold !== undefined) configUpdates.auto_heal_threshold = body.auto_heal_threshold
     if (body.custom_prompt !== undefined) configUpdates.custom_prompt = body.custom_prompt
 

@@ -56,9 +56,9 @@ const COMBAT_STRATEGIES = [
 
 const BANKING_STRATEGIES = [
   { value: 'none', label: 'None' },
-  { value: 'hoard', label: 'Hoard' },
-  { value: 'deposit_all', label: 'Deposit All' },
+  { value: 'conservative', label: 'Conservative' },
   { value: 'balanced', label: 'Balanced' },
+  { value: 'aggressive', label: 'Aggressive' },
 ]
 
 export default function DatacenterPage() {
