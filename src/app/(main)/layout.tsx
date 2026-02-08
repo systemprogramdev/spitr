@@ -408,28 +408,38 @@ export default function MainLayout({
         {/* Mobile Bottom Nav */}
         <nav className="mobile-nav">
           <Link href="/" className={pathname === '/' ? 'active' : ''}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname === '/' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={pathname === '/' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
           </Link>
 
           <Link href="/search" className={pathname === '/search' ? 'active' : ''}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <path d="M21 21l-4.35-4.35"/>
             </svg>
           </Link>
 
+          <Link href="/bank" className={pathname === '/bank' ? 'active' : ''}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={pathname === '/bank' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="10" width="18" height="11" rx="1"/>
+              <path d="M12 3L2 10h20L12 3z"/>
+              <line x1="7" y1="14" x2="7" y2="17"/>
+              <line x1="12" y1="14" x2="12" y2="17"/>
+              <line x1="17" y1="14" x2="17" y2="17"/>
+            </svg>
+          </Link>
+
           <button onClick={() => openSpitModal()} className="mobile-nav-new">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
           </button>
 
           <Link href="/notifications" className={`mobile-nav-item ${pathname === '/notifications' ? 'active' : ''}`}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname === '/notifications' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={pathname === '/notifications' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
@@ -439,10 +449,19 @@ export default function MainLayout({
           </Link>
 
           <Link href="/shop" className={`mobile-nav-item ${pathname === '/shop' ? 'active' : ''}`}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill={pathname === '/shop' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={pathname === '/shop' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
               <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </Link>
+
+          <Link href="/datacenter" className={pathname === '/datacenter' ? 'active' : ''}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={pathname === '/datacenter' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="2" width="20" height="8" rx="2"/>
+              <rect x="2" y="14" width="20" height="8" rx="2"/>
+              <circle cx="6" cy="6" r="1" fill="currentColor"/>
+              <circle cx="6" cy="18" r="1" fill="currentColor"/>
             </svg>
           </Link>
         </nav>

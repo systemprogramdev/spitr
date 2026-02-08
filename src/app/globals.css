@@ -2922,13 +2922,13 @@ a:hover {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.35rem;
     color: var(--sys-text-muted);
     text-decoration: none;
-    border-radius: 12px;
+    border-radius: 10px;
     transition: all 0.2s;
     position: relative;
-    min-width: 50px;
+    min-width: 36px;
   }
 
   .mobile-nav a:hover,
@@ -2969,10 +2969,10 @@ a:hover {
   .mobile-nav-new {
     background: var(--sys-primary) !important;
     color: var(--sys-bg) !important;
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    max-width: 38px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
     padding: 0 !important;
     border-radius: 8px !important;
     display: flex !important;
@@ -2984,8 +2984,8 @@ a:hover {
   }
 
   .mobile-nav-new svg {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   .mobile-nav-item {
@@ -3242,8 +3242,8 @@ a:hover {
 
   .mobile-nav a,
   .mobile-nav button {
-    padding: 0.4rem 0.5rem;
-    min-width: 44px;
+    padding: 0.35rem 0.2rem;
+    min-width: 30px;
   }
 
   .profile-tab {
