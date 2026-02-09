@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { getStockPrice } from '@/lib/bank'
+import { postTradeSpit } from '@/lib/trade-post'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,6 +38,16 @@ export async function POST(request: NextRequest) {
 
     if (!data.success) {
       return NextResponse.json({ error: data.error }, { status: 400 })
+    }
+
+    if (data.profit > 0) {
+      postTradeSpit(supabaseAdmin, user.id, {
+        shares: data.shares_sold,
+        pricePerShare,
+        proceeds: data.proceeds,
+        costBasisSold: data.cost_basis_sold,
+        profit: data.profit,
+      })
     }
 
     return NextResponse.json({

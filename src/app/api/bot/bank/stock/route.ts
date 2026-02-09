@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
 import { getStockPrice } from '@/lib/bank'
+import { postTradeSpit } from '@/lib/trade-post'
 
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
@@ -67,6 +68,16 @@ export async function POST(request: NextRequest) {
       }
 
       awardBotXP(botUserId, 'stock_sell')
+
+      if (data.profit > 0) {
+        postTradeSpit(supabaseAdmin, botUserId, {
+          shares: data.shares_sold,
+          pricePerShare,
+          proceeds: data.proceeds,
+          costBasisSold: data.cost_basis_sold,
+          profit: data.profit,
+        })
+      }
 
       return NextResponse.json({
         success: true,

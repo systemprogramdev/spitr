@@ -367,7 +367,9 @@ BEGIN
     'success', true,
     'shares_sold', p_shares,
     'proceeds', v_proceeds,
-    'remaining_shares', v_current_shares - p_shares
+    'remaining_shares', v_current_shares - p_shares,
+    'cost_basis_sold', v_cost_reduction,
+    'profit', v_proceeds - v_cost_reduction
   );
 END;
 $$;
