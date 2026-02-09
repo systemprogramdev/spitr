@@ -407,43 +407,47 @@ export default function ProfilePage() {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="profile-actions-wrap">
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {!isOwnProfile && currentUser && (
+                <Link href={`/messages/new?to=${profile.handle}`} className="btn btn-outline">
+                  <span className="sys-icon sys-icon-mail"></span>
+                </Link>
+              )}
+              {isOwnProfile ? (
+                <Link href="/settings/profile" className="btn btn-outline">
+                  <span className="sys-icon sys-icon-edit" style={{ marginRight: '0.5rem' }}></span>
+                  Edit Profile
+                </Link>
+              ) : (
+                <button
+                  onClick={handleFollow}
+                  className={`btn ${isFollowing ? 'btn-outline' : 'btn-primary btn-glow'}`}
+                >
+                  {isFollowing ? 'Following' : 'Follow'}
+                </button>
+              )}
+            </div>
             {!isOwnProfile && currentUser && (
-              <Link href={`/messages/new?to=${profile.handle}`} className="btn btn-outline">
-                <span className="sys-icon sys-icon-mail"></span>
-              </Link>
-            )}
-            {!isOwnProfile && currentUser && (
-              <button
-                className="btn btn-outline"
-                onClick={() => setShowTransferModal(true)}
-                title="Send Spits"
-              >
-                &#x1F4B8;
-              </button>
-            )}
-            {!isOwnProfile && currentUser && !profileDestroyed && (
-              <button
-                className="btn"
-                style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
-                onClick={() => setShowAttackModal(true)}
-                title="Attack this user"
-              >
-                ⚔️
-              </button>
-            )}
-            {isOwnProfile ? (
-              <Link href="/settings/profile" className="btn btn-outline">
-                <span className="sys-icon sys-icon-edit" style={{ marginRight: '0.5rem' }}></span>
-                Edit Profile
-              </Link>
-            ) : (
-              <button
-                onClick={handleFollow}
-                className={`btn ${isFollowing ? 'btn-outline' : 'btn-primary btn-glow'}`}
-              >
-                {isFollowing ? 'Following' : 'Follow'}
-              </button>
+              <div className="profile-actions-secondary">
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setShowTransferModal(true)}
+                  title="Send Spits"
+                >
+                  &#x1F4B8; Send
+                </button>
+                {!profileDestroyed && (
+                  <button
+                    className="btn"
+                    style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
+                    onClick={() => setShowAttackModal(true)}
+                    title="Attack this user"
+                  >
+                    ⚔️ Attack
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
