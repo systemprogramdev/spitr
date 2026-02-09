@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     const bankingStrategy = botConfigs?.[0]?.banking_strategy ?? 'none'
 
     // ============================================
-    // Financial Advisor
+    // Financial Advisor (shaped for datacenter v4)
     // ============================================
 
     const walletSpits = creditsRes.data?.balance ?? 0
@@ -136,19 +136,22 @@ export async function GET(request: NextRequest) {
     const spitsSentToday = (spitTransfersRes.data ?? []).reduce((sum: number, t: { amount: unknown }) => sum + Math.abs(Number(t.amount)), 0)
     const goldSentToday = (goldTransfersRes.data ?? []).reduce((sum: number, t: { amount: unknown }) => sum + Math.abs(Number(t.amount)), 0)
 
-    // --- CD Recommendations ---
+    // --- CD Analysis ---
     const nowMs = now.getTime()
     const cdStaggerMs = CD_STAGGER_DAYS * 24 * 60 * 60 * 1000
     const sevenDayTier = CD_TIERS.find(t => t.termDays === 7)!
+    const thirtyDayTier = CD_TIERS.find(t => t.termDays === 30)!
 
-    // Redeemable CDs (matured)
+    // Redeemable CDs (matured) — datacenter shape: cd_id, amount, currency, matured, rate, matures_at
     const redeemableCDs = activeCDs
       .filter(cd => new Date(cd.matures_at).getTime() <= nowMs)
       .map(cd => ({
-        id: cd.id,
+        cd_id: cd.id,
+        amount: cd.amount,
         currency: cd.currency,
-        principal: cd.amount,
-        payout: Math.floor(cd.amount * (1 + cd.rate) * 100000) / 100000,
+        matured: true,
+        rate: cd.rate,
+        matures_at: cd.matures_at,
       }))
 
     // Active (not yet matured) CDs split by currency
@@ -159,128 +162,138 @@ export async function GET(request: NextRequest) {
     const hasSpitCDMaturingSoon = activeSpitCDs.some(cd => new Date(cd.matures_at).getTime() - nowMs < cdStaggerMs)
     const hasGoldCDMaturingSoon = activeGoldCDs.some(cd => new Date(cd.matures_at).getTime() - nowMs < cdStaggerMs)
 
-    // Spit CD recommendation
+    // CD advice — single object with recommended currency/term
     const availableSpits = walletSpits - SPIT_RESERVE - SPIT_BUFFER
-    const hasRedeemableSpitCD = redeemableCDs.some(cd => cd.currency === 'spit')
-    let spitCdRec: { action: string; amount: number; reason: string }
-    if (hasRedeemableSpitCD) {
-      const total = redeemableCDs.filter(cd => cd.currency === 'spit').reduce((s, cd) => s + cd.payout, 0)
-      spitCdRec = { action: 'redeem', amount: Math.floor(total), reason: `${redeemableCDs.filter(cd => cd.currency === 'spit').length} matured spit CD(s) ready` }
-    } else if (availableSpits >= 100 && !hasSpitCDMaturingSoon) {
-      const amt = Math.floor(availableSpits)
-      spitCdRec = { action: 'buy', amount: amt, reason: `7-day CD at ${sevenDayTier.rate * 100}% beats bank rate (~1.43%/day vs 0.5-1%/day)` }
-    } else if (hasSpitCDMaturingSoon) {
-      spitCdRec = { action: 'wait', amount: 0, reason: 'Active spit CD matures within 3 days — wait to redeem and re-invest' }
-    } else {
-      spitCdRec = { action: 'wait', amount: 0, reason: `Insufficient spits above ${SPIT_RESERVE + SPIT_BUFFER} reserve (have ${walletSpits})` }
-    }
-
-    // Gold CD recommendation
     const availableGold = walletGold - GOLD_RESERVE
-    const hasRedeemableGoldCD = redeemableCDs.some(cd => cd.currency === 'gold')
-    let goldCdRec: { action: string; amount: number; reason: string }
-    if (hasRedeemableGoldCD) {
-      const total = redeemableCDs.filter(cd => cd.currency === 'gold').reduce((s, cd) => s + cd.payout, 0)
-      goldCdRec = { action: 'redeem', amount: Math.floor(total * 100000) / 100000, reason: `${redeemableCDs.filter(cd => cd.currency === 'gold').length} matured gold CD(s) ready` }
-    } else if (availableGold >= 10 && !hasGoldCDMaturingSoon) {
-      const amt = Math.floor(availableGold)
-      goldCdRec = { action: 'buy', amount: amt, reason: `7-day CD at ${sevenDayTier.rate * 100}% return` }
-    } else if (hasGoldCDMaturingSoon) {
-      goldCdRec = { action: 'wait', amount: 0, reason: 'Active gold CD matures within 3 days — wait to redeem and re-invest' }
+    const canBuySpitCD = availableSpits >= 100 && !hasSpitCDMaturingSoon
+    const canBuyGoldCD = availableGold >= 10 && !hasGoldCDMaturingSoon
+
+    let recommendedCurrency: 'spit' | 'gold' = 'spit'
+    let cdReasoning: string
+    if (redeemableCDs.length > 0) {
+      cdReasoning = `${redeemableCDs.length} matured CD(s) ready to redeem first`
+    } else if (canBuyGoldCD && canBuySpitCD) {
+      recommendedCurrency = 'gold'
+      cdReasoning = 'Both currencies available — gold CDs compound better after conversion'
+    } else if (canBuyGoldCD) {
+      recommendedCurrency = 'gold'
+      cdReasoning = `${Math.floor(availableGold)} gold available above ${GOLD_RESERVE} reserve`
+    } else if (canBuySpitCD) {
+      cdReasoning = `${Math.floor(availableSpits)} spits available above ${SPIT_RESERVE + SPIT_BUFFER} reserve`
+    } else if (hasSpitCDMaturingSoon || hasGoldCDMaturingSoon) {
+      cdReasoning = 'Active CD matures within 3 days — wait to redeem and re-invest'
     } else {
-      goldCdRec = { action: 'wait', amount: 0, reason: `Insufficient gold above ${GOLD_RESERVE} reserve (have ${walletGold})` }
+      cdReasoning = 'Insufficient funds above reserves for CD purchase'
     }
 
-    // --- Conversion Recommendation ---
+    const cdAdvice = {
+      recommended_currency: recommendedCurrency,
+      recommended_term_days: 7,
+      current_spit_rate: sevenDayTier.rate,
+      current_gold_rate: sevenDayTier.rate,
+      thirty_day_spit_rate: thirtyDayTier.rate,
+      thirty_day_gold_rate: thirtyDayTier.rate,
+      reasoning: cdReasoning,
+    }
+
+    // --- Conversion Advice ---
     const excessSpits = walletSpits - SPIT_RESERVE - SPIT_BUFFER
     const convertAmount = Math.floor(excessSpits / SPIT_TO_GOLD_RATIO) * SPIT_TO_GOLD_RATIO
     const shouldConvert = convertAmount >= 10
-    const conversion = {
-      should_convert: shouldConvert,
-      direction: 'spits_to_gold' as const,
-      amount: shouldConvert ? convertAmount : 0,
-      gold_received: shouldConvert ? convertAmount / SPIT_TO_GOLD_RATIO : 0,
-      reason: shouldConvert
-        ? `Excess spits above ${SPIT_RESERVE + SPIT_BUFFER} reserve`
-        : `Spits (${walletSpits}) below ${SPIT_RESERVE + SPIT_BUFFER} + 10 conversion minimum`,
-    }
+    const conversionAdvice = shouldConvert
+      ? { direction: 'spits_to_gold' as const, amount: convertAmount, reasoning: `Excess spits above ${SPIT_RESERVE + SPIT_BUFFER} reserve — convert ${convertAmount} spits to ${convertAmount / SPIT_TO_GOLD_RATIO} gold` }
+      : null
 
-    // --- Consolidation Readiness ---
+    // --- Consolidation ---
     const spitsTransferRemaining = Math.max(0, DAILY_SPIT_TRANSFER_LIMIT - spitsSentToday)
     const goldTransferRemaining = Math.max(0, DAILY_GOLD_TRANSFER_LIMIT - goldSentToday)
-    const spitsAvailableToConsolidate = Math.min(Math.max(0, walletSpits - SPIT_RESERVE), spitsTransferRemaining)
-    const goldAvailableToConsolidate = Math.min(Math.max(0, walletGold - GOLD_RESERVE), goldTransferRemaining)
-    const consolidationReady = spitsAvailableToConsolidate > 0 || goldAvailableToConsolidate > 0
+    const spitSurplus = Math.min(Math.max(0, walletSpits - SPIT_RESERVE), spitsTransferRemaining)
+    const goldSurplus = Math.min(Math.max(0, walletGold - GOLD_RESERVE), goldTransferRemaining)
+    const consolidationReady = spitSurplus > 0 || goldSurplus > 0
+
     const consolidation = {
       ready: consolidationReady,
-      spits_available: spitsAvailableToConsolidate,
-      gold_available: goldAvailableToConsolidate,
-      daily_spit_limit_remaining: spitsTransferRemaining,
-      daily_gold_limit_remaining: goldTransferRemaining,
-      reason: consolidationReady
-        ? 'Wallet exceeds reserves, daily limits available'
-        : spitsTransferRemaining === 0 && goldTransferRemaining === 0
-          ? 'Daily transfer limits exhausted'
-          : 'Wallet at or below reserves',
+      spit_surplus: spitSurplus,
+      gold_surplus: goldSurplus,
     }
 
-    // --- Priority Queue & Next Action ---
-    const priorityQueue: string[] = []
-    if (redeemableCDs.length > 0) priorityQueue.push('redeem_cd')
-    if (shouldConvert) priorityQueue.push('convert_spits')
-    if (spitCdRec.action === 'buy') priorityQueue.push('buy_spit_cd')
-    if (goldCdRec.action === 'buy') priorityQueue.push('buy_gold_cd')
-    if (rateSignal === 'bank') priorityQueue.push('deposit_at_peak_rate')
-    if (depositsOver24h.length > 0) priorityQueue.push('withdraw_matured_deposits')
-    if (consolidationReady) priorityQueue.push('consolidate')
+    // --- Priority Queue (datacenter shape: array of { action, params, reasoning, priority }) ---
+    const priorityQueue: { action: string; params: Record<string, unknown>; reasoning: string; priority: number }[] = []
+    let priority = 1
 
-    const nextAction = priorityQueue[0] ?? 'hold'
-    let nextActionDetail: string
-    switch (nextAction) {
-      case 'redeem_cd': {
-        const spitPayout = redeemableCDs.filter(cd => cd.currency === 'spit').reduce((s, cd) => s + cd.payout, 0)
-        const goldPayout = redeemableCDs.filter(cd => cd.currency === 'gold').reduce((s, cd) => s + cd.payout, 0)
-        const parts = []
-        if (spitPayout > 0) parts.push(`${Math.floor(spitPayout)} spits`)
-        if (goldPayout > 0) parts.push(`${Math.floor(goldPayout * 100) / 100} gold`)
-        nextActionDetail = `Redeem ${redeemableCDs.length} matured CD(s) worth ${parts.join(' and ')}`
-        break
+    if (redeemableCDs.length > 0) {
+      for (const cd of redeemableCDs) {
+        priorityQueue.push({
+          action: 'redeem_cd',
+          params: { cd_id: cd.cd_id, currency: cd.currency, amount: cd.amount },
+          reasoning: `Matured ${cd.currency} CD worth ${Math.floor(cd.amount * (1 + cd.rate) * 100) / 100} ready to redeem`,
+          priority: priority++,
+        })
       }
-      case 'convert_spits':
-        nextActionDetail = `Convert ${convertAmount} spits to ${convertAmount / SPIT_TO_GOLD_RATIO} gold`
-        break
-      case 'buy_spit_cd':
-        nextActionDetail = `Buy 7-day spit CD with ${spitCdRec.amount} spits`
-        break
-      case 'buy_gold_cd':
-        nextActionDetail = `Buy 7-day gold CD with ${goldCdRec.amount} gold`
-        break
-      case 'deposit_at_peak_rate':
-        nextActionDetail = `Bank rate at ${Math.round(ratePercent * 100) / 100}% — deposit to lock in high rate`
-        break
-      case 'withdraw_matured_deposits':
-        nextActionDetail = `${depositsOver24h.length} deposit(s) matured and ready for withdrawal`
-        break
-      case 'consolidate':
-        nextActionDetail = `Transfer ${spitsAvailableToConsolidate} spits and ${goldAvailableToConsolidate} gold to owner`
-        break
-      default:
-        nextActionDetail = 'No immediate actions — portfolio is optimized'
+    }
+    if (shouldConvert) {
+      priorityQueue.push({
+        action: 'convert_spits',
+        params: { amount: convertAmount, direction: 'spits_to_gold' },
+        reasoning: `Convert ${convertAmount} excess spits to ${convertAmount / SPIT_TO_GOLD_RATIO} gold`,
+        priority: priority++,
+      })
+    }
+    if (canBuySpitCD) {
+      priorityQueue.push({
+        action: 'buy_spit_cd',
+        params: { currency: 'spit', amount: Math.floor(availableSpits), term_days: 7 },
+        reasoning: `7-day spit CD at ${sevenDayTier.rate * 100}% beats bank rate (~1.43%/day vs 0.5-1%/day)`,
+        priority: priority++,
+      })
+    }
+    if (canBuyGoldCD) {
+      priorityQueue.push({
+        action: 'buy_gold_cd',
+        params: { currency: 'gold', amount: Math.floor(availableGold), term_days: 7 },
+        reasoning: `7-day gold CD at ${sevenDayTier.rate * 100}% return`,
+        priority: priority++,
+      })
+    }
+    if (rateSignal === 'bank') {
+      priorityQueue.push({
+        action: 'deposit_at_peak_rate',
+        params: { rate_percent: Math.round(ratePercent * 100) / 100 },
+        reasoning: `Bank rate at ${Math.round(ratePercent * 100) / 100}% — lock in high rate`,
+        priority: priority++,
+      })
+    }
+    if (depositsOver24h.length > 0) {
+      priorityQueue.push({
+        action: 'withdraw_matured_deposits',
+        params: { count: depositsOver24h.length, deposit_ids: depositsOver24h.map(d => d.id) },
+        reasoning: `${depositsOver24h.length} deposit(s) matured and ready for withdrawal`,
+        priority: priority++,
+      })
+    }
+    if (consolidationReady) {
+      priorityQueue.push({
+        action: 'consolidate',
+        params: { spit_surplus: spitSurplus, gold_surplus: goldSurplus },
+        reasoning: `Transfer ${spitSurplus} spits and ${goldSurplus} gold to owner`,
+        priority: priority++,
+      })
+    }
+    if (priorityQueue.length === 0) {
+      priorityQueue.push({
+        action: 'hold',
+        params: {},
+        reasoning: 'No immediate actions — portfolio is optimized',
+        priority: 1,
+      })
     }
 
     const financialAdvisor = {
-      cds: {
-        redeemable_cds: redeemableCDs,
-        spit_cd: spitCdRec,
-        gold_cd: goldCdRec,
-      },
-      conversion,
+      priority_queue: priorityQueue,
+      redeemable_cds: redeemableCDs,
+      cd_advice: cdAdvice,
+      conversion_advice: conversionAdvice,
       consolidation,
-      strategy: {
-        next_action: nextAction,
-        detail: nextActionDetail,
-        priority_queue: priorityQueue,
-      },
     }
 
     return NextResponse.json({
