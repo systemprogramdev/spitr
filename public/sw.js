@@ -66,6 +66,24 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Handle push events from server (Web Push)
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const { title, body, tag, url } = data;
+
+  event.waitUntil(
+    self.registration.showNotification(title || 'SPITr', {
+      body: body || 'You have a new notification',
+      tag: tag || 'spitr-push',
+      icon: '/applogo-192.png',
+      badge: '/applogo-192.png',
+      data: { url: url || '/notifications' },
+    })
+  );
+});
+
 // Handle notification click - open the app to the relevant page
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

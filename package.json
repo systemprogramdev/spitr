@@ -21,6 +21,7 @@
     "react-dom": "19.2.3",
     "stripe": "^20.2.0",
     "sysui-css": "^2.0.0",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
@@ -29,6 +30,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^5.1.2",
     "dotenv": "^17.2.3",
     "eslint": "^9",

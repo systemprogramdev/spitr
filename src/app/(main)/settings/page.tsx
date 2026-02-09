@@ -37,7 +37,21 @@ export default function SettingsPage() {
 
   const handleNotificationsToggle = async () => {
     if (notificationsEnabled) {
+      // Turning off — unsubscribe from push
+      try {
+        const reg = await navigator.serviceWorker.ready
+        const subscription = await reg.pushManager.getSubscription()
+        if (subscription) {
+          await fetch('/api/push-subscribe', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: subscription.endpoint }),
+          })
+          await subscription.unsubscribe()
+        }
+      } catch {}
       setNotificationsEnabled(false)
+      toast.info('Notifications disabled')
       return
     }
 
@@ -61,8 +75,28 @@ export default function SettingsPage() {
       }
     }
 
-    setNotificationsEnabled(true)
-    toast.info('Notifications enabled')
+    // Subscribe to Web Push
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+      })
+
+      const res = await fetch('/api/push-subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: subscription.toJSON() }),
+      })
+
+      if (!res.ok) throw new Error('Failed to save subscription')
+
+      setNotificationsEnabled(true)
+      toast.info('Notifications enabled')
+    } catch (err) {
+      console.error('Push subscription error:', err)
+      toast.info('Failed to enable notifications. Try again.')
+    }
   }
 
   const handleThemeChange = (newTheme: string) => {

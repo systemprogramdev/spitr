@@ -1,16 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useUIStore } from '@/stores/uiStore'
 
 export function NotificationPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
+  const { notificationsEnabled, setNotificationsEnabled } = useUIStore()
 
   useEffect(() => {
     // Don't show if notifications aren't supported
     if (!('Notification' in window)) return
 
-    // Don't show if already granted or denied
-    if (Notification.permission !== 'default') return
+    // Don't show if already enabled or browser denied
+    if (notificationsEnabled) return
+    if (Notification.permission === 'denied') return
+
+    // Don't show if already granted (user enabled via settings)
+    if (Notification.permission === 'granted') return
 
     // Check if dismissed recently
     const dismissed = localStorage.getItem('spitr-notif-dismissed')
@@ -23,12 +29,31 @@ export function NotificationPrompt() {
     // Show prompt after a short delay (let the app load first)
     const timer = setTimeout(() => setShowPrompt(true), 5000)
     return () => clearTimeout(timer)
-  }, [])
+  }, [notificationsEnabled])
 
   const handleEnable = async () => {
     const permission = await Notification.requestPermission()
     if (permission === 'granted') {
-      localStorage.setItem('spitr-notif-enabled', 'true')
+      // Subscribe to Web Push
+      try {
+        const reg = await navigator.serviceWorker.ready
+        const subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        })
+
+        const res = await fetch('/api/push-subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: subscription.toJSON() }),
+        })
+
+        if (res.ok) {
+          setNotificationsEnabled(true)
+        }
+      } catch (err) {
+        console.error('Push subscription error:', err)
+      }
     }
     setShowPrompt(false)
   }
