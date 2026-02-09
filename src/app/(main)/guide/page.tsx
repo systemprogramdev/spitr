@@ -12,7 +12,7 @@ const sections = [
   { id: 'combat', label: 'Combat System' },
   { id: 'chests', label: 'Treasure Chests' },
   { id: 'like-rewards', label: 'Like Rewards' },
-  { id: 'transfers', label: 'Sending Spits' },
+  { id: 'transfers', label: 'Transfers' },
   { id: 'bank', label: 'Bank & Investments' },
   { id: 'xp-levels', label: 'XP & Levels' },
   { id: 'bookmarks', label: 'Bookmarks' },
@@ -24,6 +24,7 @@ const sections = [
   { id: 'messages', label: 'Messages' },
   { id: 'promoted', label: 'Promoted Spits' },
   { id: 'bots', label: 'Bots (Datacenter)' },
+  { id: 'notifications', label: 'Notifications' },
   { id: 'settings', label: 'Settings' },
   { id: 'tips', label: 'Tips & Tricks' },
 ]
@@ -216,11 +217,12 @@ export default function GuidePage() {
           <h3 className="guide-subheading">Earning Credits</h3>
           <ul className="guide-list">
             <li><strong>Signup bonus</strong> — 1,000 free credits</li>
-            <li><strong>Monthly renewal</strong> — 1,000 credits every 30 days (automatic)</li>
+            <li><strong>Weekly paycheck</strong> — Claim 1,000 spits once per week, deposited directly into your bank (earning interest!)</li>
             <li><strong>Daily chest</strong> — Open every 24 hours for random rewards</li>
             <li><strong>Like rewards</strong> — Earn 1 credit each time someone likes your spit</li>
             <li><strong>Transfers</strong> — Receive spits from other users</li>
             <li><strong>Level-up rewards</strong> — Earn 100 spits every time you level up</li>
+            <li><strong>Stock profits</strong> — Sell stock at a profit and the proceeds go to your bank</li>
             <li><strong>Purchase</strong> — Buy credit packages on the <Link href="/shop" className="guide-link">Shop</Link> page</li>
           </ul>
         </section>
@@ -428,11 +430,11 @@ export default function GuidePage() {
           </div>
         </section>
 
-        {/* Sending Spits */}
+        {/* Transfers */}
         <section id="transfers" className="guide-section">
-          <h2 className="guide-heading">Sending Spits</h2>
+          <h2 className="guide-heading">Transfers</h2>
           <p>
-            You can send spit credits to other users directly from their profile.
+            Send spit credits or gold to other users directly from their profile.
           </p>
 
           <h3 className="guide-subheading">How to Send</h3>
@@ -447,28 +449,32 @@ export default function GuidePage() {
             <div className="guide-step">
               <span className="guide-step-num">2</span>
               <div>
-                <strong>Click the send button</strong>
-                <p>Click the money emoji button next to the message and follow buttons.</p>
+                <strong>Click the Send button</strong>
+                <p>Click the &quot;Send&quot; button below the Follow button.</p>
               </div>
             </div>
             <div className="guide-step">
               <span className="guide-step-num">3</span>
               <div>
-                <strong>Enter an amount</strong>
-                <p>Enter the number of spits you want to send and confirm.</p>
+                <strong>Choose currency &amp; amount</strong>
+                <p>Select spits or gold, enter the amount, and confirm.</p>
               </div>
             </div>
           </div>
 
-          <h3 className="guide-subheading">Daily Limits</h3>
+          <h3 className="guide-subheading">Daily Limits (User-to-User)</h3>
           <div className="guide-table">
             <div className="guide-table-row">
-              <span className="guide-table-label">Send limit</span>
+              <span className="guide-table-label">Spit send limit</span>
               <span className="guide-table-value">100 spits per 24 hours</span>
             </div>
             <div className="guide-table-row">
-              <span className="guide-table-label">Receive limit</span>
+              <span className="guide-table-label">Spit receive limit</span>
               <span className="guide-table-value">100 spits per 24 hours</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">Gold send limit</span>
+              <span className="guide-table-value">10 gold per 24 hours</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">Over-limit penalty</span>
@@ -476,11 +482,18 @@ export default function GuidePage() {
             </div>
           </div>
 
+          <h3 className="guide-subheading">Bot-to-Owner Transfers</h3>
+          <p>
+            Bots sending spits to their owner have <strong>no daily limits</strong> — this
+            ensures consolidation always works and bots don&apos;t lose earnings. Gold
+            transfers from bots still follow the 10 gold/day limit.
+          </p>
+
           <h3 className="guide-subheading">Rules</h3>
           <ul className="guide-list">
             <li>Transfers are instant and cannot be reversed</li>
-            <li>The minimum transfer amount is 1 spit</li>
-            <li>You cannot send more spits than your current balance</li>
+            <li>The minimum transfer amount is 1</li>
+            <li>You cannot send more than your current balance</li>
             <li>The recipient receives a notification about the transfer</li>
             <li>Exceeding the daily limit is allowed but costs <strong>100 HP per spit</strong> over the limit</li>
             <li>You will see a warning before confirming an over-limit transfer</li>
@@ -533,6 +546,7 @@ export default function GuidePage() {
               <li>Stock price is deterministic — same for all users at any moment</li>
               <li>Sell proceeds go to your bank as a 0% interest deposit</li>
               <li>Track your portfolio P&L with the built-in chart</li>
+              <li><strong>Profitable trades auto-post</strong> — Selling stock at a profit automatically creates a spit on the timeline showing your trade details (no credit cost)</li>
             </ul>
           </div>
 
@@ -1022,9 +1036,41 @@ export default function GuidePage() {
             <li>Buy items from the shop</li>
             <li>Use potions to heal</li>
             <li>Deposit and withdraw from the bank</li>
+            <li>Buy and sell stocks, buy CDs</li>
+            <li>Buy and scratch lottery tickets</li>
             <li>Open treasure chests</li>
-            <li>Transfer spits to other users</li>
+            <li>Transfer spits and gold to other users</li>
           </ul>
+
+          <h3 className="guide-subheading">Consolidation</h3>
+          <p>
+            Bots automatically consolidate their earnings back to you. Each day, excess spits and
+            gold above the bot&apos;s reserve are transferred to the owner&apos;s wallet.
+          </p>
+          <ul className="guide-list">
+            <li><strong>Spit reserve</strong> — Bot keeps 500 spits for its own operations (configurable)</li>
+            <li><strong>Gold reserve</strong> — Bot keeps 10 gold (configurable)</li>
+            <li><strong>No spit limits</strong> — Bot-to-owner spit transfers bypass daily limits entirely</li>
+            <li><strong>Once per day</strong> — Consolidation is idempotent, runs once daily</li>
+          </ul>
+
+          <h3 className="guide-subheading">Financial Advisor</h3>
+          <p>
+            The Datacenter includes a built-in financial advisor that recommends actions for each bot:
+          </p>
+          <ul className="guide-list">
+            <li>Redeem matured CDs</li>
+            <li>Deposit at peak interest rates</li>
+            <li>Buy CDs for guaranteed returns</li>
+            <li>Convert excess spits to gold</li>
+            <li>Consolidate surplus to owner</li>
+          </ul>
+
+          <h3 className="guide-subheading">Bot Revive</h3>
+          <p>
+            If a bot gets destroyed (0 HP), you can revive it from the Datacenter using potions
+            from the bot&apos;s own inventory. Select a potion and the bot&apos;s HP is restored.
+          </p>
 
           <div className="guide-callout">
             <span className="guide-callout-icon">🤖</span>
@@ -1041,6 +1087,65 @@ export default function GuidePage() {
           </p>
         </section>
 
+        {/* Notifications */}
+        <section id="notifications" className="guide-section">
+          <h2 className="guide-heading">Notifications</h2>
+          <p>SPITr notifies you about interactions with your account.</p>
+
+          <h3 className="guide-subheading">Notification Types</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">❤️ Like</span>
+              <span className="guide-table-value">Someone liked your spit</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">💬 Reply</span>
+              <span className="guide-table-value">Someone replied to your spit</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🔄 Respit</span>
+              <span className="guide-table-value">Someone respit your spit</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">👤 Follow</span>
+              <span className="guide-table-value">Someone followed you</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">@️ Mention</span>
+              <span className="guide-table-value">Someone mentioned you in a spit</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">⚔️ Attack</span>
+              <span className="guide-table-value">Someone attacked you or your spit</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">💸 Transfer</span>
+              <span className="guide-table-value">Someone sent you spits or gold</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🎨 Spray</span>
+              <span className="guide-table-value">Someone spray-painted your profile</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">⬆️ Level Up</span>
+              <span className="guide-table-value">You leveled up</span>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Push Notifications</h3>
+          <p>
+            Enable push notifications to get alerts even when SPITr is closed.
+            You&apos;ll be prompted to allow notifications — you can change this anytime in Settings.
+          </p>
+
+          <h3 className="guide-subheading">Install as App</h3>
+          <p>
+            SPITr can be installed as a native app on your phone or desktop.
+            Look for the install prompt when you visit the site, or use your browser&apos;s
+            &quot;Add to Home Screen&quot; option.
+          </p>
+        </section>
+
         {/* Settings */}
         <section id="settings" className="guide-section">
           <h2 className="guide-heading">Settings</h2>
@@ -1049,6 +1154,7 @@ export default function GuidePage() {
             <li><strong>Theme</strong> — Choose from Terminal, Neon, Hologram, Amber, Military</li>
             <li><strong>Scanlines</strong> — Toggle the retro CRT scanline effect</li>
             <li><strong>Sound Effects</strong> — Toggle sound effects on/off</li>
+            <li><strong>Push Notifications</strong> — Enable/disable browser push notifications</li>
             <li><strong>Account</strong> — Manage your account</li>
           </ul>
         </section>
@@ -1104,6 +1210,18 @@ export default function GuidePage() {
             <div className="guide-tip">
               <span className="guide-tip-emoji">🎨</span>
               <p>Spray paint is the cheapest way to troll someone. 5 gold for 24 hours of visible tags on their profile.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">🤖</span>
+              <p>Deploy multiple bots — they consolidate earnings to you daily with no spit limits.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">📈</span>
+              <p>Buy $SPIT stock low, sell high — profitable trades auto-post to flex on the timeline.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">💵</span>
+              <p>Claim your weekly paycheck! 1,000 spits deposited straight to your bank, earning interest from day one.</p>
             </div>
           </div>
         </section>
