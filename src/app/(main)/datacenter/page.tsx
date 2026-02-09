@@ -6,6 +6,7 @@ import { useCredits } from '@/hooks/useCredits'
 import { useGold } from '@/hooks/useGold'
 import { useSound } from '@/hooks/useSound'
 import { toast } from '@/stores/toastStore'
+import { POTIONS } from '@/lib/items'
 
 interface BotConfig {
   id: string
@@ -23,6 +24,8 @@ interface BotUserProfile {
   banner_url: string | null
   bio: string | null
   name: string | null
+  hp: number | null
+  is_destroyed: boolean | null
 }
 
 interface Bot {
@@ -94,6 +97,7 @@ export default function DatacenterPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [savingProfile, setSavingProfile] = useState<string | null>(null)
+  const [revivingBot, setRevivingBot] = useState<string | null>(null)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
 
@@ -290,6 +294,29 @@ export default function DatacenterPage() {
     }
   }
 
+  const handleRevive = async (bot: Bot, itemType: string) => {
+    setRevivingBot(bot.id)
+    try {
+      const res = await fetch('/api/bot/revive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bot_user_id: bot.user_id, item_type: itemType }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || 'Revive failed')
+        return
+      }
+      playSound('robot')
+      toast.success(`${bot.name} revived! HP: ${data.new_hp}/${data.max_hp}`)
+      fetchBots()
+    } catch {
+      toast.error('Revive failed')
+    } finally {
+      setRevivingBot(null)
+    }
+  }
+
   return (
     <div>
       <header className="feed-header">
@@ -400,6 +427,9 @@ export default function DatacenterPage() {
                       </span>
                     </div>
                     <div className="dc-bot-right">
+                      {bot.users?.is_destroyed && (
+                        <span className="dc-destroyed-badge">DESTROYED</span>
+                      )}
                       <button
                         className={`dc-switch ${bot.is_active ? 'dc-switch-on' : ''}`}
                         onClick={e => { e.stopPropagation(); handleToggleActive(bot) }}
@@ -419,6 +449,33 @@ export default function DatacenterPage() {
 
                   {expandedBot === bot.id && (
                     <div className="dc-bot-panel">
+                      {/* Revive Section - only if destroyed */}
+                      {bot.users?.is_destroyed && (
+                        <div className="dc-revive-section">
+                          <div className="dc-revive-header">
+                            <span style={{ fontSize: '1.25rem' }}>&#x1F480;</span>
+                            <div>
+                              <div className="dc-revive-title">Bot Destroyed</div>
+                              <div className="dc-revive-sub">Use a potion from your inventory to revive</div>
+                            </div>
+                          </div>
+                          <div className="dc-revive-potions">
+                            {POTIONS.filter(p => p.type !== 'soda').map(potion => (
+                              <button
+                                key={potion.type}
+                                className="dc-revive-btn"
+                                onClick={() => handleRevive(bot, potion.type)}
+                                disabled={revivingBot === bot.id}
+                              >
+                                <span>{potion.emoji}</span>
+                                <span className="dc-revive-potion-name">{potion.name}</span>
+                                <span className="dc-revive-potion-heal">+{potion.healAmount} HP</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Profile Section */}
                       <div className="dc-profile-section">
                         <label className="dc-label" style={{ marginBottom: '0.5rem' }}>Profile</label>

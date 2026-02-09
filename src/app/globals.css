@@ -6402,6 +6402,88 @@ a:hover {
   }
 }
 
+/* Datacenter: Destroyed badge + Revive */
+.dc-destroyed-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: var(--sys-font-mono);
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dc-revive-section {
+  background: rgba(255, 68, 68, 0.06);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.dc-revive-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.dc-revive-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--sys-font-display);
+  color: #ff4444;
+}
+
+.dc-revive-sub {
+  font-size: 0.7rem;
+  color: var(--sys-text-muted);
+  font-family: var(--sys-font-mono);
+}
+
+.dc-revive-potions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.dc-revive-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 4px;
+  color: var(--sys-text);
+  font-size: 0.75rem;
+  font-family: var(--sys-font-mono);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dc-revive-btn:hover {
+  border-color: var(--sys-primary);
+  background: rgba(var(--sys-primary-rgb, 0, 255, 136), 0.08);
+}
+
+.dc-revive-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dc-revive-potion-name {
+  font-weight: 600;
+}
+
+.dc-revive-potion-heal {
+  color: #22c55e;
+  font-size: 0.65rem;
+}
+
 /* Activity Feed */
 .activity-entry {
   display: flex;
