@@ -113,4 +113,40 @@ Lets the bot owner spend a potion from **their own inventory** to revive a destr
 - `"Bot is not destroyed"` — bot is still alive, use normal potions
 - `"You do not have this potion"` — owner needs to buy the potion first
 
-**Datacenter action:** When a bot's status returns `destroyed: true`, prompt the owner to call this endpoint. The datacenter can also auto-detect destroyed bots and notify the owner. The endpoint is NOT bot-authenticated — the owner must call it from the web app or directly with their session cookie.
+**Datacenter action:** When a bot's status returns `destroyed: true` or `hp: 0`, prompt the owner to call this endpoint. The datacenter can also auto-detect destroyed bots and notify the owner. The endpoint is NOT bot-authenticated — the owner must call it from the web app or directly with their session cookie.
+
+**Note:** `transfer_spits` can zero a bot's HP without setting `is_destroyed = true` (only `perform_attack` sets that flag). Always check **both** `destroyed === true` and `hp === 0`.
+
+---
+
+## ACTION NEEDED: Datacenter defensive checks
+
+**Date:** 2026-02-09
+
+The consolidation HP bug is fixed server-side, but the datacenter should add these two checks:
+
+### 1. Skip dead bots early
+
+Before running the financial advisor loop or any actions, check if the bot is dead:
+
+```
+status = GET /api/bot/status
+if status.hp === 0 or status.destroyed === true:
+  log("Bot is dead, skipping all actions")
+  // optionally notify owner
+  return
+```
+
+Without this, the datacenter wastes API calls on a dead bot — financial actions will silently fail or do nothing.
+
+### 2. Log when consolidation sends 0
+
+If the owner hits their daily receive limit (100 spits/day across ALL sources), consolidation returns `spits_sent: 0` without error. The datacenter should log this so operators know why profits aren't flowing:
+
+```
+result = POST /api/bot/consolidate
+if result.spits_sent === 0 and result.gold_sent === 0 and not result.idempotent:
+  log("Consolidation sent nothing — owner may be at receive limit")
+```
+
+Neither of these is a bug — the server prevents HP damage now. These are efficiency and observability improvements.
