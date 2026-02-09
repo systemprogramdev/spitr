@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
   if (!context) return NextResponse.json({ error }, { status })
 
-  const { botUserId } = context
+  const { bot, botUserId } = context
 
   try {
     const { recipientId, amount } = await request.json()
@@ -18,10 +18,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
     }
 
+    // Skip limits when bot sends to its owner
+    const skipLimits = recipientId === bot.owner_id
+
     const { data, error: rpcErr } = await supabaseAdmin.rpc('transfer_spits', {
       p_sender_id: botUserId,
       p_recipient_id: recipientId,
       p_amount: amount,
+      p_skip_limits: skipLimits,
     })
 
     if (rpcErr) {

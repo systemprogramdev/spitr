@@ -16,7 +16,8 @@ ALTER TYPE transaction_type ADD VALUE IF NOT EXISTS 'chest_purchase';
 CREATE OR REPLACE FUNCTION transfer_spits(
   p_sender_id UUID,
   p_recipient_id UUID,
-  p_amount INT
+  p_amount INT,
+  p_skip_limits BOOLEAN DEFAULT false
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -47,20 +48,6 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Recipient not found');
   END IF;
 
-  -- Calculate daily sent total for sender (last 24h)
-  SELECT COALESCE(SUM(ABS(amount)), 0) INTO v_sent_today
-  FROM credit_transactions
-  WHERE user_id = p_sender_id
-    AND type = 'transfer_sent'
-    AND created_at >= NOW() - INTERVAL '24 hours';
-
-  -- Calculate daily received total for recipient (last 24h)
-  SELECT COALESCE(SUM(amount), 0) INTO v_received_today
-  FROM credit_transactions
-  WHERE user_id = p_recipient_id
-    AND type = 'transfer_received'
-    AND created_at >= NOW() - INTERVAL '24 hours';
-
   -- Lock sender row and check balance
   SELECT balance INTO v_sender_balance
   FROM user_credits
@@ -71,10 +58,18 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Insufficient balance');
   END IF;
 
-  -- Calculate overage from both limits (100/day)
-  v_send_overage := GREATEST(0, (v_sent_today + p_amount) - 100);
-  v_receive_overage := GREATEST(0, (v_received_today + p_amount) - 100);
-  v_overage := GREATEST(v_send_overage, v_receive_overage);
+  -- Calculate daily totals (needed for return values even if skipping limits)
+  SELECT COALESCE(SUM(ABS(amount)), 0) INTO v_sent_today
+  FROM credit_transactions
+  WHERE user_id = p_sender_id
+    AND type = 'transfer_sent'
+    AND created_at >= NOW() - INTERVAL '24 hours';
+
+  SELECT COALESCE(SUM(amount), 0) INTO v_received_today
+  FROM credit_transactions
+  WHERE user_id = p_recipient_id
+    AND type = 'transfer_received'
+    AND created_at >= NOW() - INTERVAL '24 hours';
 
   -- Deduct from sender
   v_new_sender_balance := v_sender_balance - p_amount;
@@ -101,14 +96,21 @@ BEGIN
     (p_recipient_id, 'transfer_received', p_amount, v_new_recipient_balance, p_sender_id);
 
   -- Apply HP penalty if over daily limit (100 HP per 1 spit over)
+  -- Skip limits entirely when p_skip_limits is true (bot-to-owner transfers)
   v_hp_penalty := 0;
   v_new_hp := -1;
-  IF v_overage > 0 THEN
-    v_hp_penalty := v_overage * 100;
-    UPDATE users
-    SET hp = GREATEST(0, hp - v_hp_penalty)
-    WHERE id = p_sender_id
-    RETURNING hp INTO v_new_hp;
+  IF NOT p_skip_limits THEN
+    v_send_overage := GREATEST(0, (v_sent_today + p_amount) - 100);
+    v_receive_overage := GREATEST(0, (v_received_today + p_amount) - 100);
+    v_overage := GREATEST(v_send_overage, v_receive_overage);
+
+    IF v_overage > 0 THEN
+      v_hp_penalty := v_overage * 100;
+      UPDATE users
+      SET hp = GREATEST(0, hp - v_hp_penalty)
+      WHERE id = p_sender_id
+      RETURNING hp INTO v_new_hp;
+    END IF;
   END IF;
 
   RETURN jsonb_build_object(
