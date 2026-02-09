@@ -32,6 +32,56 @@ const NOTIF_LABELS: Record<string, string> = {
   level_up: 'You leveled up!',
 }
 
+// Debug endpoint - check subscription status and test push
+export async function GET(req: NextRequest) {
+  const handle = req.nextUrl.searchParams.get('handle')
+  if (!handle) return NextResponse.json({ error: 'Missing ?handle=' }, { status: 400 })
+
+  const { data: user } = await adminClient
+    .from('users')
+    .select('id, handle')
+    .eq('handle', handle)
+    .single()
+
+  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+  const { data: subs, count } = await adminClient
+    .from('push_subscriptions')
+    .select('endpoint, created_at', { count: 'exact' })
+    .eq('user_id', user.id)
+
+  const test = req.nextUrl.searchParams.get('test')
+  if (test === '1' && subs && subs.length > 0) {
+    ensureVapid()
+    const { data: allSubs } = await adminClient
+      .from('push_subscriptions')
+      .select('endpoint, p256dh, auth')
+      .eq('user_id', user.id)
+
+    const results: any[] = []
+    for (const sub of allSubs || []) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify({ title: 'SPITr', body: 'Test push notification!', tag: 'spitr-test', url: '/notifications' })
+        )
+        results.push({ endpoint: sub.endpoint.slice(0, 60), status: 'sent' })
+      } catch (err: any) {
+        results.push({ endpoint: sub.endpoint.slice(0, 60), status: 'error', code: err.statusCode, message: err.message })
+      }
+    }
+    return NextResponse.json({ user: user.handle, subscriptions: count, testResults: results })
+  }
+
+  return NextResponse.json({
+    user: user.handle,
+    subscriptions: count,
+    endpoints: subs?.map(s => ({ endpoint: s.endpoint.slice(0, 60) + '...', created_at: s.created_at })),
+    vapidKeySet: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    webhookSecretSet: !!process.env.WEBHOOK_SECRET,
+  })
+}
+
 // Called by Supabase Database Webhook on notification INSERT
 export async function POST(req: NextRequest) {
   ensureVapid()
