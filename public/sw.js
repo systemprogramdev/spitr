@@ -1,5 +1,5 @@
 // SPITr Service Worker
-const CACHE_NAME = 'spitr-v2';
+const CACHE_NAME = 'spitr-v3';
 
 // Install event
 self.addEventListener('install', (event) => {
@@ -60,7 +60,7 @@ self.addEventListener('message', (event) => {
       body,
       tag,
       icon: '/applogo-192.png',
-      badge: '/applogo-192.png',
+      badge: '/badge-mono.png',
       data: { url },
     });
   }
@@ -78,7 +78,7 @@ self.addEventListener('push', (event) => {
       body: body || 'You have a new notification',
       tag: tag || 'spitr-push',
       icon: '/applogo-192.png',
-      badge: '/applogo-192.png',
+      badge: '/badge-mono.png',
       data: { url: url || '/notifications' },
     })
   );
