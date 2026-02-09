@@ -460,9 +460,9 @@ export default function ProfilePage() {
           </h1>
           <p style={{ color: 'var(--sys-text-muted)' }}>@{profile.handle}</p>
 
-          {profile.bio && <p style={{ marginTop: '0.5rem', color: 'var(--sys-text)', fontFamily: 'var(--sys-font-mono)' }}>{profile.bio}</p>}
+          {profile.bio && <p style={{ marginTop: '0.15rem', color: 'var(--sys-text)', fontFamily: 'var(--sys-font-mono)' }}>{profile.bio}</p>}
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap', fontSize: '0.875rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.15rem', flexWrap: 'wrap', fontSize: '0.875rem' }}>
             {profile.location && (
               <span style={{ color: 'var(--sys-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <span className="sys-icon sys-icon-map-pin"></span>
