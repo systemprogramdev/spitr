@@ -211,7 +211,7 @@ export default function SetupPage() {
                 style={{
                   width: '100px',
                   height: '100px',
-                  borderRadius: '50%',
+                  borderRadius: '12px',
                   margin: '0 auto',
                   cursor: 'pointer',
                   border: '2px dashed var(--sys-border)',

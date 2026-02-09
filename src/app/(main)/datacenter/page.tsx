@@ -527,7 +527,7 @@ export default function DatacenterPage() {
                               {editName[0]?.toUpperCase() || '?'}
                             </span>
                           )}
-                          <div className="image-upload-overlay" style={{ borderRadius: '50%' }}>
+                          <div className="image-upload-overlay" style={{ borderRadius: '12px' }}>
                             <div className="image-upload-icon" style={{ width: '24px', height: '24px' }}>
                               <span className="sys-icon sys-icon-camera" style={{ fontSize: '0.65rem' }}></span>
                             </div>

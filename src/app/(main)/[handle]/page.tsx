@@ -389,19 +389,20 @@ export default function ProfilePage() {
           <div
             className="avatar avatar-glow"
             style={{
-              width: '100px',
-              height: '100px',
+              width: '120px',
+              height: '120px',
               backgroundColor: 'var(--sys-primary)',
               backgroundImage: profile.avatar_url ? `url(${profile.avatar_url})` : undefined,
               border: '4px solid var(--sys-bg)',
-              marginTop: '-50px',
+              marginTop: '-60px',
+              borderRadius: '12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
             {!profile.avatar_url && (
-              <span style={{ fontSize: '2.5rem', fontFamily: 'var(--sys-font-display)', color: 'var(--sys-bg)' }}>
+              <span style={{ fontSize: '3rem', fontFamily: 'var(--sys-font-display)', color: 'var(--sys-bg)' }}>
                 {profile.name[0]?.toUpperCase()}
               </span>
             )}
@@ -452,16 +453,16 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '1rem' }}>
+        <div style={{ marginTop: '0.5rem' }}>
           <h1 className="text-glow" style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'var(--sys-font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {profile.name}
             <LevelBadge level={userLevel} />
           </h1>
           <p style={{ color: 'var(--sys-text-muted)' }}>@{profile.handle}</p>
 
-          {profile.bio && <p style={{ marginTop: '0.75rem', color: 'var(--sys-text)', fontFamily: 'var(--sys-font-mono)' }}>{profile.bio}</p>}
+          {profile.bio && <p style={{ marginTop: '0.5rem', color: 'var(--sys-text)', fontFamily: 'var(--sys-font-mono)' }}>{profile.bio}</p>}
 
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', flexWrap: 'wrap', fontSize: '0.875rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', flexWrap: 'wrap', fontSize: '0.875rem' }}>
             {profile.location && (
               <span style={{ color: 'var(--sys-text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <span className="sys-icon sys-icon-map-pin"></span>
@@ -486,7 +487,7 @@ export default function ProfilePage() {
           </div>
 
           {/* HP Bar + Active Buffs */}
-          <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ flex: 1 }}>
               <HPBar hp={profileHp} maxHp={getMaxHp(userLevel)} size="md" />
             </div>
@@ -515,13 +516,13 @@ export default function ProfilePage() {
           </div>
 
           {/* XP Bar */}
-          <div style={{ marginTop: '0.5rem' }}>
+          <div style={{ marginTop: '0.35rem' }}>
             <XPBar xp={userXp} level={userLevel} />
           </div>
 
           {profileDestroyed && (
             <div style={{
-              marginTop: '0.75rem',
+              marginTop: '0.5rem',
               padding: '0.5rem 1rem',
               background: 'rgba(255,68,68,0.1)',
               border: '1px solid var(--sys-danger)',
@@ -536,7 +537,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
             <button
               onClick={() => openFollowModal('following')}
               className="stat-button"

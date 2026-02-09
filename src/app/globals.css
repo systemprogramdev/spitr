@@ -266,7 +266,7 @@ a:hover {
 
 /* Avatar styles */
 .avatar {
-  border-radius: 50%;
+  border-radius: 8px;
   background: linear-gradient(135deg, var(--sys-primary) 0%, var(--sys-secondary, var(--sys-primary)) 100%);
   background-size: cover;
   background-position: center;
@@ -282,7 +282,7 @@ a:hover {
   content: '';
   position: absolute;
   inset: -3px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--sys-primary), transparent, var(--sys-primary));
   opacity: 0;
   transition: opacity 0.2s;
@@ -1181,7 +1181,7 @@ a:hover {
 
 /* Avatar */
 .avatar {
-  border-radius: 50%;
+  border-radius: 8px;
   background: var(--sys-surface);
   background-size: cover;
   background-position: center;
@@ -1612,7 +1612,7 @@ a:hover {
 .follow-item-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: var(--sys-surface);
   display: flex;
   align-items: center;
@@ -1876,7 +1876,7 @@ a:hover {
 .sidebar-profile-avatar {
   width: 42px;
   height: 42px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: var(--sys-primary);
   display: flex;
   align-items: center;
@@ -2025,7 +2025,7 @@ a:hover {
 .who-to-follow-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: var(--sys-primary);
   display: flex;
   align-items: center;
@@ -2598,7 +2598,7 @@ a:hover {
 .avatar-upload {
   width: 100px;
   height: 100px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: var(--sys-primary);
   background-size: cover;
   background-position: center;
@@ -2616,7 +2616,7 @@ a:hover {
 }
 
 .avatar-upload .image-upload-overlay {
-  border-radius: 50%;
+  border-radius: 12px;
 }
 
 /* Upload progress */
@@ -3442,7 +3442,7 @@ a:hover {
   content: '';
   position: absolute;
   inset: -3px;
-  border-radius: 50%;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--sys-primary), var(--spit-cyan));
   z-index: -1;
   opacity: 0;
