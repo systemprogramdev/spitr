@@ -33,6 +33,7 @@ function updateBadge(count: number) {
 }
 
 function showBrowserNotification(type: string, actorHandle?: string) {
+  if (!useUIStore.getState().notificationsEnabled) return
   if (Notification.permission !== 'granted') return
   if (document.hasFocus()) return // Don't notify if app is focused
 

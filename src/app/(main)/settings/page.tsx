@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { useUIStore } from '@/stores/uiStore'
@@ -23,7 +24,46 @@ const themes = [
 
 export default function SettingsPage() {
   const { user, signOut } = useAuth()
-  const { theme, scanlines, soundEnabled, setTheme, toggleScanlines, toggleSound } = useUIStore()
+  const { theme, scanlines, soundEnabled, notificationsEnabled, setTheme, toggleScanlines, toggleSound, setNotificationsEnabled } = useUIStore()
+  const [browserPermission, setBrowserPermission] = useState<NotificationPermission | 'unsupported'>('default')
+
+  useEffect(() => {
+    if (!('Notification' in window)) {
+      setBrowserPermission('unsupported')
+    } else {
+      setBrowserPermission(Notification.permission)
+    }
+  }, [])
+
+  const handleNotificationsToggle = async () => {
+    if (notificationsEnabled) {
+      setNotificationsEnabled(false)
+      return
+    }
+
+    // Turning on — need browser permission
+    if (browserPermission === 'unsupported') {
+      toast.info('Notifications are not supported in this browser')
+      return
+    }
+
+    if (browserPermission === 'denied') {
+      toast.info('Notifications were blocked. Enable them in your browser settings.')
+      return
+    }
+
+    if (browserPermission !== 'granted') {
+      const permission = await Notification.requestPermission()
+      setBrowserPermission(permission)
+      if (permission !== 'granted') {
+        toast.info('Notification permission was not granted')
+        return
+      }
+    }
+
+    setNotificationsEnabled(true)
+    toast.info('Notifications enabled')
+  }
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme)
@@ -80,6 +120,51 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Notifications */}
+        <div className="panel-bash" style={{ marginBottom: '1.5rem' }}>
+          <div className="panel-bash-header">
+            <div className="panel-bash-dots">
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+              <span className="panel-bash-dot"></span>
+            </div>
+            <span className="panel-bash-title">notifications</span>
+          </div>
+          <div className="panel-bash-body" style={{ padding: '1rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
+              <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={notificationsEnabled}
+                  onChange={handleNotificationsToggle}
+                />
+                <span style={{ color: 'var(--sys-text)' }}>Push notifications</span>
+              </label>
+              <p style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginTop: '0.25rem', marginLeft: '2rem' }}>
+                Get notified for likes, replies, mentions, attacks, and more
+              </p>
+              {browserPermission === 'denied' && (
+                <p style={{ fontSize: '0.8rem', color: 'var(--sys-danger)', marginTop: '0.5rem', marginLeft: '2rem' }}>
+                  Blocked by browser — enable in your browser/OS settings
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={soundEnabled}
+                  onChange={toggleSound}
+                />
+                <span style={{ color: 'var(--sys-text)' }}>Notification sound</span>
+              </label>
+              <p style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginTop: '0.25rem', marginLeft: '2rem' }}>
+                Play a sound when new notifications arrive
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Theme Settings */}
         <div className="panel-bash" style={{ marginBottom: '1.5rem' }}>
           <div className="panel-bash-header">
@@ -100,20 +185,6 @@ export default function SettingsPage() {
                 />
                 <span style={{ color: 'var(--sys-text)' }}>Enable scanlines effect</span>
               </label>
-            </div>
-
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label className="switch" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={soundEnabled}
-                  onChange={toggleSound}
-                />
-                <span style={{ color: 'var(--sys-text)' }}>Sound effects</span>
-              </label>
-              <p style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginTop: '0.25rem', marginLeft: '2rem' }}>
-                Play sounds on likes, attacks, chest opens, and more
-              </p>
             </div>
 
             <div>
