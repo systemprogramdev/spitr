@@ -411,7 +411,7 @@ export default function ProfilePage() {
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {!isOwnProfile && currentUser && (
                 <Link href={`/messages/new?to=${profile.handle}`} className="btn btn-outline">
-                  <span className="sys-icon sys-icon-mail"></span>
+                  <span className="sys-icon sys-icon-mail"></span> DM
                 </Link>
               )}
               {isOwnProfile ? (
