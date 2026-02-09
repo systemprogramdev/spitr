@@ -38,23 +38,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid protocol' }, { status: 400 })
     }
 
-    // Fetch the page with a realistic User-Agent and redirect support
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      redirect: 'follow',
-      signal: AbortSignal.timeout(10000),
-    })
+    // Try fetching with different User-Agents (some sites block bots)
+    const userAgents = [
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+    ]
 
-    if (!response.ok) {
+    let response: Response | null = null
+    for (const ua of userAgents) {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            'User-Agent': ua,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
+          redirect: 'follow',
+          signal: AbortSignal.timeout(10000),
+        })
+        if (res.ok) {
+          response = res
+          break
+        }
+      } catch {
+        continue
+      }
+    }
+
+    if (!response) {
       return NextResponse.json({ error: 'Failed to fetch' }, { status: 400 })
     }
 
     const contentType = response.headers.get('content-type') || ''
-    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+    if (!contentType.includes('text/html') && !contentType.includes('application/xhtml') && !contentType.includes('text/xml')) {
       return NextResponse.json({ error: 'Not an HTML page' }, { status: 400 })
     }
 

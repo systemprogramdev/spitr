@@ -5,9 +5,9 @@ import { BankDeposit } from '@/types'
 // ============================================
 
 // Rate oscillates between 0.5% and 1% daily with a ~12 hour period
-const MIN_RATE = 0.005
-const MAX_RATE = 0.01
-const RATE_PERIOD_MS = 12 * 60 * 60 * 1000 // 12 hours
+export const MIN_RATE = 0.005
+export const MAX_RATE = 0.01
+export const RATE_PERIOD_MS = 12 * 60 * 60 * 1000 // 12 hours
 
 export function getCurrentDailyRate(now: Date = new Date()): number {
   const t = now.getTime() / RATE_PERIOD_MS

@@ -226,7 +226,7 @@ export default function DatacenterPage() {
           combat_strategy: editCombatStrategy,
           banking_strategy: editBankingStrategy,
           auto_heal_threshold: editAutoHeal,
-          custom_prompt: editCustomPrompt || null,
+          custom_prompt: editCustomPrompt,
         }),
       })
       if (res.ok) {
