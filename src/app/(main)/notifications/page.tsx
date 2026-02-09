@@ -136,7 +136,7 @@ export default function NotificationsPage() {
                 if (notification.spit_id && notification.spit) {
                   return `/${notification.actor.handle}/status/${notification.spit.id}`
                 }
-                return `/${user!.handle}`
+                return `/${notification.actor.handle}`
               }
               if (!notification.spit) return `/${notification.actor.handle}`
               if (notification.type === 'reply' && notification.spit.reply_to_id) {
