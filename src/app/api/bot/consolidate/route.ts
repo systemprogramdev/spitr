@@ -69,26 +69,39 @@ export async function POST(request: NextRequest) {
     const spitsToSend = Math.max(0, walletSpits - spitReserve)
     const goldToSend = Math.max(0, walletGold - goldReserve)
 
-    // Check daily transfer limits - how much already sent today
-    const [spitsSentRes, goldSentRes] = await Promise.all([
+    // Check daily transfer limits - bot's send AND owner's receive (both capped at 100/day for spits)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const [spitsSentRes, goldSentRes, ownerSpitsReceivedRes] = await Promise.all([
       supabaseAdmin
         .from('credit_transactions')
         .select('amount')
         .eq('user_id', botUserId)
         .eq('type', 'transfer_sent')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+        .gte('created_at', twentyFourHoursAgo),
       supabaseAdmin
         .from('gold_transactions')
         .select('amount')
         .eq('user_id', botUserId)
         .eq('type', 'transfer_sent')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+        .gte('created_at', twentyFourHoursAgo),
+      // Also check how much the OWNER has received today — transfer_spits RPC
+      // penalizes the sender if recipient is over the 100/day receive limit
+      supabaseAdmin
+        .from('credit_transactions')
+        .select('amount')
+        .eq('user_id', bot.owner_id)
+        .eq('type', 'transfer_received')
+        .gte('created_at', twentyFourHoursAgo),
     ])
 
     const spitsSentToday = (spitsSentRes.data ?? []).reduce((sum: number, t: { amount: number }) => sum + Math.abs(t.amount), 0)
     const goldSentToday = (goldSentRes.data ?? []).reduce((sum: number, t: { amount: number }) => sum + Math.abs(t.amount), 0)
+    const ownerSpitsReceivedToday = (ownerSpitsReceivedRes.data ?? []).reduce((sum: number, t: { amount: number }) => sum + Math.abs(t.amount), 0)
 
-    const spitsRemaining = Math.max(0, DAILY_SPIT_LIMIT - spitsSentToday)
+    const spitsSendRemaining = Math.max(0, DAILY_SPIT_LIMIT - spitsSentToday)
+    const ownerReceiveRemaining = Math.max(0, DAILY_SPIT_LIMIT - ownerSpitsReceivedToday)
+    // Cap by the tighter of send limit and owner's receive limit to avoid HP penalty
+    const spitsRemaining = Math.min(spitsSendRemaining, ownerReceiveRemaining)
     const goldRemaining = Math.max(0, DAILY_GOLD_LIMIT - goldSentToday)
 
     const actualSpitsToSend = Math.min(spitsToSend, spitsRemaining)
