@@ -41,7 +41,8 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'Bot user not found');
   END IF;
 
-  IF NOT v_bot_destroyed THEN
+  -- Allow revive if is_destroyed OR hp = 0 (transfer penalty can zero HP without setting is_destroyed)
+  IF NOT v_bot_destroyed AND v_bot_hp > 0 THEN
     RETURN jsonb_build_object('success', false, 'error', 'Bot is not destroyed');
   END IF;
 

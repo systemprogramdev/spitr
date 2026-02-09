@@ -427,7 +427,7 @@ export default function DatacenterPage() {
                       </span>
                     </div>
                     <div className="dc-bot-right">
-                      {bot.users?.is_destroyed && (
+                      {(bot.users?.is_destroyed || bot.users?.hp === 0) && (
                         <span className="dc-destroyed-badge">DESTROYED</span>
                       )}
                       <button
@@ -449,8 +449,8 @@ export default function DatacenterPage() {
 
                   {expandedBot === bot.id && (
                     <div className="dc-bot-panel">
-                      {/* Revive Section - only if destroyed */}
-                      {bot.users?.is_destroyed && (
+                      {/* Revive Section - if destroyed or HP is 0 */}
+                      {(bot.users?.is_destroyed || bot.users?.hp === 0) && (
                         <div className="dc-revive-section">
                           <div className="dc-revive-header">
                             <span style={{ fontSize: '1.25rem' }}>&#x1F480;</span>
