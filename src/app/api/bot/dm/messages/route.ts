@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     // Validate bot is a participant in this conversation
     const { data: participation } = await supabaseAdmin
       .from('conversation_participants')
-      .select('id')
+      .select('conversation_id')
       .eq('conversation_id', conversationId)
       .eq('user_id', botUserId)
-      .single()
+      .maybeSingle()
 
     if (!participation) {
       return NextResponse.json({ error: 'Not a participant in this conversation' }, { status: 403 })
