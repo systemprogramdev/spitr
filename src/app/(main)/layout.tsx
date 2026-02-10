@@ -324,21 +324,27 @@ export default function MainLayout({
           {/* Stats Panel */}
           <div className="right-panel-card">
             <div className="right-panel-card-header">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 20V10M12 20V4M6 20v-6"/>
               </svg>
-              <span>Your Spits</span>
+              <span>Stats</span>
             </div>
-            <div className="right-panel-card-body">
-              <div className="credits-amount">{balance.toLocaleString()}</div>
-              <div className="credits-sublabel">available to spend</div>
-              <div className="right-panel-gold-row">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" strokeWidth="1">
-                  <circle cx="12" cy="12" r="10"/>
-                </svg>
-                <span className="right-panel-gold-amount">{goldBalance.toLocaleString()} gold</span>
+            <div className="right-panel-card-body stats-body">
+              <div className="stats-row">
+                <div className="stats-cell">
+                  <div className="stats-value text-glow">{balance.toLocaleString()}</div>
+                  <div className="stats-label">spits</div>
+                </div>
+                <div className="stats-cell">
+                  <div className="stats-value stats-value-gold">{goldBalance.toLocaleString()}</div>
+                  <div className="stats-label">gold</div>
+                </div>
+                <div className="stats-cell">
+                  <div className="stats-value stats-value-level">{level}</div>
+                  <div className="stats-label">level</div>
+                </div>
               </div>
-              <div className="right-panel-bars">
+              <div className="stats-bars">
                 <HPBar hp={user?.hp ?? getMaxHp(level)} maxHp={getMaxHp(level)} size="sm" />
                 <XPBar xp={xp} level={level} />
               </div>

@@ -2752,52 +2752,56 @@ a:hover {
 }
 
 .right-panel-card-body {
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
-/* Credits Display in Right Panel */
-.credits-amount {
-  font-size: 2.5rem;
+/* Stats Display in Right Panel */
+.stats-body {
+  padding: 0.6rem 0.75rem;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.stats-cell {
+  flex: 1;
+  text-align: center;
+}
+
+.stats-value {
+  font-size: 1.25rem;
   font-weight: bold;
   font-family: var(--sys-font-display);
-  background: linear-gradient(135deg, var(--sys-primary), var(--spit-cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  text-shadow: none;
-  filter: drop-shadow(0 0 20px rgba(var(--sys-primary-rgb), 0.5));
+  color: var(--sys-primary);
+  line-height: 1.2;
 }
 
-.credits-sublabel {
-  color: var(--sys-text-muted);
+.stats-value-gold {
+  color: #fbbf24;
+}
+
+.stats-value-level {
+  color: var(--spit-cyan, #00ffff);
+}
+
+.stats-label {
   font-family: var(--sys-font-mono);
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
+  font-size: 0.65rem;
+  color: var(--sys-text-muted);
+  text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.right-panel-gold-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--sys-border);
-}
-
-.right-panel-gold-amount {
-  font-family: var(--sys-font-mono);
-  font-size: 0.85rem;
-  color: #fbbf24;
-  font-weight: 600;
-}
-
-.right-panel-bars {
+.stats-bars {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--sys-border);
 }
 
 /* Right Panel Links */
