@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
@@ -11,7 +11,7 @@ import { LeaderboardTab } from '@/components/explore/LeaderboardTab'
 import { KillFeedTab } from '@/components/explore/KillFeedTab'
 import { ActivityFeedTab } from '@/components/explore/ActivityFeedTab'
 
-type ExploreTab = 'activity' | 'leaderboard' | 'killfeed'
+type ExploreTab = 'activity' | 'leaderboard' | 'killfeed' | 'who-to-follow'
 
 export default function SearchPage() {
   const { user } = useAuthStore()
@@ -22,7 +22,70 @@ export default function SearchPage() {
   const [spits, setSpits] = useState<SpitWithAuthor[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [whoToFollow, setWhoToFollow] = useState<User[]>([])
+  const [followingSet, setFollowingSet] = useState<Set<string>>(new Set())
+  const [followLoading, setFollowLoading] = useState<string | null>(null)
   const supabase = useMemo(() => createClient(), [])
+
+  // Fetch who-to-follow list when tab selected
+  const fetchWhoToFollow = useCallback(async () => {
+    if (!user) return
+    const { data } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (data) {
+      const filtered = data.filter((u) => u.id !== user.id)
+      setWhoToFollow(filtered)
+
+      // Fetch which ones we already follow
+      const { data: follows } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', user.id)
+        .in('following_id', filtered.map((u) => u.id))
+
+      if (follows) {
+        setFollowingSet(new Set(follows.map((f) => f.following_id)))
+      }
+    }
+  }, [user, supabase])
+
+  useEffect(() => {
+    if (exploreTab === 'who-to-follow') {
+      fetchWhoToFollow()
+    }
+  }, [exploreTab, fetchWhoToFollow])
+
+  const handleFollow = async (targetId: string) => {
+    if (!user) return
+    setFollowLoading(targetId)
+
+    if (followingSet.has(targetId)) {
+      await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', user.id)
+        .eq('following_id', targetId)
+
+      setFollowingSet((prev) => {
+        const next = new Set(prev)
+        next.delete(targetId)
+        return next
+      })
+    } else {
+      await supabase.from('follows').insert({
+        follower_id: user.id,
+        following_id: targetId,
+      })
+
+      setFollowingSet((prev) => new Set(prev).add(targetId))
+    }
+
+    setFollowLoading(null)
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,6 +131,7 @@ export default function SearchPage() {
     { key: 'activity', label: 'Activity', icon: '⚡' },
     { key: 'leaderboard', label: 'Leaderboard', icon: '🏆' },
     { key: 'killfeed', label: 'Kill Feed', icon: '⚔️' },
+    { key: 'who-to-follow', label: 'Follow', icon: '👥' },
   ]
 
   return (
@@ -216,6 +280,50 @@ export default function SearchPage() {
           <LeaderboardTab />
         ) : exploreTab === 'killfeed' ? (
           <KillFeedTab />
+        ) : exploreTab === 'who-to-follow' ? (
+          <div>
+            {whoToFollow.length === 0 ? (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--sys-text-muted)' }}>
+                Loading...
+              </div>
+            ) : (
+              whoToFollow.map((u) => (
+                <div key={u.id} className="who-to-follow-item" style={{ padding: '0.75rem 1rem' }}>
+                  <Link href={`/${u.handle}`} style={{ display: 'contents', textDecoration: 'none' }}>
+                    <div
+                      className="who-to-follow-avatar"
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        backgroundImage: u.avatar_url ? `url(${u.avatar_url})` : undefined,
+                      }}
+                    >
+                      {!u.avatar_url && (
+                        <span>{u.name[0]?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="who-to-follow-info" style={{ flex: 1 }}>
+                      <div className="who-to-follow-name">{u.name}</div>
+                      <div className="who-to-follow-handle">@{u.handle}</div>
+                      {u.bio && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginTop: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {u.bio}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => handleFollow(u.id)}
+                    disabled={followLoading === u.id}
+                    className={`btn ${followingSet.has(u.id) ? 'btn-outline' : 'btn-primary btn-glow'}`}
+                    style={{ fontSize: '0.78rem', padding: '0.3rem 0.75rem', flexShrink: 0 }}
+                  >
+                    {followingSet.has(u.id) ? 'Following' : 'Follow'}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         ) : (
           <ActivityFeedTab />
         )
