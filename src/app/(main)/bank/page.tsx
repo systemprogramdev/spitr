@@ -80,6 +80,7 @@ export default function BankPage() {
   const [cdTerm, setCdTerm] = useState(7)
   const [isBuyingCD, setIsBuyingCD] = useState(false)
   const [redeemingCdId, setRedeemingCdId] = useState<string | null>(null)
+  const [isPurgingDust, setIsPurgingDust] = useState(false)
 
   // Tick rate + stock price every second
   useEffect(() => {
@@ -352,6 +353,27 @@ export default function BankPage() {
     }
   }
 
+  const handlePurgeDust = async () => {
+    setIsPurgingDust(true)
+    try {
+      const res = await fetch('/api/bank/purge-dust', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Purged ${data.purged} dust deposit${data.purged === 1 ? '' : 's'}`)
+        refreshBank()
+      } else {
+        toast.error(data.error || 'Purge failed')
+      }
+    } catch {
+      toast.error('Purge failed')
+    } finally {
+      setIsPurgingDust(false)
+    }
+  }
+
   // ---- Computed ----
 
   const currentShares = stockHolding?.shares || 0
@@ -367,6 +389,13 @@ export default function BankPage() {
   })
   const bankBalance = depositTab === 'spit' ? spitBank : goldBank
   const walletBalance = depositTab === 'spit' ? walletSpits : walletGold
+
+  // Dust = deposits with remaining value > 0 but < 1 (across both currencies)
+  const allDustCount = [...spitDeposits, ...goldDeposits].filter(d => {
+    const interest = calculateInterest(d.principal, d.locked_rate, d.deposited_at)
+    const remaining = d.principal + interest - d.withdrawn
+    return remaining > 0 && remaining < 1
+  }).length
 
   const ticketsToScratch = unscratchedTickets.filter(t => !scratchedIds.has(t.id))
 
@@ -658,9 +687,22 @@ export default function BankPage() {
           {/* Active deposits with live ticking per row */}
           {activeDeposits.length > 0 && (
             <div className="bank-deposits-list">
-              <h3 className="bank-deposits-list-title">
-                Active Deposits ({activeDeposits.length})
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="bank-deposits-list-title">
+                  Active Deposits ({activeDeposits.length})
+                </h3>
+                {allDustCount > 0 && (
+                  <button
+                    className="btn btn-outline"
+                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', minHeight: 'unset' }}
+                    onClick={handlePurgeDust}
+                    disabled={isPurgingDust}
+                    title="Delete deposits with less than 1 remaining"
+                  >
+                    {isPurgingDust ? '...' : `Purge Dust (${allDustCount})`}
+                  </button>
+                )}
+              </div>
               <div className="bank-deposits-table-header">
                 <span>Principal</span>
                 <span>Rate</span>
