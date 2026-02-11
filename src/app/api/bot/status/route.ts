@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
 import { getMaxHp, SPIT_TO_GOLD_RATIO } from '@/lib/items'
 import { xpForLevel } from '@/lib/xp'
-import { calculateBankBalance, calculateInterest, getCurrentDailyRate, getStockPrice, CD_TIERS } from '@/lib/bank'
+import { calculateBankBalance, calculateInterest, getCurrentDailyRate, getStockPrice, CD_TIERS, MIN_RATE, MAX_RATE } from '@/lib/bank'
 import { BankDeposit } from '@/types'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -89,14 +89,21 @@ export async function GET(request: NextRequest) {
     const currentRate = getCurrentDailyRate(now)
     const stockPrice = getStockPrice(now)
     const ratePercent = currentRate * 100
-    const rateSignal = ratePercent >= 0.85 ? 'bank' : 'trade'
+
+    // Rate position 0-1 (0 = min yield/cheap stock, 1 = max yield/expensive stock)
+    const rateNorm = (currentRate - MIN_RATE) / (MAX_RATE - MIN_RATE)
+    const rateSignal = rateNorm >= 0.70 ? 'bank' : rateNorm <= 0.30 ? 'trade' : 'hold'
+
+    // Stock signal: buy when yield is low (stock cheap), sell when yield is high (stock expensive)
+    const stockSignal = rateNorm <= 0.30 ? 'buy' : rateNorm >= 0.70 ? 'sell' : 'hold'
 
     // Suggested action based on market
     let suggestedAction: string
     if (rateSignal === 'bank') {
       suggestedAction = 'deposit'
+    } else if (rateSignal === 'trade') {
+      suggestedAction = 'buy_stock'
     } else {
-      // Check if there are matured deposits to withdraw
       const hasMaturedDeposits = deposits.some(d => {
         const ageMs = now.getTime() - new Date(d.deposited_at).getTime()
         return ageMs >= TWENTY_FOUR_HOURS_MS
@@ -255,6 +262,27 @@ export async function GET(request: NextRequest) {
         priority: priority++,
       })
     }
+    // Stock trading: buy low (yield low = cheap stock), sell high (yield high = expensive stock)
+    const sharesOwned = Number(stockRes.data?.shares ?? 0)
+    if (stockSignal === 'buy' && bankingStrategy !== 'none' && bankingStrategy !== 'conservative') {
+      const spitForStock = Math.floor(Math.max(0, walletSpits - SPIT_RESERVE - SPIT_BUFFER) * 0.5)
+      if (spitForStock >= 10) {
+        priorityQueue.push({
+          action: 'buy_stock',
+          params: { spit_amount: spitForStock, price_per_share: stockPrice },
+          reasoning: `Yield at ${Math.round(ratePercent * 100) / 100}% (low) — stock price $${stockPrice} is near trough, buy opportunity`,
+          priority: priority++,
+        })
+      }
+    }
+    if (stockSignal === 'sell' && sharesOwned > 0) {
+      priorityQueue.push({
+        action: 'sell_stock',
+        params: { shares: sharesOwned, price_per_share: stockPrice },
+        reasoning: `Yield at ${Math.round(ratePercent * 100) / 100}% (high) — stock price $${stockPrice} is near peak, sell for profit`,
+        priority: priority++,
+      })
+    }
     if (rateSignal === 'bank') {
       priorityQueue.push({
         action: 'deposit_at_peak_rate',
@@ -318,8 +346,10 @@ export async function GET(request: NextRequest) {
       market: {
         current_rate: Math.round(currentRate * 100000) / 100000,
         current_rate_percent: Math.round(ratePercent * 100) / 100,
+        rate_position: Math.round(rateNorm * 100) / 100,
         rate_signal: rateSignal,
         stock_price: stockPrice,
+        stock_signal: stockSignal,
       },
       suggested_action: suggestedAction,
       banking_strategy: bankingStrategy,

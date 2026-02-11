@@ -150,3 +150,103 @@ if result.spits_sent === 0 and result.gold_sent === 0 and not result.idempotent:
 ```
 
 Neither of these is a bug — the server prevents HP damage now. These are efficiency and observability improvements.
+
+---
+
+## ACTION NEEDED: Yield-Aware Stock Trading (v5)
+
+**Date:** 2026-02-11
+
+### What changed
+
+Stock price now **correlates with the daily yield rate**. When yield is high, stock is expensive. When yield is low, stock is cheap. This is deterministic — bots can predict the market by watching the yield rate.
+
+### New fields in `GET /api/bot/status`
+
+The `market` object now includes:
+
+```json
+{
+  "market": {
+    "current_rate": 0.00732,
+    "current_rate_percent": 0.73,
+    "rate_position": 0.46,
+    "rate_signal": "hold",
+    "stock_price": 3.42,
+    "stock_signal": "hold"
+  }
+}
+```
+
+- **`rate_position`** (0.0–1.0): Normalized yield rate. 0 = minimum yield (stock is cheap), 1 = maximum yield (stock is expensive).
+- **`stock_signal`**: `"buy"` when `rate_position <= 0.30`, `"sell"` when `rate_position >= 0.70`, `"hold"` otherwise.
+- **`rate_signal`**: `"bank"` (deposit) when `rate_position >= 0.70`, `"trade"` (buy stock) when `rate_position <= 0.30`, `"hold"` otherwise.
+
+### New fields in `GET /api/bot/market`
+
+Same new fields: `rate_position` and `stock_signal`. The `signal` field now has 3 values (`bank`, `trade`, `hold`) instead of 2.
+
+### New priority queue actions
+
+The `financial_advisor.priority_queue` can now include:
+
+```json
+{ "action": "buy_stock", "params": { "spit_amount": 200, "price_per_share": 2.15 }, "reasoning": "...", "priority": 5 }
+{ "action": "sell_stock", "params": { "shares": 50.5, "price_per_share": 4.10 }, "reasoning": "...", "priority": 5 }
+```
+
+### Datacenter integration
+
+The scheduler should handle these new actions in the priority queue loop:
+
+```
+for item in advisor.priority_queue:
+  switch item.action:
+    ...existing actions...
+    "buy_stock"  → POST /api/bot/bank/stock { action: "buy", spit_amount: item.params.spit_amount }
+    "sell_stock" → POST /api/bot/bank/stock { action: "sell", shares: item.params.shares }
+```
+
+### Strategy gating
+
+- `buy_stock` only appears for bots with `banking_strategy` set to `"balanced"` or `"aggressive"`
+- `sell_stock` appears for any strategy that owns shares (always sell at peak regardless of strategy)
+- `conservative` bots will NOT auto-buy stock — they stick to deposits and CDs
+- `none` bots skip all financial actions as before
+
+### Trading logic explained
+
+The yield rate oscillates on a **12-hour cycle** between 0.5% and 1.0%. The stock price directly follows this cycle:
+
+1. **Yield drops below 30%** (`rate_position <= 0.30`) → Stock is near its trough → **BUY signal**
+2. **Yield rises above 70%** (`rate_position >= 0.70`) → Stock is near its peak → **SELL signal** + **DEPOSIT signal** (lock in high rate)
+3. **Middle range** (0.30–0.70) → **HOLD** — don't trade, don't deposit
+
+The buy amount is capped at 50% of excess spits (above reserve + buffer) to avoid going all-in. Sell always sells all shares to maximize profit at peak.
+
+### Recommended scheduler flow
+
+```
+1. GET /api/bot/status
+2. If destroyed/dead → skip
+3. For each item in financial_advisor.priority_queue (in order):
+   a. Check stock_signal before executing buy_stock/sell_stock
+      (signal may have changed since status was fetched)
+   b. Execute the action via the corresponding POST endpoint
+   c. If action fails, log and continue to next item
+4. After all actions, if consolidation.ready → POST /api/bot/consolidate
+```
+
+**Timing tip:** The 12h cycle means there are ~2 buy windows and ~2 sell windows per day. Each window lasts roughly 3.6 hours (30% of 12h). The scheduler should check market conditions at least every 30–60 minutes to catch these windows.
+
+### Price formula (for reference)
+
+```
+base = 3 + 17 * (days_since_launch / 365)
+yield_swing = ±25% based on yield rate (primary driver)
+weekly = ±10% (7-day cycle)
+midweek = ±5% (~3-day cycle)
+noise = ±5% (daily deterministic pseudo-random)
+price = base * (1 + yield_swing + weekly + midweek + noise)
+floor = $0.10 (safety net — mathematically unreachable since base >= 3 and min multiplier ~0.55)
+```

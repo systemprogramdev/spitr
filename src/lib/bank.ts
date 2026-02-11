@@ -83,17 +83,23 @@ export function getStockPrice(now: Date = new Date()): number {
   // Base trend: starts at 3, grows ~17 per year
   const base = 3 + 17 * (t / 365)
 
-  // Oscillations for volatility
-  const osc1 = 2 * Math.sin(t * 2 * Math.PI / 7)       // weekly cycle
-  const osc2 = 1.5 * Math.sin(t * 2 * Math.PI / 3.1)   // ~3 day cycle
-  const osc3 = 0.8 * Math.sin(t * 2 * Math.PI / 0.5)   // 12h cycle
+  // Primary driver: correlate with yield rate (12h cycle)
+  // High yield = high stock, low yield = low stock
+  const rate = getCurrentDailyRate(now)
+  const rateNorm = (rate - MIN_RATE) / (MAX_RATE - MIN_RATE) // 0 to 1
+  const yieldSwing = (rateNorm - 0.5) * 0.50                 // ±25%
 
-  // Deterministic pseudo-noise based on day
+  // Secondary: longer cycles for multi-day trends
+  const weekly = 0.10 * Math.sin(t * 2 * Math.PI / 7)        // ±10%
+  const midweek = 0.05 * Math.sin(t * 2 * Math.PI / 3.1)     // ±5%
+
+  // Daily noise for day-to-day variation
   const dayInt = Math.floor(t)
-  const noise = Math.sin(dayInt * 12345.6789) * 1.5
+  const noise = Math.sin(dayInt * 12345.6789) * 0.05          // ±5%
 
-  const price = base + osc1 + osc2 + osc3 + noise
-  return Math.max(0.1, Math.round(price * 100) / 100)
+  const swing = yieldSwing + weekly + midweek + noise          // max ±45%
+  const price = base * (1 + swing)
+  return Math.max(0.10, Math.round(price * 100) / 100)
 }
 
 export interface StockDataPoint {

@@ -13,9 +13,11 @@ export async function GET() {
   const cosValue = Math.cos(t * 2 * Math.PI)
   const rateRising = cosValue > 0
 
-  // Signal: bank when rate is high, trade (buy stock) when rate is low
+  // Rate position 0-1 (0 = min yield/cheap stock, 1 = max yield/expensive stock)
+  const rateNorm = (rate - MIN_RATE) / (MAX_RATE - MIN_RATE)
   const ratePercent = rate * 100
-  const signal = ratePercent >= 0.85 ? 'bank' : 'trade'
+  const signal = rateNorm >= 0.70 ? 'bank' : rateNorm <= 0.30 ? 'trade' : 'hold'
+  const stockSignal = rateNorm <= 0.30 ? 'buy' : rateNorm >= 0.70 ? 'sell' : 'hold'
 
   // Time to next peak/trough
   // Peak when sin(t * 2π) = 1, i.e. t = 0.25 + n
@@ -43,10 +45,12 @@ export async function GET() {
   return NextResponse.json({
     current_rate: Math.round(rate * 100000) / 100000,
     current_rate_percent: Math.round(ratePercent * 100) / 100,
+    rate_position: Math.round(rateNorm * 100) / 100,
     min_rate_percent: MIN_RATE * 100,
     max_rate_percent: MAX_RATE * 100,
     rate_trend: rateRising ? 'rising' : 'falling',
     signal,
+    stock_signal: stockSignal,
     time_to_peak_hours: Math.round(timeToPeakHours * 100) / 100,
     time_to_trough_hours: Math.round(timeToTroughHours * 100) / 100,
     stock_price: stockPrice,
