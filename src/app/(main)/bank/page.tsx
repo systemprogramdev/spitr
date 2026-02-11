@@ -60,10 +60,12 @@ export default function BankPage() {
 
   // Forms
   const [depositTab, setDepositTab] = useState<'spit' | 'gold'>('spit')
+  const [depositMode, setDepositMode] = useState<'deposit' | 'withdraw'>('deposit')
   const [depositAmount, setDepositAmount] = useState('')
   const [withdrawAmount, setWithdrawAmount] = useState('')
   const [buyStockAmount, setBuyStockAmount] = useState('')
   const [sellSharesAmount, setSellSharesAmount] = useState('')
+  const [stockMode, setStockMode] = useState<'buy' | 'sell'>('buy')
   const [isDepositing, setIsDepositing] = useState(false)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
   const [isBuyingStock, setIsBuyingStock] = useState(false)
@@ -71,6 +73,7 @@ export default function BankPage() {
   const [buyingTicket, setBuyingTicket] = useState<string | null>(null)
   const [chartDays, setChartDays] = useState(30)
   const [scratchedIds, setScratchedIds] = useState<Set<string>>(new Set())
+  const [convertDir, setConvertDir] = useState<'toGold' | 'toSpit'>('toGold')
   const [spitToGoldAmount, setSpitToGoldAmount] = useState('')
   const [goldToSpitAmount, setGoldToSpitAmount] = useState('')
   const [isConvertingToGold, setIsConvertingToGold] = useState(false)
@@ -487,96 +490,48 @@ export default function BankPage() {
         {/* ============================================ */}
         <section className="bank-section">
           <h2 className="bank-section-heading">Convert Currency</h2>
-
-          <div className="bank-forms-row">
-            {/* Spits → Gold */}
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon bank-form-icon-buy">🔄</div>
-                <div>
-                  <h3 className="bank-form-title">Spits → Gold</h3>
-                  <p className="bank-form-sub">{SPIT_TO_GOLD_RATIO} spits = 1 gold</p>
-                </div>
+          <div className="bank-form-card">
+            <div className="bank-form-header">
+              <div className="bank-tabs" style={{ marginBottom: 0 }}>
+                <button className={`bank-tab ${convertDir === 'toGold' ? 'active' : ''}`} onClick={() => setConvertDir('toGold')}>Spits → Gold</button>
+                <button className={`bank-tab ${convertDir === 'toSpit' ? 'active' : ''}`} onClick={() => setConvertDir('toSpit')}>Gold → Spits</button>
               </div>
-              <div className="bank-form-body">
-                <label className="bank-form-label">Spits to convert</label>
-                <div className="bank-form-input-group">
-                  <input
-                    type="number"
-                    className="input bank-form-input"
-                    placeholder={`Min ${SPIT_TO_GOLD_RATIO}`}
-                    value={spitToGoldAmount}
-                    onChange={(e) => setSpitToGoldAmount(e.target.value)}
-                    min={SPIT_TO_GOLD_RATIO}
-                  />
-                  <button
-                    className="bank-form-max-btn"
-                    onClick={() => setSpitToGoldAmount(String(walletSpits))}
-                  >
-                    MAX
-                  </button>
-                </div>
-                {spitToGoldAmount && parseInt(spitToGoldAmount) >= SPIT_TO_GOLD_RATIO && (
-                  <div className="bank-form-preview">
-                    = {Math.floor(parseInt(spitToGoldAmount) / SPIT_TO_GOLD_RATIO)} gold
-                  </div>
-                )}
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleConvertToGold}
-                  disabled={isConvertingToGold || !spitToGoldAmount || parseInt(spitToGoldAmount) < SPIT_TO_GOLD_RATIO || parseInt(spitToGoldAmount) > walletSpits}
-                >
-                  {isConvertingToGold ? 'Converting...' : 'Convert'}
-                </button>
-                <div className="bank-form-footer">
-                  Wallet: <strong>{walletSpits.toLocaleString()}</strong> spits
-                </div>
-              </div>
+              <span className="bank-form-sub" style={{ marginLeft: 'auto' }}>
+                {convertDir === 'toGold' ? `${SPIT_TO_GOLD_RATIO} spits = 1 gold` : `1 gold = ${SPIT_TO_GOLD_RATIO} spits`}
+              </span>
             </div>
-
-            {/* Gold → Spits */}
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon bank-form-icon-sell">🔄</div>
-                <div>
-                  <h3 className="bank-form-title">Gold → Spits</h3>
-                  <p className="bank-form-sub">1 gold = {SPIT_TO_GOLD_RATIO} spits</p>
-                </div>
-              </div>
-              <div className="bank-form-body">
-                <label className="bank-form-label">Gold to convert</label>
-                <div className="bank-form-input-group">
-                  <input
-                    type="number"
-                    className="input bank-form-input"
-                    placeholder="Min 1"
-                    value={goldToSpitAmount}
-                    onChange={(e) => setGoldToSpitAmount(e.target.value)}
-                    min="1"
-                  />
-                  <button
-                    className="bank-form-max-btn"
-                    onClick={() => setGoldToSpitAmount(String(walletGold))}
-                  >
-                    MAX
-                  </button>
-                </div>
-                {goldToSpitAmount && parseInt(goldToSpitAmount) >= 1 && (
-                  <div className="bank-form-preview">
-                    = {parseInt(goldToSpitAmount) * SPIT_TO_GOLD_RATIO} spits
+            <div className="bank-form-body">
+              {convertDir === 'toGold' ? (
+                <>
+                  <label className="bank-form-label">Spits to convert</label>
+                  <div className="bank-form-input-group">
+                    <input type="number" className="input bank-form-input" placeholder={`Min ${SPIT_TO_GOLD_RATIO}`} value={spitToGoldAmount} onChange={(e) => setSpitToGoldAmount(e.target.value)} min={SPIT_TO_GOLD_RATIO} />
+                    <button className="bank-form-max-btn" onClick={() => setSpitToGoldAmount(String(walletSpits))}>MAX</button>
                   </div>
-                )}
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleConvertToSpit}
-                  disabled={isConvertingToSpit || !goldToSpitAmount || parseInt(goldToSpitAmount) < 1 || parseInt(goldToSpitAmount) > walletGold}
-                >
-                  {isConvertingToSpit ? 'Converting...' : 'Convert'}
-                </button>
-                <div className="bank-form-footer">
-                  Wallet: <strong>{walletGold.toLocaleString()}</strong> gold
-                </div>
-              </div>
+                  {spitToGoldAmount && parseInt(spitToGoldAmount) >= SPIT_TO_GOLD_RATIO && (
+                    <div className="bank-form-preview">= {Math.floor(parseInt(spitToGoldAmount) / SPIT_TO_GOLD_RATIO)} gold</div>
+                  )}
+                  <button className="btn btn-primary bank-form-submit" onClick={handleConvertToGold} disabled={isConvertingToGold || !spitToGoldAmount || parseInt(spitToGoldAmount) < SPIT_TO_GOLD_RATIO || parseInt(spitToGoldAmount) > walletSpits}>
+                    {isConvertingToGold ? 'Converting...' : 'Convert'}
+                  </button>
+                  <div className="bank-form-footer">Wallet: <strong>{walletSpits.toLocaleString()}</strong> spits</div>
+                </>
+              ) : (
+                <>
+                  <label className="bank-form-label">Gold to convert</label>
+                  <div className="bank-form-input-group">
+                    <input type="number" className="input bank-form-input" placeholder="Min 1" value={goldToSpitAmount} onChange={(e) => setGoldToSpitAmount(e.target.value)} min="1" />
+                    <button className="bank-form-max-btn" onClick={() => setGoldToSpitAmount(String(walletGold))}>MAX</button>
+                  </div>
+                  {goldToSpitAmount && parseInt(goldToSpitAmount) >= 1 && (
+                    <div className="bank-form-preview">= {parseInt(goldToSpitAmount) * SPIT_TO_GOLD_RATIO} spits</div>
+                  )}
+                  <button className="btn btn-primary bank-form-submit" onClick={handleConvertToSpit} disabled={isConvertingToSpit || !goldToSpitAmount || parseInt(goldToSpitAmount) < 1 || parseInt(goldToSpitAmount) > walletGold}>
+                    {isConvertingToSpit ? 'Converting...' : 'Convert'}
+                  </button>
+                  <div className="bank-form-footer">Wallet: <strong>{walletGold.toLocaleString()}</strong> gold</div>
+                </>
+              )}
             </div>
           </div>
         </section>
@@ -587,100 +542,43 @@ export default function BankPage() {
         <section className="bank-section">
           <h2 className="bank-section-heading">Deposits & Withdrawals</h2>
 
-          <div className="bank-tabs">
-            <button
-              className={`bank-tab ${depositTab === 'spit' ? 'active' : ''}`}
-              onClick={() => setDepositTab('spit')}
-            >
-              Spits
-            </button>
-            <button
-              className={`bank-tab ${depositTab === 'gold' ? 'active' : ''}`}
-              onClick={() => setDepositTab('gold')}
-            >
-              Gold
-            </button>
-          </div>
-
-          <div className="bank-forms-row">
-            {/* Deposit */}
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon">+</div>
-                <div>
-                  <h3 className="bank-form-title">Deposit</h3>
-                  <p className="bank-form-sub">Locks at {formatRate(currentRate)}/day</p>
-                </div>
+          <div className="bank-form-card">
+            <div className="bank-form-header">
+              <div className="bank-tabs" style={{ marginBottom: 0 }}>
+                <button className={`bank-tab ${depositMode === 'deposit' ? 'active' : ''}`} onClick={() => setDepositMode('deposit')}>Deposit</button>
+                <button className={`bank-tab ${depositMode === 'withdraw' ? 'active' : ''}`} onClick={() => setDepositMode('withdraw')}>Withdraw</button>
               </div>
-              <div className="bank-form-body">
-                <label className="bank-form-label">Amount ({depositTab})</label>
-                <div className="bank-form-input-group">
-                  <input
-                    type="number"
-                    className="input bank-form-input"
-                    placeholder="0"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    min="1"
-                  />
-                  <button
-                    className="bank-form-max-btn"
-                    onClick={() => setDepositAmount(String(walletBalance))}
-                  >
-                    MAX
-                  </button>
-                </div>
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleDeposit}
-                  disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0 || Number(depositAmount) > walletBalance}
-                >
-                  {isDepositing ? 'Depositing...' : 'Deposit'}
-                </button>
-                <div className="bank-form-footer">
-                  Wallet: <strong>{walletBalance.toLocaleString()}</strong> {depositTab}
-                </div>
+              <div className="bank-tabs" style={{ marginBottom: 0, marginLeft: 'auto' }}>
+                <button className={`bank-tab ${depositTab === 'spit' ? 'active' : ''}`} onClick={() => setDepositTab('spit')}>Spits</button>
+                <button className={`bank-tab ${depositTab === 'gold' ? 'active' : ''}`} onClick={() => setDepositTab('gold')}>Gold</button>
               </div>
             </div>
-
-            {/* Withdraw */}
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon bank-form-icon-withdraw">-</div>
-                <div>
-                  <h3 className="bank-form-title">Withdraw</h3>
-                  <p className="bank-form-sub">Floored to integer</p>
-                </div>
-              </div>
-              <div className="bank-form-body">
-                <label className="bank-form-label">Amount ({depositTab})</label>
-                <div className="bank-form-input-group">
-                  <input
-                    type="number"
-                    className="input bank-form-input"
-                    placeholder="0"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    min="1"
-                  />
-                  <button
-                    className="bank-form-max-btn"
-                    onClick={() => setWithdrawAmount(String(Math.floor(bankBalance.totalBalance)))}
-                  >
-                    MAX
+            <div className="bank-form-body">
+              {depositMode === 'deposit' ? (
+                <>
+                  <label className="bank-form-label">Deposit {depositTab} (locks at {formatRate(currentRate)}/day)</label>
+                  <div className="bank-form-input-group">
+                    <input type="number" className="input bank-form-input" placeholder="0" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} min="1" />
+                    <button className="bank-form-max-btn" onClick={() => setDepositAmount(String(walletBalance))}>MAX</button>
+                  </div>
+                  <button className="btn btn-primary bank-form-submit" onClick={handleDeposit} disabled={isDepositing || !depositAmount || Number(depositAmount) <= 0 || Number(depositAmount) > walletBalance}>
+                    {isDepositing ? 'Depositing...' : 'Deposit'}
                   </button>
-                </div>
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleWithdraw}
-                  disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > bankBalance.totalBalance}
-                >
-                  {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
-                </button>
-                <div className="bank-form-footer">
-                  Bank: <strong>{bankBalance.totalBalance.toFixed(2)}</strong> {depositTab}
-                </div>
-              </div>
+                  <div className="bank-form-footer">Wallet: <strong>{walletBalance.toLocaleString()}</strong> {depositTab}</div>
+                </>
+              ) : (
+                <>
+                  <label className="bank-form-label">Withdraw {depositTab} (floored to integer)</label>
+                  <div className="bank-form-input-group">
+                    <input type="number" className="input bank-form-input" placeholder="0" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} min="1" />
+                    <button className="bank-form-max-btn" onClick={() => setWithdrawAmount(String(Math.floor(bankBalance.totalBalance)))}>MAX</button>
+                  </div>
+                  <button className="btn btn-primary bank-form-submit" onClick={handleWithdraw} disabled={isWithdrawing || !withdrawAmount || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > bankBalance.totalBalance}>
+                    {isWithdrawing ? 'Withdrawing...' : 'Withdraw'}
+                  </button>
+                  <div className="bank-form-footer">Bank: <strong>{bankBalance.totalBalance.toFixed(2)}</strong> {depositTab}</div>
+                </>
+              )}
             </div>
           </div>
 
@@ -907,90 +805,48 @@ export default function BankPage() {
             </div>
           )}
 
-          <div className="bank-forms-row">
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon bank-form-icon-buy">B</div>
-                <div>
-                  <h3 className="bank-form-title">Buy Shares</h3>
-                  <p className="bank-form-sub">From bank spit balance</p>
-                </div>
+          <div className="bank-form-card">
+            <div className="bank-form-header">
+              <div className="bank-tabs" style={{ marginBottom: 0 }}>
+                <button className={`bank-tab ${stockMode === 'buy' ? 'active' : ''}`} onClick={() => setStockMode('buy')}>Buy</button>
+                <button className={`bank-tab ${stockMode === 'sell' ? 'active' : ''}`} onClick={() => setStockMode('sell')}>Sell</button>
               </div>
-              <div className="bank-form-body">
-                <label className="bank-form-label">Spend (spits)</label>
-                <div className="bank-form-input-group">
-                  <input
-                    type="number"
-                    className="input bank-form-input"
-                    placeholder="0"
-                    value={buyStockAmount}
-                    onChange={(e) => setBuyStockAmount(e.target.value)}
-                    min="1"
-                  />
-                  <button
-                    className="bank-form-max-btn"
-                    onClick={() => setBuyStockAmount(String(Math.floor(spitBank.totalBalance)))}
-                  >
-                    MAX
-                  </button>
-                </div>
-                {buyStockAmount && Number(buyStockAmount) > 0 && (
-                  <div className="bank-form-preview">
-                    ≈ {(Number(buyStockAmount) / stockPrice).toFixed(4)} shares
-                  </div>
-                )}
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleBuyStock}
-                  disabled={isBuyingStock || !buyStockAmount || Number(buyStockAmount) <= 0}
-                >
-                  {isBuyingStock ? 'Buying...' : 'Buy'}
-                </button>
-              </div>
+              <span className="bank-form-sub" style={{ marginLeft: 'auto' }}>
+                {stockMode === 'buy' ? 'From bank spit balance' : 'Proceeds to bank (0% rate)'}
+              </span>
             </div>
-
-            <div className="bank-form-card">
-              <div className="bank-form-header">
-                <div className="bank-form-icon bank-form-icon-sell">S</div>
-                <div>
-                  <h3 className="bank-form-title">Sell Shares</h3>
-                  <p className="bank-form-sub">Proceeds to bank (0% rate)</p>
-                </div>
-              </div>
-              <div className="bank-form-body">
-                <label className="bank-form-label">Shares</label>
-                <div className="bank-form-input-group">
-                  <input
-                    type="number"
-                    className="input bank-form-input"
-                    placeholder="0"
-                    value={sellSharesAmount}
-                    onChange={(e) => setSellSharesAmount(e.target.value)}
-                    min="0.00001"
-                    step="0.00001"
-                  />
-                  {currentShares > 0 && (
-                    <button
-                      className="bank-form-max-btn"
-                      onClick={() => setSellSharesAmount(String(currentShares))}
-                    >
-                      MAX
-                    </button>
-                  )}
-                </div>
-                {sellSharesAmount && Number(sellSharesAmount) > 0 && (
-                  <div className="bank-form-preview">
-                    ≈ {(Number(sellSharesAmount) * stockPrice).toFixed(2)} spits
+            <div className="bank-form-body">
+              {stockMode === 'buy' ? (
+                <>
+                  <label className="bank-form-label">Spend (spits)</label>
+                  <div className="bank-form-input-group">
+                    <input type="number" className="input bank-form-input" placeholder="0" value={buyStockAmount} onChange={(e) => setBuyStockAmount(e.target.value)} min="1" />
+                    <button className="bank-form-max-btn" onClick={() => setBuyStockAmount(String(Math.floor(spitBank.totalBalance)))}>MAX</button>
                   </div>
-                )}
-                <button
-                  className="btn btn-primary bank-form-submit"
-                  onClick={handleSellStock}
-                  disabled={isSellingStock || !sellSharesAmount || Number(sellSharesAmount) <= 0 || Number(sellSharesAmount) > currentShares}
-                >
-                  {isSellingStock ? 'Selling...' : 'Sell'}
-                </button>
-              </div>
+                  {buyStockAmount && Number(buyStockAmount) > 0 && (
+                    <div className="bank-form-preview">≈ {(Number(buyStockAmount) / stockPrice).toFixed(4)} shares</div>
+                  )}
+                  <button className="btn btn-primary bank-form-submit" onClick={handleBuyStock} disabled={isBuyingStock || !buyStockAmount || Number(buyStockAmount) <= 0}>
+                    {isBuyingStock ? 'Buying...' : 'Buy Shares'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <label className="bank-form-label">Shares to sell</label>
+                  <div className="bank-form-input-group">
+                    <input type="number" className="input bank-form-input" placeholder="0" value={sellSharesAmount} onChange={(e) => setSellSharesAmount(e.target.value)} min="0.00001" step="0.00001" />
+                    {currentShares > 0 && (
+                      <button className="bank-form-max-btn" onClick={() => setSellSharesAmount(String(currentShares))}>MAX</button>
+                    )}
+                  </div>
+                  {sellSharesAmount && Number(sellSharesAmount) > 0 && (
+                    <div className="bank-form-preview">≈ {(Number(sellSharesAmount) * stockPrice).toFixed(2)} spits</div>
+                  )}
+                  <button className="btn btn-primary bank-form-submit" onClick={handleSellStock} disabled={isSellingStock || !sellSharesAmount || Number(sellSharesAmount) <= 0 || Number(sellSharesAmount) > currentShares}>
+                    {isSellingStock ? 'Selling...' : 'Sell Shares'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </section>
