@@ -726,7 +726,6 @@ export default function BankPage() {
         {/* ============================================ */}
         <section className="bank-section">
           <h2 className="bank-section-heading">Certificates of Deposit</h2>
-          <p className="bank-section-sub">Lock funds for a fixed term and earn a guaranteed return.</p>
 
           {/* CD Tier cards */}
           <div className="bank-cd-tiers">
@@ -1001,7 +1000,6 @@ export default function BankPage() {
         {/* ============================================ */}
         <section className="bank-section">
           <h2 className="bank-section-heading">Scratch-Off Lottery</h2>
-          <p className="bank-section-sub">Buy tickets with your bank balance. Scratch to reveal!</p>
 
           <div className="bank-ticket-grid">
             {TICKET_TIERS.map((tier) => {
