@@ -21,20 +21,27 @@ const previewCache = new Map<string, OGData | null>()
 function getYouTubeVideoId(url: string): string | null {
   try {
     const u = new URL(url)
-    // youtube.com/watch?v=ID
     if ((u.hostname === 'www.youtube.com' || u.hostname === 'youtube.com' || u.hostname === 'm.youtube.com')) {
       if (u.pathname === '/watch') return u.searchParams.get('v')
-      // youtube.com/embed/ID
       if (u.pathname.startsWith('/embed/')) return u.pathname.split('/embed/')[1]?.split(/[?&]/)[0] || null
-      // youtube.com/shorts/ID
       if (u.pathname.startsWith('/shorts/')) return u.pathname.split('/shorts/')[1]?.split(/[?&]/)[0] || null
     }
-    // youtu.be/ID
     if (u.hostname === 'youtu.be') return u.pathname.slice(1).split(/[?&]/)[0] || null
   } catch {
     return null
   }
   return null
+}
+
+// Check if URL is a SoundCloud track/playlist
+function isSoundCloudUrl(url: string): boolean {
+  try {
+    const u = new URL(url)
+    return (u.hostname === 'soundcloud.com' || u.hostname === 'www.soundcloud.com' || u.hostname === 'm.soundcloud.com')
+      && u.pathname.split('/').filter(Boolean).length >= 2 // needs at least /artist/track
+  } catch {
+    return false
+  }
 }
 
 export function LinkPreview({ url }: LinkPreviewProps) {
@@ -43,10 +50,11 @@ export function LinkPreview({ url }: LinkPreviewProps) {
   const [error, setError] = useState(false)
 
   const videoId = getYouTubeVideoId(url)
+  const soundcloud = isSoundCloudUrl(url)
 
   useEffect(() => {
-    // Skip unfurl for YouTube — we embed directly
-    if (videoId) {
+    // Skip unfurl for embeddable URLs
+    if (videoId || soundcloud) {
       setLoading(false)
       return
     }
@@ -74,7 +82,7 @@ export function LinkPreview({ url }: LinkPreviewProps) {
     }
 
     fetchPreview()
-  }, [url, videoId])
+  }, [url, videoId, soundcloud])
 
   // YouTube embed
   if (videoId) {
@@ -85,6 +93,21 @@ export function LinkPreview({ url }: LinkPreviewProps) {
           title="YouTube video"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+        />
+      </div>
+    )
+  }
+
+  // SoundCloud embed
+  if (soundcloud) {
+    const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&color=%2300ff88&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`
+    return (
+      <div className="soundcloud-embed" onClick={(e) => e.stopPropagation()}>
+        <iframe
+          src={embedUrl}
+          title="SoundCloud player"
+          allow="autoplay"
+          scrolling="no"
         />
       </div>
     )
