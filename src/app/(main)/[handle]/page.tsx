@@ -44,7 +44,9 @@ export default function ProfilePage() {
   const [showTransferModal, setShowTransferModal] = useState(false)
   const [userXp, setUserXp] = useState(0)
   const [userLevel, setUserLevel] = useState(1)
-  const [activeBuffs, setActiveBuffs] = useState<{ buff_type: string; charges_remaining: number }[]>([])
+  const [activeBuffs, setActiveBuffs] = useState<{ buff_type: string; charges_remaining: number; activated_at?: string }[]>([])
+  const [activeNameTag, setActiveNameTag] = useState<string | null>(null)
+  const [isFakeDeath, setIsFakeDeath] = useState(false)
 
   const fetchTabContent = useCallback(async (profileId: string, selectedTab: TabType, cursor?: string) => {
     const isLoadMore = !!cursor
@@ -199,7 +201,7 @@ export default function ProfilePage() {
       setProfileHp(profileData.hp ?? getMaxHp(1))
       setProfileDestroyed(profileData.is_destroyed ?? false)
 
-      const [followersRes, followingRes, spitsRes, creditsRes, goldRes, pinnedRes, xpRes, buffsRes] = await Promise.all([
+      const [followersRes, followingRes, spitsRes, creditsRes, goldRes, pinnedRes, xpRes, buffsRes, nameTagsRes] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profileData.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profileData.id),
         supabase.from('spits').select('*', { count: 'exact', head: true }).eq('user_id', profileData.id).is('reply_to_id', null),
@@ -211,15 +213,33 @@ export default function ProfilePage() {
           .gt('expires_at', new Date().toISOString())
           .single(),
         supabase.from('user_xp').select('xp, level').eq('user_id', profileData.id).single(),
-        supabase.from('user_buffs').select('buff_type, charges_remaining').eq('user_id', profileData.id),
-      ])
+        supabase.from('user_buffs').select('buff_type, charges_remaining, activated_at').eq('user_id', profileData.id),
+        supabase.from('name_tags').select('custom_title').eq('target_user_id', profileData.id).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }).limit(1),
+      ] as const)
 
       if (xpRes.data) {
         setUserXp(xpRes.data.xp)
         setUserLevel(xpRes.data.level)
       }
 
-      setActiveBuffs(buffsRes.data || [])
+      const allBuffs = buffsRes.data || []
+      setActiveBuffs(allBuffs)
+
+      // Check fake death: if active and viewer is NOT the profile owner, show as dead
+      const fakeDeathBuff = allBuffs.find((b: any) => b.buff_type === 'fake_death')
+      if (fakeDeathBuff && currentUser?.id !== profileData.id) {
+        const activatedAt = new Date(fakeDeathBuff.activated_at)
+        const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000)
+        if (activatedAt > twelveHoursAgo) {
+          setIsFakeDeath(true)
+        }
+      }
+
+      // Set active name tag
+      const nameTagData = (nameTagsRes as any).data
+      if (nameTagData && nameTagData.length > 0) {
+        setActiveNameTag(nameTagData[0].custom_title)
+      }
 
       setStats({
         followers: followersRes.count || 0,
@@ -459,6 +479,22 @@ export default function ProfilePage() {
             <LevelBadge level={userLevel} />
           </h1>
           <p style={{ color: 'var(--sys-text-muted)' }}>@{profile.handle}</p>
+          {activeNameTag && (
+            <div style={{
+              display: 'inline-block',
+              marginTop: '0.25rem',
+              padding: '0.15rem 0.5rem',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--sys-font-mono)',
+              fontWeight: 700,
+              background: 'rgba(168, 85, 247, 0.15)',
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              borderRadius: '4px',
+              color: '#a855f7',
+            }}>
+              🏷️ {activeNameTag}
+            </div>
+          )}
 
           {profile.bio && <p style={{ marginTop: '0.15rem', color: 'var(--sys-text)', fontFamily: 'var(--sys-font-mono)' }}>{profile.bio}</p>}
 
@@ -489,30 +525,45 @@ export default function ProfilePage() {
           {/* HP Bar + Active Buffs */}
           <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ flex: 1 }}>
-              <HPBar hp={profileHp} maxHp={getMaxHp(userLevel)} size="md" />
+              <HPBar hp={isFakeDeath ? 0 : profileHp} maxHp={getMaxHp(userLevel)} size="md" />
             </div>
-            {activeBuffs.map((buff) => (
-              <span
-                key={buff.buff_type}
-                title={buff.buff_type === 'firewall' ? 'Firewall Active' : `Kevlar Active (${buff.charges_remaining} charges)`}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  padding: '0.2rem 0.5rem',
-                  fontSize: '0.75rem',
-                  fontFamily: 'var(--sys-font-mono)',
-                  background: buff.buff_type === 'firewall' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                  border: `1px solid ${buff.buff_type === 'firewall' ? 'rgba(59, 130, 246, 0.4)' : 'rgba(34, 197, 94, 0.4)'}`,
-                  borderRadius: '4px',
-                  color: buff.buff_type === 'firewall' ? '#3b82f6' : '#22c55e',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {buff.buff_type === 'firewall' ? '🛡️' : '🦺'}
-                {buff.buff_type === 'kevlar' && `×${buff.charges_remaining}`}
-              </span>
-            ))}
+            {activeBuffs.map((buff) => {
+              const BUFF_CONFIG: Record<string, { emoji: string; color: string; bg: string; border: string; label: string }> = {
+                firewall: { emoji: '🛡️', color: '#3b82f6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.4)', label: 'Firewall' },
+                kevlar: { emoji: '🦺', color: '#22c55e', bg: 'rgba(34,197,94,0.15)', border: 'rgba(34,197,94,0.4)', label: 'Kevlar' },
+                mirror_shield: { emoji: '🪞', color: '#a855f7', bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.4)', label: 'Mirror Shield' },
+                rage_serum: { emoji: '🔴', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)', label: 'Rage' },
+                critical_chip: { emoji: '💎', color: '#06b6d4', bg: 'rgba(6,182,212,0.15)', border: 'rgba(6,182,212,0.4)', label: 'Crit' },
+                xp_boost: { emoji: '📈', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)', label: 'XP 2x' },
+                fake_death: { emoji: '💀', color: '#6b7280', bg: 'rgba(107,114,128,0.15)', border: 'rgba(107,114,128,0.4)', label: 'Dead' },
+              }
+              const cfg = BUFF_CONFIG[buff.buff_type]
+              if (!cfg) return null
+              // Hide fake_death buff from other viewers
+              if (buff.buff_type === 'fake_death' && currentUser?.id !== profile?.id) return null
+              return (
+                <span
+                  key={buff.buff_type}
+                  title={`${cfg.label}${buff.charges_remaining > 1 ? ` (${buff.charges_remaining} charges)` : ''}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.2rem 0.5rem',
+                    fontSize: '0.75rem',
+                    fontFamily: 'var(--sys-font-mono)',
+                    background: cfg.bg,
+                    border: `1px solid ${cfg.border}`,
+                    borderRadius: '4px',
+                    color: cfg.color,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {cfg.emoji}
+                  {buff.charges_remaining > 1 && `×${buff.charges_remaining}`}
+                </span>
+              )
+            })}
           </div>
 
           {/* XP Bar */}
@@ -520,7 +571,7 @@ export default function ProfilePage() {
             <XPBar xp={userXp} level={userLevel} />
           </div>
 
-          {profileDestroyed && (
+          {(profileDestroyed || isFakeDeath) && (
             <div style={{
               marginTop: '0.5rem',
               padding: '0.5rem 1rem',

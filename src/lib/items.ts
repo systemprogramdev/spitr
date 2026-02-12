@@ -4,10 +4,11 @@ export interface GameItem {
   type: ItemType
   name: string
   description: string
-  category: 'weapon' | 'potion' | 'defense' | 'utility'
+  category: 'weapon' | 'potion' | 'defense' | 'powerup' | 'utility'
   goldCost: number
   damage?: number
   healAmount?: number
+  effect?: string
   emoji: string
 }
 
@@ -18,6 +19,8 @@ export const ITEMS: GameItem[] = [
   { type: 'soldier', name: 'Soldier', description: 'Sends in a mercenary.', category: 'weapon', goldCost: 25, damage: 100, emoji: '💂' },
   { type: 'drone', name: 'Drone', description: 'Devastating aerial strike.', category: 'weapon', goldCost: 100, damage: 500, emoji: '🛩️' },
   { type: 'nuke', name: 'Nuke', description: 'Devastating nuclear strike.', category: 'weapon', goldCost: 250, damage: 2500, emoji: '☢️' },
+  { type: 'emp', name: 'EMP', description: '200 DMG + strips all defense buffs.', category: 'weapon', goldCost: 50, damage: 200, emoji: '⚡' },
+  { type: 'malware', name: 'Malware', description: '75 DMG + steals a random item.', category: 'weapon', goldCost: 15, damage: 75, emoji: '🦠' },
   // Potions
   { type: 'small_potion', name: 'Small Potion', description: 'Restores 500 HP.', category: 'potion', goldCost: 10, healAmount: 500, emoji: '🧪' },
   { type: 'medium_potion', name: 'Medium Potion', description: 'Restores 1500 HP.', category: 'potion', goldCost: 25, healAmount: 1500, emoji: '⚗️' },
@@ -26,8 +29,16 @@ export const ITEMS: GameItem[] = [
   // Defense
   { type: 'firewall', name: 'Firewall', description: 'Blocks the next attack completely.', category: 'defense', goldCost: 15, emoji: '🛡️' },
   { type: 'kevlar', name: 'Kevlar Vest', description: 'Blocks next 3 attacks (not drones/nukes).', category: 'defense', goldCost: 30, emoji: '🦺' },
+  { type: 'mirror_shield', name: 'Mirror Shield', description: 'Reflects 100% of next attack back.', category: 'defense', goldCost: 40, emoji: '🪞' },
+  // Power-ups
+  { type: 'rage_serum', name: 'Rage Serum', description: '2x damage on next 3 attacks.', category: 'powerup', goldCost: 25, effect: '2x DMG (3 attacks)', emoji: '🔴' },
+  { type: 'critical_chip', name: 'Critical Chip', description: '30% chance for 3x damage, 5 attacks.', category: 'powerup', goldCost: 15, effect: '30% crit (5 attacks)', emoji: '💎' },
+  { type: 'xp_boost', name: 'XP Boost', description: '2x XP for 1 hour.', category: 'powerup', goldCost: 10, effect: '2x XP (1 hour)', emoji: '📈' },
   // Utility
   { type: 'spray_paint', name: 'Spray Paint', description: 'Tag someone\'s profile for 24h.', category: 'utility', goldCost: 5, emoji: '🎨' },
+  { type: 'fake_death', name: 'Fake Death', description: 'Profile shows 0 HP to others for 12h.', category: 'utility', goldCost: 15, effect: '0 HP disguise (12h)', emoji: '💀' },
+  { type: 'name_tag', name: 'Name Tag', description: 'Give someone a custom title for 24h.', category: 'utility', goldCost: 5, effect: 'Custom title (24h)', emoji: '🏷️' },
+  { type: 'smoke_bomb', name: 'Smoke Bomb', description: 'Clears all spray paints from your profile.', category: 'utility', goldCost: 8, effect: 'Remove all tags', emoji: '💨' },
 ]
 
 export const ITEM_MAP = new Map(ITEMS.map(item => [item.type, item]))
@@ -35,6 +46,7 @@ export const ITEM_MAP = new Map(ITEMS.map(item => [item.type, item]))
 export const WEAPONS = ITEMS.filter(i => i.category === 'weapon')
 export const POTIONS = ITEMS.filter(i => i.category === 'potion')
 export const DEFENSE_ITEMS = ITEMS.filter(i => i.category === 'defense')
+export const POWERUP_ITEMS = ITEMS.filter(i => i.category === 'powerup')
 export const UTILITY_ITEMS = ITEMS.filter(i => i.category === 'utility')
 
 export const GOLD_PACKAGES = [
@@ -82,6 +94,7 @@ export const CHEST_LOOT_POOLS: LootPool[] = [
       () => { const n = randInt(1, 3); return { type: 'gold', amount: n, rarity: 'common', label: `${n} Gold`, emoji: '🪙' } },
       () => ({ type: 'item', amount: 1, itemType: 'knife' as ItemType, rarity: 'common', label: '1 Knife', emoji: '🔪' }),
       () => ({ type: 'item', amount: 1, itemType: 'soda' as ItemType, rarity: 'common', label: '1 Soda', emoji: '🥤' }),
+      () => ({ type: 'item', amount: 1, itemType: 'smoke_bomb' as ItemType, rarity: 'common', label: '1 Smoke Bomb', emoji: '💨' }),
     ],
   },
   {
@@ -91,6 +104,9 @@ export const CHEST_LOOT_POOLS: LootPool[] = [
       () => { const n = randInt(20, 50); return { type: 'credits', amount: n, rarity: 'uncommon', label: `${n} Spits`, emoji: '⭐' } },
       () => { const n = randInt(3, 8); return { type: 'gold', amount: n, rarity: 'uncommon', label: `${n} Gold`, emoji: '🪙' } },
       () => ({ type: 'item', amount: 1, itemType: 'small_potion' as ItemType, rarity: 'uncommon', label: '1 Small Potion', emoji: '🧪' }),
+      () => ({ type: 'item', amount: 1, itemType: 'malware' as ItemType, rarity: 'uncommon', label: '1 Malware', emoji: '🦠' }),
+      () => ({ type: 'item', amount: 1, itemType: 'name_tag' as ItemType, rarity: 'uncommon', label: '1 Name Tag', emoji: '🏷️' }),
+      () => ({ type: 'item', amount: 1, itemType: 'critical_chip' as ItemType, rarity: 'uncommon', label: '1 Critical Chip', emoji: '💎' }),
     ],
   },
   {
@@ -102,6 +118,9 @@ export const CHEST_LOOT_POOLS: LootPool[] = [
       () => ({ type: 'item', amount: 1, itemType: 'gun' as ItemType, rarity: 'rare', label: '1 Gun', emoji: '🔫' }),
       () => ({ type: 'item', amount: 1, itemType: 'medium_potion' as ItemType, rarity: 'rare', label: '1 Medium Potion', emoji: '⚗️' }),
       () => ({ type: 'item', amount: 1, itemType: 'firewall' as ItemType, rarity: 'rare', label: '1 Firewall', emoji: '🛡️' }),
+      () => ({ type: 'item', amount: 1, itemType: 'rage_serum' as ItemType, rarity: 'rare', label: '1 Rage Serum', emoji: '🔴' }),
+      () => ({ type: 'item', amount: 1, itemType: 'xp_boost' as ItemType, rarity: 'rare', label: '1 XP Boost', emoji: '📈' }),
+      () => ({ type: 'item', amount: 1, itemType: 'fake_death' as ItemType, rarity: 'rare', label: '1 Fake Death', emoji: '💀' }),
     ],
   },
   {
@@ -113,6 +132,8 @@ export const CHEST_LOOT_POOLS: LootPool[] = [
       () => ({ type: 'item', amount: 1, itemType: 'soldier' as ItemType, rarity: 'epic', label: '1 Soldier', emoji: '💂' }),
       () => ({ type: 'item', amount: 1, itemType: 'drone' as ItemType, rarity: 'epic', label: '1 Drone', emoji: '🛩️' }),
       () => ({ type: 'item', amount: 1, itemType: 'large_potion' as ItemType, rarity: 'epic', label: '1 Large Potion', emoji: '🏺' }),
+      () => ({ type: 'item', amount: 1, itemType: 'emp' as ItemType, rarity: 'epic', label: '1 EMP', emoji: '⚡' }),
+      () => ({ type: 'item', amount: 1, itemType: 'mirror_shield' as ItemType, rarity: 'epic', label: '1 Mirror Shield', emoji: '🪞' }),
     ],
   },
 ]

@@ -13,24 +13,25 @@ interface ItemCardProps {
 
 export function ItemCard({ item, quantity = 0, goldBalance, onBuy, onUse, buying }: ItemCardProps) {
   const canAfford = goldBalance >= item.goldCost
+  const canUse = item.category === 'potion' || item.category === 'defense' || item.category === 'powerup' ||
+    (item.category === 'utility' && ['smoke_bomb', 'fake_death', 'name_tag'].includes(item.type))
 
   return (
     <div className="shop-item-card">
       <div className="shop-item-emoji">{item.emoji}</div>
       <div className="shop-item-info">
         <div className="shop-item-name">{item.name}</div>
-        <div className="shop-item-desc">{item.description}</div>
         {item.damage && (
           <div className="shop-item-stat shop-item-stat-damage">{item.damage} DMG</div>
         )}
         {item.healAmount && (
           <div className="shop-item-stat shop-item-stat-heal">+{item.healAmount} HP</div>
         )}
-        {item.category === 'defense' && (
-          <div className="shop-item-stat" style={{ color: 'var(--sys-primary)' }}>Blocks attacks</div>
+        {item.effect && (
+          <div className="shop-item-stat" style={{ color: 'var(--sys-primary)' }}>{item.effect}</div>
         )}
-        {item.category === 'utility' && (
-          <div className="shop-item-stat" style={{ color: 'var(--sys-success)' }}>Use on profiles</div>
+        {item.category === 'defense' && !item.effect && (
+          <div className="shop-item-stat" style={{ color: 'var(--sys-primary)' }}>Blocks attacks</div>
         )}
       </div>
       <div className="shop-item-actions">
@@ -45,7 +46,7 @@ export function ItemCard({ item, quantity = 0, goldBalance, onBuy, onUse, buying
         >
           {buying ? '...' : 'Buy'}
         </button>
-        {onUse && quantity > 0 && (item.category === 'potion' || item.category === 'defense') && (
+        {onUse && quantity > 0 && canUse && (
           <button
             className="btn btn-primary shop-item-use"
             onClick={() => onUse(item)}

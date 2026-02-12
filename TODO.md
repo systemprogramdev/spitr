@@ -250,3 +250,90 @@ noise = ±5% (daily deterministic pseudo-random)
 price = base * (1 + yield_swing + weekly + midweek + noise)
 floor = $0.10 (safety net — mathematically unreachable since base >= 3 and min multiplier ~0.55)
 ```
+
+---
+
+## ACTION NEEDED: Shop Overhaul — 9 New Items + New Buff Types
+
+**Date:** 2026-02-11
+
+### What changed
+
+9 new items added to the shop across 4 categories. Several have combat effects that change attack/defense behavior. The `item_type` enum now includes: `emp`, `malware`, `rage_serum`, `critical_chip`, `xp_boost`, `mirror_shield`, `fake_death`, `name_tag`, `smoke_bomb`.
+
+New `name_tags` table tracks custom titles applied to users (24h expiry).
+
+### New items bots should know about
+
+| Item | Type | Cost | Category | Effect |
+|------|------|------|----------|--------|
+| EMP | `emp` | 50g | weapon | 200 DMG + strips ALL active defense buffs from target |
+| Malware | `malware` | 15g | weapon | 75 DMG + steals 1 random item from target's inventory |
+| Rage Serum | `rage_serum` | 25g | powerup | 2x damage on next 3 attacks (buff, charge-based) |
+| Critical Chip | `critical_chip` | 15g | powerup | 30% chance for 3x damage, next 5 attacks (buff, charge-based) |
+| XP Boost | `xp_boost` | 10g | powerup | 2x XP for 1 hour (time-based via `activated_at`) |
+| Mirror Shield | `mirror_shield` | 40g | defense | Reflects 100% of next attack back at attacker (1 charge) |
+| Fake Death | `fake_death` | 15g | utility | Profile shows 0 HP to others for 12h (time-based buff) |
+| Name Tag | `name_tag` | 5g | utility | Give someone a custom title on their profile for 24h |
+| Smoke Bomb | `smoke_bomb` | 8g | utility | Clears all spray paints from your own profile |
+
+### New API endpoints
+
+- `POST /api/use-powerup` — Activates rage_serum, critical_chip, or xp_boost. Body: `{ "itemType": "rage_serum" }`
+- `POST /api/use-smoke-bomb` — Uses smoke bomb to clear spray paints. No body needed.
+- `POST /api/use-fake-death` — Activates fake death buff. No body needed.
+- `POST /api/use-name-tag` — Applies name tag. Body: `{ "targetUserId": "uuid", "customTitle": "string (max 30 chars)" }`
+
+### Changes to existing endpoints
+
+#### `POST /api/attack` — New response fields
+
+The attack response can now include these additional fields:
+
+```json
+{
+  "success": true,
+  "damage": 200,
+  "newHp": 4800,
+  "destroyed": false,
+  "critical": true,
+  "reflected": false,
+  "reflectedDamage": 0,
+  "buffsStripped": true,
+  "stolenItem": { "type": "firewall", "name": "Firewall", "emoji": "🛡️" }
+}
+```
+
+- **`critical`** (boolean): True if Critical Chip triggered (3x damage)
+- **`reflected`** (boolean): True if target had Mirror Shield — damage went back to attacker
+- **`reflectedDamage`** (number): Amount of damage reflected
+- **`buffsStripped`** (boolean): True if EMP was used — all target's buffs deleted
+- **`stolenItem`** (object|null): If Malware was used — the item stolen from target
+
+#### `POST /api/use-defense` — Now accepts `mirror_shield`
+
+Mirror Shield works like firewall (1 charge) but reflects damage back instead of blocking.
+
+#### `POST /api/award-xp` — XP Boost check
+
+If the user has an active `xp_boost` buff (activated within the last hour), XP is doubled automatically. Expired buffs are cleaned up.
+
+### Datacenter action
+
+#### For bot combat (if bots use `POST /api/bot/attack`):
+
+1. **Mirror Shield awareness:** Before attacking, bots should check target's buffs. If `mirror_shield` is active, the attack will reflect back and damage the bot instead. Bots may want to skip attacking shielded targets or use cheap weapons (knife) to trigger the shield first.
+
+2. **EMP is high-value:** If a target has multiple defense buffs (firewall + kevlar + mirror_shield), a 50g EMP strips all of them AND does 200 damage. Worth it against heavily defended targets.
+
+3. **Malware steals items:** The stolen item is random from the target's inventory. Bots now need to handle the `stolenItem` field in attack responses — the item is automatically added to the bot's inventory.
+
+4. **New attack response fields:** The bot attack handler should parse `critical`, `reflected`, `buffsStripped`, and `stolenItem` from attack responses for logging/decision-making.
+
+#### For bot item management (via `POST /api/bot/buy-item`):
+
+The new items can be purchased through the existing buy-item endpoint. Bots with `aggressive` banking strategies may want to buy `rage_serum` or `critical_chip` before attacking. `xp_boost` is cheap (10g) and doubles XP for an hour — good ROI for active bots.
+
+#### For bot self-defense (via `POST /api/bot/use-item`):
+
+If the bot use-item endpoint supports it, bots can activate `mirror_shield` as a defense. At 40g it's expensive but can deter attackers since the damage reflects back.

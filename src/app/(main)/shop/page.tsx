@@ -7,7 +7,7 @@ import { useGold } from '@/hooks/useGold'
 import { useInventory } from '@/hooks/useInventory'
 import { useCredits } from '@/hooks/useCredits'
 import { useModalStore } from '@/stores/modalStore'
-import { ITEMS, WEAPONS, POTIONS, DEFENSE_ITEMS, UTILITY_ITEMS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, getMaxHp } from '@/lib/items'
+import { WEAPONS, POTIONS, DEFENSE_ITEMS, POWERUP_ITEMS, UTILITY_ITEMS, GOLD_PACKAGES, SPIT_TO_GOLD_RATIO, ITEM_MAP, getMaxHp } from '@/lib/items'
 import { ItemCard } from '@/components/shop/ItemCard'
 import { GoldCheckoutModal } from '@/components/shop/GoldCheckoutModal'
 import { StripeCheckoutModal } from '@/components/StripeCheckoutModal'
@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
 import { toast } from '@/stores/toastStore'
+import { NameTagModal } from '@/components/shop/NameTagModal'
 
 const supabase = createClient()
 
@@ -42,6 +43,24 @@ const TXN_TYPE_LABELS: Record<string, string> = {
   free_monthly: 'Monthly Bonus',
   chest_purchase: 'Bought Chest',
   level_up: 'Level Up Reward',
+}
+
+type ShopTab = 'weapons' | 'potions' | 'defense' | 'powerups' | 'utility'
+
+const SHOP_TABS: { key: ShopTab; label: string; emoji: string }[] = [
+  { key: 'weapons', label: 'Weapons', emoji: '⚔️' },
+  { key: 'potions', label: 'Potions', emoji: '🧪' },
+  { key: 'defense', label: 'Defense', emoji: '🛡️' },
+  { key: 'powerups', label: 'Power-Ups', emoji: '🔴' },
+  { key: 'utility', label: 'Utility', emoji: '🎨' },
+]
+
+const TAB_ITEMS: Record<ShopTab, GameItem[]> = {
+  weapons: WEAPONS,
+  potions: POTIONS,
+  defense: DEFENSE_ITEMS,
+  powerups: POWERUP_ITEMS,
+  utility: UTILITY_ITEMS,
 }
 
 function timeAgo(dateStr: string) {
@@ -71,10 +90,15 @@ function ShopPageContent() {
   const [buyingItem, setBuyingItem] = useState<string | null>(null)
   const [usingPotion, setUsingPotion] = useState<string | null>(null)
   const [activatingDefense, setActivatingDefense] = useState<string | null>(null)
+  const [activatingPowerup, setActivatingPowerup] = useState<string | null>(null)
   const [checkoutPkg, setCheckoutPkg] = useState<typeof GOLD_PACKAGES[number] | null>(null)
   const [userHp, setUserHp] = useState(user?.hp ?? getMaxHp(userLevel))
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
   const [buyingChest, setBuyingChest] = useState(false)
+  const [activeTab, setActiveTab] = useState<ShopTab>('weapons')
+
+  // Name tag modal
+  const [showNameTagModal, setShowNameTagModal] = useState(false)
 
   // Credit purchase state
   const [selectedCreditPkg, setSelectedCreditPkg] = useState<typeof CREDIT_PACKAGES[0] | null>(null)
@@ -84,6 +108,9 @@ function ShopPageContent() {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([])
   const [loadingTxns, setLoadingTxns] = useState(true)
   const [showAllTxns, setShowAllTxns] = useState(false)
+
+  // Currency section collapse
+  const [showCurrency, setShowCurrency] = useState(false)
 
   // Handle Stripe redirect URL params
   useEffect(() => {
@@ -151,17 +178,6 @@ function ShopPageContent() {
     fetchTransactions()
   }, [fetchTransactions])
 
-  // Refresh HP from user store
-  const refreshHp = async () => {
-    if (!user) return
-    const { data } = await supabase
-      .from('users')
-      .select('hp')
-      .eq('id', user.id)
-      .single()
-    if (data) setUserHp(data.hp)
-  }
-
   const handleConvert = async () => {
     if (!user || isConverting) return
     const spitsToConvert = parseInt(convertAmount, 10)
@@ -172,7 +188,6 @@ function ShopPageContent() {
 
     setIsConverting(true)
 
-    // Deduct spits
     const credited = await deductAmount(actualSpitCost, 'convert', 'gold_convert')
     if (!credited) {
       toast.warning('Insufficient spits!')
@@ -180,7 +195,6 @@ function ShopPageContent() {
       return
     }
 
-    // Add gold
     const added = await addGold(goldToGet, 'convert')
     if (!added) {
       toast.error('Failed to add gold. Your spits were deducted — contact support.')
@@ -201,7 +215,6 @@ function ShopPageContent() {
 
     setBuyingItem(item.type)
 
-    // Deduct gold
     const deducted = await deductGold(item.goldCost, 'item_purchase', item.type)
     if (!deducted) {
       toast.error('Failed to purchase item.')
@@ -209,7 +222,6 @@ function ShopPageContent() {
       return
     }
 
-    // Add to inventory — read current qty from DB to avoid stale state
     const { data: existing } = await supabase
       .from('user_inventory')
       .select('quantity')
@@ -293,11 +305,73 @@ function ShopPageContent() {
     setActivatingDefense(null)
   }
 
+  const handleActivatePowerup = async (item: GameItem) => {
+    if (!user || activatingPowerup) return
+
+    setActivatingPowerup(item.type)
+
+    const res = await fetch('/api/use-powerup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemType: item.type }),
+    })
+
+    const data = await res.json()
+
+    if (data.success) {
+      playSound('shield')
+      await refreshInventory()
+      toast.success(`${item.name} activated! ${data.charges} charge${data.charges > 1 ? 's' : ''}.`)
+    } else {
+      toast.error(data.error || 'Failed to activate power-up.')
+    }
+
+    setActivatingPowerup(null)
+  }
+
+  const handleUseUtility = async (item: GameItem) => {
+    if (!user) return
+
+    if (item.type === 'smoke_bomb') {
+      const res = await fetch('/api/use-smoke-bomb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.success) {
+        playSound('shield')
+        await refreshInventory()
+        toast.success(`Smoke Bomb used! Cleared ${data.cleared} spray paint${data.cleared !== 1 ? 's' : ''}.`)
+      } else {
+        toast.error(data.error || 'Failed to use smoke bomb.')
+      }
+    } else if (item.type === 'fake_death') {
+      const res = await fetch('/api/use-fake-death', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.success) {
+        playSound('shield')
+        await refreshInventory()
+        toast.success(`Fake Death activated for ${data.duration}!`)
+      } else {
+        toast.error(data.error || 'Failed to activate Fake Death.')
+      }
+    } else if (item.type === 'name_tag') {
+      setShowNameTagModal(true)
+    }
+  }
+
   const handleUseItem = async (item: GameItem) => {
     if (item.category === 'potion') {
       handleUsePotion(item)
     } else if (item.category === 'defense') {
       handleActivateDefense(item)
+    } else if (item.category === 'powerup') {
+      handleActivatePowerup(item)
+    } else if (item.category === 'utility') {
+      handleUseUtility(item)
     }
   }
 
@@ -361,6 +435,7 @@ function ShopPageContent() {
   const goldFromSpits = convertAmount ? Math.floor(parseInt(convertAmount, 10) / SPIT_TO_GOLD_RATIO) || 0 : 0
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`
   const visibleTxns = showAllTxns ? transactions : transactions.slice(0, 5)
+  const inventoryItems = items.filter(i => i.quantity > 0)
 
   return (
     <div>
@@ -390,10 +465,48 @@ function ShopPageContent() {
         </div>
       </div>
 
+      {/* Compact Inventory Strip */}
+      <div className="shop-section" style={{ padding: '0.75rem' }}>
+        <h2 className="shop-section-title" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+          <span>🎒</span> Inventory
+        </h2>
+        {inventoryItems.length === 0 ? (
+          <p style={{ color: 'var(--sys-text-muted)', fontSize: '0.8rem', margin: 0 }}>No items yet</p>
+        ) : (
+          <div className="shop-inventory-compact">
+            {inventoryItems.map((inv) => {
+              const itemDef = ITEM_MAP.get(inv.item_type)
+              if (!itemDef) return null
+              const canUse = itemDef.category === 'potion' || itemDef.category === 'defense' || itemDef.category === 'powerup' || (itemDef.category === 'utility' && ['smoke_bomb', 'fake_death', 'name_tag'].includes(itemDef.type))
+              return (
+                <div key={inv.item_type} className="shop-inv-pill">
+                  <span>{itemDef.emoji}</span>
+                  <span className="shop-inv-pill-name">{itemDef.name}</span>
+                  <span className="shop-inv-pill-qty">x{inv.quantity}</span>
+                  {canUse && (
+                    <button
+                      className="btn btn-primary shop-inv-pill-btn"
+                      onClick={() => handleUseItem(itemDef)}
+                      disabled={
+                        (itemDef.category === 'potion' && usingPotion === itemDef.type) ||
+                        (itemDef.category === 'defense' && activatingDefense === itemDef.type) ||
+                        (itemDef.category === 'powerup' && activatingPowerup === itemDef.type)
+                      }
+                    >
+                      {itemDef.category === 'defense' ? 'Activate' : 'Use'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
       {/* My Chests */}
       {unopenedChests.length > 0 && (
-        <div className="shop-section">
-          <h2 className="shop-section-title">
+        <div className="shop-section" style={{ padding: '0.75rem' }}>
+          <h2 className="shop-section-title" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
             <span>🎁</span> My Chests ({unopenedChests.length})
           </h2>
           <div className="shop-chests-grid">
@@ -416,289 +529,155 @@ function ShopPageContent() {
         </div>
       )}
 
-      {/* Buy Chest */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>🎁</span> Buy Treasure Chest
-        </h2>
-        <p className="shop-section-desc">Purchase a treasure chest for 100 spits. Contains 2-3 random rewards!</p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ fontSize: '2rem' }}>🎁</span>
-            <div>
-              <div style={{ fontWeight: 600, color: 'var(--sys-text)' }}>Treasure Chest</div>
-              <div style={{ fontSize: '0.85rem', color: 'var(--sys-text-muted)' }}>100 spits</div>
-            </div>
-          </div>
-          <button
-            className="btn btn-primary btn-glow"
-            onClick={handleBuyChest}
-            disabled={buyingChest || creditBalance < 100}
-            style={{ marginLeft: 'auto' }}
-          >
-            {buyingChest ? 'Buying...' : 'Buy Chest'}
-          </button>
-        </div>
-      </div>
-
-      {/* Convert Spits → Gold */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>🔄</span> Convert Spits → Gold
-        </h2>
-        <p className="shop-section-desc">{SPIT_TO_GOLD_RATIO} spits = 1 gold. You have {creditBalance.toLocaleString()} spits.</p>
-        <div className="shop-convert-row">
-          <input
-            type="number"
-            className="input"
-            value={convertAmount}
-            onChange={(e) => setConvertAmount(e.target.value)}
-            placeholder={`Min ${SPIT_TO_GOLD_RATIO} spits`}
-            min={SPIT_TO_GOLD_RATIO}
-            style={{ flex: 1 }}
-          />
-          <span className="shop-convert-arrow">→</span>
-          <span className="shop-convert-result">{goldFromSpits}g</span>
-          <button
-            className="btn btn-warning"
-            onClick={handleConvert}
-            disabled={isConverting || goldFromSpits < 1}
-          >
-            {isConverting ? '...' : 'Convert'}
-          </button>
-        </div>
-      </div>
-
-      {/* Buy Gold with Stripe */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>💳</span> Buy Gold
-        </h2>
-        <div className="shop-packages-grid">
-          {GOLD_PACKAGES.map((pkg) => (
+      {/* Tabbed Item Categories */}
+      <div className="shop-section" style={{ padding: '0.75rem' }}>
+        <div className="shop-tabs">
+          {SHOP_TABS.map((t) => (
             <button
-              key={pkg.id}
-              className={`shop-package ${pkg.popular ? 'shop-package-popular' : ''} ${pkg.whale ? 'shop-package-whale' : ''}`}
-              onClick={() => setCheckoutPkg(pkg)}
+              key={t.key}
+              className={`shop-tab ${activeTab === t.key ? 'shop-tab-active' : ''}`}
+              onClick={() => setActiveTab(t.key)}
             >
-              {pkg.popular && <span className="shop-package-badge">POPULAR</span>}
-              {pkg.whale && <span className="shop-package-badge shop-package-badge-whale">BEST VALUE</span>}
-              <div className="shop-package-gold">{pkg.gold}g</div>
-              <div className="shop-package-price">${(pkg.price / 100).toFixed(2)}</div>
+              <span>{t.emoji}</span> {t.label}
             </button>
           ))}
         </div>
+        <div className="shop-items-grid" style={{ marginTop: '0.75rem' }}>
+          {TAB_ITEMS[activeTab].map((item) => (
+            <ItemCard
+              key={item.type}
+              item={item}
+              quantity={getQuantity(item.type)}
+              goldBalance={goldBalance}
+              onBuy={handleBuyItem}
+              onUse={handleUseItem}
+              buying={buyingItem === item.type}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Buy Spits with Stripe */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>⭐</span> Buy Spits
-        </h2>
-        <p className="shop-section-desc">Spits never expire. Secure checkout powered by Stripe.</p>
-        <div style={{ display: 'grid', gap: '0.75rem', marginTop: '0.75rem' }}>
-          {CREDIT_PACKAGES.map((pkg) => (
-            <div
-              key={pkg.id}
-              className="panel"
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '1rem',
-                border: pkg.popular ? '2px solid var(--sys-primary)' : pkg.whale ? '2px solid var(--sys-warning)' : '1px solid var(--sys-border)',
-                background: pkg.whale ? 'linear-gradient(135deg, rgba(255, 204, 0, 0.05), rgba(255, 136, 0, 0.05))' : undefined,
-                position: 'relative',
-                overflow: 'hidden',
-                cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-              }}
-              onClick={() => handleCreditPurchase(pkg)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = pkg.whale
-                  ? '0 4px 20px rgba(255, 204, 0, 0.3)'
-                  : '0 4px 20px rgba(0, 255, 136, 0.2)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
-              }}
-            >
-              {pkg.whale && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: '-100%',
-                    width: '200%',
-                    height: '100%',
-                    background: 'linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.1), transparent)',
-                    animation: 'shimmer 3s infinite',
-                    pointerEvents: 'none',
-                  }}
-                />
-              )}
-
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--sys-text)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  {pkg.credits.toLocaleString()} Spits
-                  {pkg.popular && <span className="badge badge-glow">Popular</span>}
-                  {pkg.whale && <span className="badge" style={{ background: 'var(--sys-warning)', color: '#000' }}>Best Deal</span>}
-                </div>
-                <div style={{ color: 'var(--sys-text-muted)', marginTop: '0.15rem', fontSize: '0.85rem' }}>{pkg.description}</div>
+      {/* Currency & Purchases (collapsible) */}
+      <div className="shop-section" style={{ padding: '0.75rem' }}>
+        <button
+          className="shop-section-title"
+          onClick={() => setShowCurrency(!showCurrency)}
+          style={{ marginBottom: showCurrency ? '0.75rem' : 0, cursor: 'pointer', width: '100%', background: 'none', border: 'none', fontSize: '0.9rem' }}
+        >
+          <span>💰</span> Buy Currency & Chests
+          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>{showCurrency ? '▲' : '▼'}</span>
+        </button>
+        {showCurrency && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {/* Buy Chest */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid var(--sys-border)' }}>
+              <span style={{ fontSize: '1.5rem' }}>🎁</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, color: 'var(--sys-text)', fontSize: '0.9rem' }}>Treasure Chest</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>100 spits - 2-3 random rewards</div>
               </div>
-
               <button
-                className={`btn ${pkg.whale ? 'btn-warning' : 'btn-primary'} btn-glow`}
-                style={{ minWidth: '70px', position: 'relative', zIndex: 1 }}
+                className="btn btn-primary"
+                onClick={handleBuyChest}
+                disabled={buyingChest || creditBalance < 100}
+                style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
               >
-                {formatPrice(pkg.price)}
+                {buyingChest ? '...' : 'Buy'}
               </button>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Weapons */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>⚔️</span> Weapons
-        </h2>
-        <div className="shop-items-grid">
-          {WEAPONS.map((item) => (
-            <ItemCard
-              key={item.type}
-              item={item}
-              quantity={getQuantity(item.type)}
-              goldBalance={goldBalance}
-              onBuy={handleBuyItem}
-              buying={buyingItem === item.type}
-            />
-          ))}
-        </div>
-      </div>
+            {/* Convert */}
+            <div style={{ borderBottom: '1px solid var(--sys-border)', paddingBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginBottom: '0.5rem' }}>
+                Convert Spits → Gold ({SPIT_TO_GOLD_RATIO}:1)
+              </div>
+              <div className="shop-convert-row">
+                <input
+                  type="number"
+                  className="input"
+                  value={convertAmount}
+                  onChange={(e) => setConvertAmount(e.target.value)}
+                  placeholder={`Min ${SPIT_TO_GOLD_RATIO}`}
+                  min={SPIT_TO_GOLD_RATIO}
+                  style={{ flex: 1, padding: '0.4rem' }}
+                />
+                <span className="shop-convert-arrow">→</span>
+                <span className="shop-convert-result">{goldFromSpits}g</span>
+                <button
+                  className="btn btn-warning"
+                  onClick={handleConvert}
+                  disabled={isConverting || goldFromSpits < 1}
+                  style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
+                >
+                  {isConverting ? '...' : 'Convert'}
+                </button>
+              </div>
+            </div>
 
-      {/* Potions */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>🧪</span> Potions
-        </h2>
-        <div className="shop-items-grid">
-          {POTIONS.map((item) => (
-            <ItemCard
-              key={item.type}
-              item={item}
-              quantity={getQuantity(item.type)}
-              goldBalance={goldBalance}
-              onBuy={handleBuyItem}
-              onUse={handleUsePotion}
-              buying={buyingItem === item.type}
-            />
-          ))}
-        </div>
-      </div>
+            {/* Buy Gold */}
+            <div style={{ borderBottom: '1px solid var(--sys-border)', paddingBottom: '0.75rem' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginBottom: '0.5rem' }}>Buy Gold</div>
+              <div className="shop-packages-grid">
+                {GOLD_PACKAGES.map((pkg) => (
+                  <button
+                    key={pkg.id}
+                    className={`shop-package ${pkg.popular ? 'shop-package-popular' : ''} ${pkg.whale ? 'shop-package-whale' : ''}`}
+                    onClick={() => setCheckoutPkg(pkg)}
+                    style={{ padding: '0.75rem' }}
+                  >
+                    {pkg.popular && <span className="shop-package-badge">POPULAR</span>}
+                    {pkg.whale && <span className="shop-package-badge shop-package-badge-whale">BEST VALUE</span>}
+                    <div className="shop-package-gold" style={{ fontSize: '1.25rem' }}>{pkg.gold}g</div>
+                    <div className="shop-package-price">${(pkg.price / 100).toFixed(2)}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      {/* Defense */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>🛡️</span> Defense
-        </h2>
-        <div className="shop-items-grid">
-          {DEFENSE_ITEMS.map((item) => (
-            <ItemCard
-              key={item.type}
-              item={item}
-              quantity={getQuantity(item.type)}
-              goldBalance={goldBalance}
-              onBuy={handleBuyItem}
-              onUse={handleActivateDefense}
-              buying={buyingItem === item.type}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Utility */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>🎨</span> Utility
-        </h2>
-        <div className="shop-items-grid">
-          {UTILITY_ITEMS.map((item) => (
-            <ItemCard
-              key={item.type}
-              item={item}
-              quantity={getQuantity(item.type)}
-              goldBalance={goldBalance}
-              onBuy={handleBuyItem}
-              buying={buyingItem === item.type}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Inventory */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
-          <span>🎒</span> Inventory
-        </h2>
-        <div className="shop-inventory-grid">
-          {items.filter(i => i.quantity > 0).length === 0 ? (
-            <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1.5rem' }}>
-              Your inventory is empty. Buy some items above!
-            </p>
-          ) : (
-            items
-              .filter(i => i.quantity > 0)
-              .map((inv) => {
-                const itemDef = ITEM_MAP.get(inv.item_type)
-                if (!itemDef) return null
-                return (
-                  <div key={inv.item_type} className="shop-inventory-item">
-                    <span className="shop-inventory-emoji">{itemDef.emoji}</span>
-                    <span className="shop-inventory-name">{itemDef.name}</span>
-                    <span className="shop-inventory-qty">x{inv.quantity}</span>
-                    {itemDef.category === 'potion' && (
-                      <button
-                        className="btn btn-primary"
-                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-                        onClick={() => handleUsePotion(itemDef)}
-                        disabled={usingPotion === itemDef.type}
-                      >
-                        Use
-                      </button>
-                    )}
-                    {itemDef.category === 'defense' && (
-                      <button
-                        className="btn btn-primary"
-                        style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
-                        onClick={() => handleActivateDefense(itemDef)}
-                        disabled={activatingDefense === itemDef.type}
-                      >
-                        Activate
-                      </button>
-                    )}
+            {/* Buy Spits */}
+            <div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginBottom: '0.5rem' }}>Buy Spits</div>
+              <div style={{ display: 'grid', gap: '0.5rem' }}>
+                {CREDIT_PACKAGES.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    className="panel"
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem',
+                      border: pkg.popular ? '2px solid var(--sys-primary)' : pkg.whale ? '2px solid var(--sys-warning)' : '1px solid var(--sys-border)',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleCreditPurchase(pkg)}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'var(--sys-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {pkg.credits.toLocaleString()} Spits
+                        {pkg.popular && <span className="badge badge-glow" style={{ fontSize: '0.6rem' }}>Popular</span>}
+                      </div>
+                    </div>
+                    <button className={`btn ${pkg.whale ? 'btn-warning' : 'btn-primary'}`} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}>
+                      {formatPrice(pkg.price)}
+                    </button>
                   </div>
-                )
-              })
-          )}
-        </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Transaction History */}
-      <div className="shop-section">
-        <h2 className="shop-section-title">
+      <div className="shop-section" style={{ padding: '0.75rem' }}>
+        <h2 className="shop-section-title" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
           <span>📜</span> Transaction History
         </h2>
         {loadingTxns ? (
-          <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1.5rem' }}>
-            Loading...
-          </p>
+          <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>Loading...</p>
         ) : transactions.length === 0 ? (
-          <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1.5rem' }}>
-            No transactions yet.
-          </p>
+          <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>No transactions yet.</p>
         ) : (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -709,17 +688,17 @@ function ShopPageContent() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '0.6rem 0.75rem',
+                    padding: '0.5rem 0.5rem',
                     borderBottom: '1px solid var(--sys-border)',
                     fontFamily: 'var(--sys-font-mono)',
-                    fontSize: '0.85rem',
+                    fontSize: '0.8rem',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
                     <span style={{
                       color: txn.amount >= 0 ? 'var(--sys-success)' : 'var(--sys-error)',
                       fontWeight: 'bold',
-                      minWidth: '60px',
+                      minWidth: '50px',
                       textAlign: 'right',
                     }}>
                       {txn.amount >= 0 ? '+' : ''}{txn.amount}
@@ -728,21 +707,16 @@ function ShopPageContent() {
                       {TXN_TYPE_LABELS[txn.type] || txn.type}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-                    <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.8rem' }}>
-                      bal: {txn.balance_after}
-                    </span>
-                    <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.75rem', minWidth: '50px', textAlign: 'right' }}>
-                      {timeAgo(txn.created_at)}
-                    </span>
-                  </div>
+                  <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.7rem', flexShrink: 0 }}>
+                    {timeAgo(txn.created_at)}
+                  </span>
                 </div>
               ))}
             </div>
             {transactions.length > 5 && !showAllTxns && (
               <button
                 className="btn btn-outline"
-                style={{ width: '100%', marginTop: '0.75rem' }}
+                style={{ width: '100%', marginTop: '0.5rem', fontSize: '0.8rem' }}
                 onClick={() => setShowAllTxns(true)}
               >
                 Show More ({transactions.length - 5} more)
@@ -774,6 +748,17 @@ function ShopPageContent() {
         userId={user?.id || ''}
         onSuccess={handleCreditPurchaseSuccess}
       />
+
+      {/* Name Tag Modal */}
+      {showNameTagModal && user && (
+        <NameTagModal
+          onClose={() => setShowNameTagModal(false)}
+          onSuccess={async () => {
+            await refreshInventory()
+            setShowNameTagModal(false)
+          }}
+        />
+      )}
     </div>
   )
 }

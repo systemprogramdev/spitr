@@ -36,9 +36,29 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { action, referenceId } = body
 
-  const amount = XP_AMOUNTS[action]
+  let amount = XP_AMOUNTS[action]
   if (!amount) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+  }
+
+  // Check for XP boost buff
+  const { data: xpBuff } = await adminClient
+    .from('user_buffs')
+    .select('id, activated_at')
+    .eq('user_id', user.id)
+    .eq('buff_type', 'xp_boost')
+    .single()
+
+  if (xpBuff) {
+    const activatedAt = new Date(xpBuff.activated_at)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
+    if (activatedAt > oneHourAgo) {
+      // Buff is active - double XP
+      amount *= 2
+    } else {
+      // Buff expired - clean it up
+      await adminClient.from('user_buffs').delete().eq('id', xpBuff.id)
+    }
   }
 
   const { data, error } = await adminClient.rpc('award_xp', {

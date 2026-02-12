@@ -7,6 +7,12 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const POWERUP_CONFIG: Record<string, { charges: number }> = {
+  rage_serum: { charges: 3 },
+  critical_chip: { charges: 5 },
+  xp_boost: { charges: 1 },
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient()
@@ -18,11 +24,9 @@ export async function POST(request: NextRequest) {
     const { itemType } = await request.json()
     const userId = user.id
 
-    if (itemType !== 'firewall' && itemType !== 'kevlar' && itemType !== 'mirror_shield') {
-      return NextResponse.json(
-        { error: 'Invalid defense item' },
-        { status: 400 }
-      )
+    const config = POWERUP_CONFIG[itemType]
+    if (!config) {
+      return NextResponse.json({ error: 'Invalid power-up item' }, { status: 400 })
     }
 
     // Check inventory
@@ -34,10 +38,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (!inv || inv.quantity < 1) {
-      return NextResponse.json(
-        { error: 'You don\'t have this item' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "You don't have this item" }, { status: 400 })
     }
 
     // Check if buff already active
@@ -49,46 +50,30 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existing) {
-      return NextResponse.json(
-        { error: 'This defense is already active' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'This power-up is already active' }, { status: 400 })
     }
-
-    const charges = itemType === 'kevlar' ? 3 : 1 // firewall = 1, mirror_shield = 1
 
     // Deduct from inventory
     if (inv.quantity === 1) {
-      await supabaseAdmin
-        .from('user_inventory')
-        .delete()
-        .eq('user_id', userId)
-        .eq('item_type', itemType)
+      await supabaseAdmin.from('user_inventory').delete().eq('user_id', userId).eq('item_type', itemType)
     } else {
-      await supabaseAdmin
-        .from('user_inventory')
-        .update({ quantity: inv.quantity - 1 })
-        .eq('user_id', userId)
-        .eq('item_type', itemType)
+      await supabaseAdmin.from('user_inventory').update({ quantity: inv.quantity - 1 }).eq('user_id', userId).eq('item_type', itemType)
     }
 
     // Activate buff
     await supabaseAdmin.from('user_buffs').insert({
       user_id: userId,
       buff_type: itemType,
-      charges_remaining: charges,
+      charges_remaining: config.charges,
     })
 
     return NextResponse.json({
       success: true,
       buffType: itemType,
-      charges,
+      charges: config.charges,
     })
   } catch (error) {
-    console.error('Use defense error:', error)
-    return NextResponse.json(
-      { error: 'Failed to activate defense' },
-      { status: 500 }
-    )
+    console.error('Use power-up error:', error)
+    return NextResponse.json({ error: 'Failed to activate power-up' }, { status: 500 })
   }
 }

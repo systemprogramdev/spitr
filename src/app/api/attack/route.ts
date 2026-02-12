@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { ITEM_MAP } from '@/lib/items'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,8 +17,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { targetUserId, targetSpitId, itemType, damage } = await request.json()
+    const { targetUserId, targetSpitId, itemType, damage: baseDamage } = await request.json()
     const attackerId = user.id
+    let damage = baseDamage
 
     if (!itemType || !damage) {
       return NextResponse.json(
@@ -33,7 +35,48 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check target user's defensive buffs (only for user attacks, not spit attacks)
+    // --- Check attacker's offensive buffs (rage serum, critical chip) ---
+    let critical = false
+    let rageActive = false
+
+    if (targetUserId) {
+      const { data: attackerBuffs } = await supabaseAdmin
+        .from('user_buffs')
+        .select('*')
+        .eq('user_id', attackerId)
+
+      if (attackerBuffs) {
+        // Rage Serum: 2x damage
+        const rageBuff = attackerBuffs.find(b => b.buff_type === 'rage_serum')
+        if (rageBuff) {
+          damage *= 2
+          rageActive = true
+          const newCharges = rageBuff.charges_remaining - 1
+          if (newCharges <= 0) {
+            await supabaseAdmin.from('user_buffs').delete().eq('id', rageBuff.id)
+          } else {
+            await supabaseAdmin.from('user_buffs').update({ charges_remaining: newCharges }).eq('id', rageBuff.id)
+          }
+        }
+
+        // Critical Chip: 30% chance for 3x damage (applied on top of rage if both active)
+        const critBuff = attackerBuffs.find(b => b.buff_type === 'critical_chip')
+        if (critBuff) {
+          if (Math.random() < 0.3) {
+            damage = rageActive ? baseDamage * 2 * 3 : baseDamage * 3
+            critical = true
+          }
+          const newCharges = critBuff.charges_remaining - 1
+          if (newCharges <= 0) {
+            await supabaseAdmin.from('user_buffs').delete().eq('id', critBuff.id)
+          } else {
+            await supabaseAdmin.from('user_buffs').update({ charges_remaining: newCharges }).eq('id', critBuff.id)
+          }
+        }
+      }
+    }
+
+    // --- Check target user's defensive buffs (only for user attacks) ---
     if (targetUserId) {
       const { data: buffs } = await supabaseAdmin
         .from('user_buffs')
@@ -41,7 +84,63 @@ export async function POST(request: NextRequest) {
         .eq('user_id', targetUserId)
 
       if (buffs && buffs.length > 0) {
-        // Check firewall first (blocks everything)
+        // Mirror Shield check (BEFORE firewall)
+        const mirrorShield = buffs.find(b => b.buff_type === 'mirror_shield')
+        if (mirrorShield) {
+          // Consume mirror shield
+          await supabaseAdmin.from('user_buffs').delete().eq('id', mirrorShield.id)
+
+          // Deduct weapon from attacker
+          const { data: inv } = await supabaseAdmin
+            .from('user_inventory')
+            .select('quantity')
+            .eq('user_id', attackerId)
+            .eq('item_type', itemType)
+            .single()
+
+          if (inv) {
+            if (inv.quantity <= 1) {
+              await supabaseAdmin.from('user_inventory').delete().eq('user_id', attackerId).eq('item_type', itemType)
+            } else {
+              await supabaseAdmin.from('user_inventory').update({ quantity: inv.quantity - 1 }).eq('user_id', attackerId).eq('item_type', itemType)
+            }
+          }
+
+          // Apply damage to ATTACKER instead
+          const { data: reflectResult } = await supabaseAdmin.rpc('perform_attack', {
+            p_attacker_id: attackerId,
+            p_target_user_id: attackerId,
+            p_target_spit_id: null,
+            p_item_type: itemType,
+            p_damage: damage,
+          })
+
+          // Log attack
+          await supabaseAdmin.from('attack_log').insert({
+            attacker_id: attackerId,
+            target_user_id: targetUserId,
+            item_type: itemType,
+            damage: 0,
+          })
+
+          // Notify both users
+          await supabaseAdmin.from('notifications').insert({
+            user_id: targetUserId,
+            type: 'attack',
+            actor_id: attackerId,
+            reference_id: itemType,
+          })
+
+          return NextResponse.json({
+            success: true,
+            reflected: true,
+            reflectedDamage: damage,
+            blockedBy: 'mirror_shield',
+            damage: 0,
+          })
+        }
+
+        // Check firewall (blocks everything)
         const firewall = buffs.find(b => b.buff_type === 'firewall')
         if (firewall) {
           // Consume firewall
@@ -141,7 +240,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Call the server-side function
+    // Call the server-side function with (possibly buffed) damage
     const { data, error } = await supabaseAdmin.rpc('perform_attack', {
       p_attacker_id: attackerId,
       p_target_user_id: targetUserId || null,
@@ -165,6 +264,58 @@ export async function POST(request: NextRequest) {
         { error: result.error || 'Attack failed' },
         { status: 400 }
       )
+    }
+
+    // --- Post-attack special effects ---
+    const extras: Record<string, any> = {}
+
+    if (targetUserId) {
+      // EMP: strip ALL buffs from target
+      if (itemType === 'emp') {
+        await supabaseAdmin.from('user_buffs').delete().eq('user_id', targetUserId)
+        extras.buffsStripped = true
+      }
+
+      // Malware: steal random item from target
+      if (itemType === 'malware') {
+        const { data: targetInv } = await supabaseAdmin
+          .from('user_inventory')
+          .select('item_type, quantity')
+          .eq('user_id', targetUserId)
+          .gt('quantity', 0)
+
+        if (targetInv && targetInv.length > 0) {
+          const randomItem = targetInv[Math.floor(Math.random() * targetInv.length)]
+
+          // Deduct 1 from target
+          if (randomItem.quantity <= 1) {
+            await supabaseAdmin.from('user_inventory').delete().eq('user_id', targetUserId).eq('item_type', randomItem.item_type)
+          } else {
+            await supabaseAdmin.from('user_inventory').update({ quantity: randomItem.quantity - 1 }).eq('user_id', targetUserId).eq('item_type', randomItem.item_type)
+          }
+
+          // Add 1 to attacker (upsert)
+          const { data: attackerInv } = await supabaseAdmin
+            .from('user_inventory')
+            .select('quantity')
+            .eq('user_id', attackerId)
+            .eq('item_type', randomItem.item_type)
+            .single()
+
+          await supabaseAdmin.from('user_inventory').upsert({
+            user_id: attackerId,
+            item_type: randomItem.item_type,
+            quantity: (attackerInv?.quantity ?? 0) + 1,
+          }, { onConflict: 'user_id,item_type' })
+
+          const itemDef = ITEM_MAP.get(randomItem.item_type as any)
+          extras.stolenItem = {
+            type: randomItem.item_type,
+            name: itemDef?.name || randomItem.item_type,
+            emoji: itemDef?.emoji || '',
+          }
+        }
+      }
     }
 
     // Create notification for the target user
@@ -202,6 +353,8 @@ export async function POST(request: NextRequest) {
       newHp: result.new_hp,
       destroyed: result.destroyed,
       damage: result.damage,
+      critical,
+      ...extras,
     })
   } catch (error) {
     console.error('Attack error:', error)

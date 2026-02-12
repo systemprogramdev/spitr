@@ -542,13 +542,13 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint' | 'emp' | 'malware' | 'rage_serum' | 'critical_chip' | 'xp_boost' | 'mirror_shield' | 'fake_death' | 'name_tag' | 'smoke_bomb'
           quantity: number
         }
         Insert: {
           id?: string
           user_id: string
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint' | 'emp' | 'malware' | 'rage_serum' | 'critical_chip' | 'xp_boost' | 'mirror_shield' | 'fake_death' | 'name_tag' | 'smoke_bomb'
           quantity?: number
         }
         Update: {
@@ -572,7 +572,7 @@ export type Database = {
           attacker_id: string
           target_user_id: string | null
           target_spit_id: string | null
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint' | 'emp' | 'malware' | 'rage_serum' | 'critical_chip' | 'xp_boost' | 'mirror_shield' | 'fake_death' | 'name_tag' | 'smoke_bomb'
           damage: number
           created_at: string
         }
@@ -581,7 +581,7 @@ export type Database = {
           attacker_id: string
           target_user_id?: string | null
           target_spit_id?: string | null
-          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
+          item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint' | 'emp' | 'malware' | 'rage_serum' | 'critical_chip' | 'xp_boost' | 'mirror_shield' | 'fake_death' | 'name_tag' | 'smoke_bomb'
           damage: number
           created_at?: string
         }
@@ -1029,6 +1029,46 @@ export type Database = {
           }
         ]
       }
+      name_tags: {
+        Row: {
+          id: string
+          tagger_id: string
+          target_user_id: string
+          custom_title: string
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          tagger_id: string
+          target_user_id: string
+          custom_title: string
+          created_at?: string
+          expires_at: string
+        }
+        Update: {
+          id?: string
+          tagger_id?: string
+          target_user_id?: string
+          custom_title?: string
+          created_at?: string
+          expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "name_tags_tagger_id_fkey"
+            columns: ["tagger_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "name_tags_target_user_id_fkey"
+            columns: ["target_user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1040,7 +1080,7 @@ export type Database = {
       notification_type: 'follow' | 'like' | 'respit' | 'reply' | 'mention' | 'message' | 'attack' | 'like_reward' | 'transfer' | 'spray' | 'level_up' | 'spray' | 'level_up'
       transaction_type: 'free_monthly' | 'free_weekly' | 'purchase' | 'post' | 'reply' | 'respit' | 'like' | 'pin_purchase' | 'convert' | 'like_reward' | 'transfer_sent' | 'transfer_received' | 'chest_purchase' | 'level_up'
       gold_transaction_type: 'purchase' | 'convert' | 'item_purchase' | 'transfer_sent' | 'transfer_received' | 'level_up'
-      item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint'
+      item_type: 'knife' | 'gun' | 'soldier' | 'drone' | 'nuke' | 'small_potion' | 'medium_potion' | 'large_potion' | 'soda' | 'firewall' | 'kevlar' | 'spray_paint' | 'emp' | 'malware' | 'rage_serum' | 'critical_chip' | 'xp_boost' | 'mirror_shield' | 'fake_death' | 'name_tag' | 'smoke_bomb'
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1077,6 +1117,7 @@ export type UserStockHolding = Database['public']['Tables']['user_stock_holdings
 export type StockTransaction = Database['public']['Tables']['stock_transactions']['Row']
 export type LotteryTicket = Database['public']['Tables']['lottery_tickets']['Row']
 export type BankCD = Database['public']['Tables']['bank_cds']['Row']
+export type NameTag = Database['public']['Tables']['name_tags']['Row']
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {
