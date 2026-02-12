@@ -149,18 +149,9 @@ export function getStockCandles(
   if (days <= 1) {
     candleMs = 60 * 60 * 1000          // 1 hour candles
     samplesPerCandle = 12               // sample every 5 min
-  } else if (days <= 7) {
+  } else {
     candleMs = 6 * 60 * 60 * 1000      // 6 hour candles
     samplesPerCandle = 12               // sample every 30 min
-  } else if (days <= 14) {
-    candleMs = 12 * 60 * 60 * 1000     // 12 hour candles
-    samplesPerCandle = 12               // sample every 60 min
-  } else if (days <= 30) {
-    candleMs = 24 * 60 * 60 * 1000     // 1 day candles
-    samplesPerCandle = 24               // sample every hour
-  } else {
-    candleMs = 3 * 24 * 60 * 60 * 1000 // 3 day candles
-    samplesPerCandle = 18               // sample every 4 hours
   }
 
   const startMs = now.getTime() - days * 86400 * 1000
