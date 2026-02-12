@@ -465,9 +465,11 @@ export function Spit({ spit, showActions = true }: SpitProps) {
             </div>
           </Link>
 
-          {/* Link Preview - show for first URL if no image attached */}
-          {!spit.image_url && extractFirstUrl(spit.content) && (
-            <LinkPreview url={extractFirstUrl(spit.content)!} />
+          {/* Link Preview / Video Embed - always show for YouTube, otherwise only if no image */}
+          {extractFirstUrl(spit.content) && (
+            (!spit.image_url || /youtu\.?be/.test(extractFirstUrl(spit.content)!)) && (
+              <LinkPreview url={extractFirstUrl(spit.content)!} />
+            )
           )}
 
           {spit.image_url && (
