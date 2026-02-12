@@ -109,8 +109,9 @@ function ShopPageContent() {
   const [loadingTxns, setLoadingTxns] = useState(true)
   const [showAllTxns, setShowAllTxns] = useState(false)
 
-  // Currency section collapse
-  const [showCurrency, setShowCurrency] = useState(false)
+  // Currency sub-section toggle
+  const [showBuyGold, setShowBuyGold] = useState(false)
+  const [showBuySpits, setShowBuySpits] = useState(false)
 
   // Handle Stripe redirect URL params
   useEffect(() => {
@@ -465,27 +466,25 @@ function ShopPageContent() {
         </div>
       </div>
 
-      {/* Compact Inventory Strip */}
-      <div className="shop-section" style={{ padding: '0.75rem' }}>
-        <h2 className="shop-section-title" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-          <span>🎒</span> Inventory
-        </h2>
-        {inventoryItems.length === 0 ? (
-          <p style={{ color: 'var(--sys-text-muted)', fontSize: '0.8rem', margin: 0 }}>No items yet</p>
-        ) : (
-          <div className="shop-inventory-compact">
+      {/* Inventory */}
+      {inventoryItems.length > 0 && (
+        <div className="shop-section">
+          <h2 className="shop-section-title">
+            <span>🎒</span> Inventory
+          </h2>
+          <div className="shop-inv-list">
             {inventoryItems.map((inv) => {
               const itemDef = ITEM_MAP.get(inv.item_type)
               if (!itemDef) return null
               const canUse = itemDef.category === 'potion' || itemDef.category === 'defense' || itemDef.category === 'powerup' || (itemDef.category === 'utility' && ['smoke_bomb', 'fake_death', 'name_tag'].includes(itemDef.type))
               return (
-                <div key={inv.item_type} className="shop-inv-pill">
-                  <span>{itemDef.emoji}</span>
-                  <span className="shop-inv-pill-name">{itemDef.name}</span>
-                  <span className="shop-inv-pill-qty">x{inv.quantity}</span>
+                <div key={inv.item_type} className="shop-inv-row">
+                  <span className="shop-inv-row-icon">{itemDef.emoji}</span>
+                  <span className="shop-inv-row-name">{itemDef.name}</span>
+                  <span className="shop-inv-row-qty">x{inv.quantity}</span>
                   {canUse && (
                     <button
-                      className="btn btn-primary shop-inv-pill-btn"
+                      className="btn btn-primary shop-inv-row-btn"
                       onClick={() => handleUseItem(itemDef)}
                       disabled={
                         (itemDef.category === 'potion' && usingPotion === itemDef.type) ||
@@ -493,20 +492,20 @@ function ShopPageContent() {
                         (itemDef.category === 'powerup' && activatingPowerup === itemDef.type)
                       }
                     >
-                      {itemDef.category === 'defense' ? 'Activate' : 'Use'}
+                      {itemDef.category === 'defense' ? 'Equip' : 'Use'}
                     </button>
                   )}
                 </div>
               )
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* My Chests */}
       {unopenedChests.length > 0 && (
-        <div className="shop-section" style={{ padding: '0.75rem' }}>
-          <h2 className="shop-section-title" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+        <div className="shop-section">
+          <h2 className="shop-section-title">
             <span>🎁</span> My Chests ({unopenedChests.length})
           </h2>
           <div className="shop-chests-grid">
@@ -529,8 +528,8 @@ function ShopPageContent() {
         </div>
       )}
 
-      {/* Tabbed Item Categories */}
-      <div className="shop-section" style={{ padding: '0.75rem' }}>
+      {/* Tabbed Item Shop */}
+      <div className="shop-section">
         <div className="shop-tabs">
           {SHOP_TABS.map((t) => (
             <button
@@ -542,7 +541,7 @@ function ShopPageContent() {
             </button>
           ))}
         </div>
-        <div className="shop-items-grid" style={{ marginTop: '0.75rem' }}>
+        <div className="shop-items-list">
           {TAB_ITEMS[activeTab].map((item) => (
             <ItemCard
               key={item.type}
@@ -557,121 +556,128 @@ function ShopPageContent() {
         </div>
       </div>
 
-      {/* Currency & Purchases (collapsible) */}
-      <div className="shop-section" style={{ padding: '0.75rem' }}>
-        <button
-          className="shop-section-title"
-          onClick={() => setShowCurrency(!showCurrency)}
-          style={{ marginBottom: showCurrency ? '0.75rem' : 0, cursor: 'pointer', width: '100%', background: 'none', border: 'none', fontSize: '0.9rem' }}
-        >
-          <span>💰</span> Buy Currency & Chests
-          <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>{showCurrency ? '▲' : '▼'}</span>
-        </button>
-        {showCurrency && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {/* Buy Chest */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', borderBottom: '1px solid var(--sys-border)' }}>
-              <span style={{ fontSize: '1.5rem' }}>🎁</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, color: 'var(--sys-text)', fontSize: '0.9rem' }}>Treasure Chest</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--sys-text-muted)' }}>100 spits - 2-3 random rewards</div>
-              </div>
-              <button
-                className="btn btn-primary"
-                onClick={handleBuyChest}
-                disabled={buyingChest || creditBalance < 100}
-                style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
-              >
-                {buyingChest ? '...' : 'Buy'}
-              </button>
+      {/* Treasure Chest */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>🎁</span> Treasure Chest
+        </h2>
+        <div className="shop-item-row">
+          <div className="shop-item-icon">🎁</div>
+          <div className="shop-item-info">
+            <div className="shop-item-name">Random Chest</div>
+            <div className="shop-item-meta">
+              <span className="shop-item-stat-effect">2-3 random rewards</span>
             </div>
+          </div>
+          <div className="shop-item-right">
+            <span className="shop-item-cost" style={{ color: 'var(--sys-text)' }}>100 spits</span>
+            <button
+              className="btn btn-primary"
+              onClick={handleBuyChest}
+              disabled={buyingChest || creditBalance < 100}
+            >
+              {buyingChest ? '...' : 'Buy'}
+            </button>
+          </div>
+        </div>
+      </div>
 
-            {/* Convert */}
-            <div style={{ borderBottom: '1px solid var(--sys-border)', paddingBottom: '0.75rem' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginBottom: '0.5rem' }}>
-                Convert Spits → Gold ({SPIT_TO_GOLD_RATIO}:1)
-              </div>
-              <div className="shop-convert-row">
-                <input
-                  type="number"
-                  className="input"
-                  value={convertAmount}
-                  onChange={(e) => setConvertAmount(e.target.value)}
-                  placeholder={`Min ${SPIT_TO_GOLD_RATIO}`}
-                  min={SPIT_TO_GOLD_RATIO}
-                  style={{ flex: 1, padding: '0.4rem' }}
-                />
-                <span className="shop-convert-arrow">→</span>
-                <span className="shop-convert-result">{goldFromSpits}g</span>
-                <button
-                  className="btn btn-warning"
-                  onClick={handleConvert}
-                  disabled={isConverting || goldFromSpits < 1}
-                  style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}
-                >
-                  {isConverting ? '...' : 'Convert'}
+      {/* Convert Spits → Gold */}
+      <div className="shop-section">
+        <h2 className="shop-section-title">
+          <span>🔄</span> Convert Spits → Gold
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', margin: '0 0 0.75rem' }}>
+          Rate: {SPIT_TO_GOLD_RATIO} spits = 1 gold
+        </p>
+        <div className="shop-convert-row">
+          <input
+            type="number"
+            className="input"
+            value={convertAmount}
+            onChange={(e) => setConvertAmount(e.target.value)}
+            placeholder={`Min ${SPIT_TO_GOLD_RATIO}`}
+            min={SPIT_TO_GOLD_RATIO}
+            style={{ flex: 1 }}
+          />
+          <span className="shop-convert-arrow">→</span>
+          <span className="shop-convert-result">{goldFromSpits}g</span>
+          <button
+            className="btn btn-warning"
+            onClick={handleConvert}
+            disabled={isConverting || goldFromSpits < 1}
+          >
+            {isConverting ? '...' : 'Convert'}
+          </button>
+        </div>
+      </div>
+
+      {/* Buy Gold */}
+      <div className="shop-section">
+        <button
+          className="shop-section-title shop-section-toggle"
+          onClick={() => setShowBuyGold(!showBuyGold)}
+        >
+          <span>🪙</span> Buy Gold
+          <span className="shop-toggle-arrow">{showBuyGold ? '▲' : '▼'}</span>
+        </button>
+        {showBuyGold && (
+          <div className="shop-packages-grid">
+            {GOLD_PACKAGES.map((pkg) => (
+              <button
+                key={pkg.id}
+                className={`shop-package ${pkg.popular ? 'shop-package-popular' : ''} ${pkg.whale ? 'shop-package-whale' : ''}`}
+                onClick={() => setCheckoutPkg(pkg)}
+              >
+                {pkg.popular && <span className="shop-package-badge">POPULAR</span>}
+                {pkg.whale && <span className="shop-package-badge shop-package-badge-whale">BEST VALUE</span>}
+                <div className="shop-package-gold">{pkg.gold}g</div>
+                <div className="shop-package-price">${(pkg.price / 100).toFixed(2)}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Buy Spits */}
+      <div className="shop-section">
+        <button
+          className="shop-section-title shop-section-toggle"
+          onClick={() => setShowBuySpits(!showBuySpits)}
+        >
+          <span>⭐</span> Buy Spits
+          <span className="shop-toggle-arrow">{showBuySpits ? '▲' : '▼'}</span>
+        </button>
+        {showBuySpits && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {CREDIT_PACKAGES.map((pkg) => (
+              <div
+                key={pkg.id}
+                className="shop-spit-pkg"
+                style={{
+                  borderColor: pkg.popular ? 'var(--sys-primary)' : pkg.whale ? 'var(--sys-warning)' : undefined,
+                  borderWidth: pkg.popular || pkg.whale ? '2px' : undefined,
+                }}
+                onClick={() => handleCreditPurchase(pkg)}
+              >
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'var(--sys-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {pkg.credits.toLocaleString()} Spits
+                    {pkg.popular && <span className="badge badge-glow" style={{ fontSize: '0.6rem' }}>Popular</span>}
+                  </div>
+                </div>
+                <button className={`btn ${pkg.whale ? 'btn-warning' : 'btn-primary'}`}>
+                  {formatPrice(pkg.price)}
                 </button>
               </div>
-            </div>
-
-            {/* Buy Gold */}
-            <div style={{ borderBottom: '1px solid var(--sys-border)', paddingBottom: '0.75rem' }}>
-              <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginBottom: '0.5rem' }}>Buy Gold</div>
-              <div className="shop-packages-grid">
-                {GOLD_PACKAGES.map((pkg) => (
-                  <button
-                    key={pkg.id}
-                    className={`shop-package ${pkg.popular ? 'shop-package-popular' : ''} ${pkg.whale ? 'shop-package-whale' : ''}`}
-                    onClick={() => setCheckoutPkg(pkg)}
-                    style={{ padding: '0.75rem' }}
-                  >
-                    {pkg.popular && <span className="shop-package-badge">POPULAR</span>}
-                    {pkg.whale && <span className="shop-package-badge shop-package-badge-whale">BEST VALUE</span>}
-                    <div className="shop-package-gold" style={{ fontSize: '1.25rem' }}>{pkg.gold}g</div>
-                    <div className="shop-package-price">${(pkg.price / 100).toFixed(2)}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Buy Spits */}
-            <div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--sys-text-muted)', marginBottom: '0.5rem' }}>Buy Spits</div>
-              <div style={{ display: 'grid', gap: '0.5rem' }}>
-                {CREDIT_PACKAGES.map((pkg) => (
-                  <div
-                    key={pkg.id}
-                    className="panel"
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '0.75rem',
-                      border: pkg.popular ? '2px solid var(--sys-primary)' : pkg.whale ? '2px solid var(--sys-warning)' : '1px solid var(--sys-border)',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => handleCreditPurchase(pkg)}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'var(--sys-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {pkg.credits.toLocaleString()} Spits
-                        {pkg.popular && <span className="badge badge-glow" style={{ fontSize: '0.6rem' }}>Popular</span>}
-                      </div>
-                    </div>
-                    <button className={`btn ${pkg.whale ? 'btn-warning' : 'btn-primary'}`} style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem' }}>
-                      {formatPrice(pkg.price)}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         )}
       </div>
 
       {/* Transaction History */}
-      <div className="shop-section" style={{ padding: '0.75rem' }}>
-        <h2 className="shop-section-title" style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+      <div className="shop-section">
+        <h2 className="shop-section-title">
           <span>📜</span> Transaction History
         </h2>
         {loadingTxns ? (
@@ -680,34 +686,18 @@ function ShopPageContent() {
           <p style={{ color: 'var(--sys-text-muted)', textAlign: 'center', padding: '1rem', fontSize: '0.85rem' }}>No transactions yet.</p>
         ) : (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {visibleTxns.map((txn) => (
-                <div
-                  key={txn.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0.5rem',
-                    borderBottom: '1px solid var(--sys-border)',
-                    fontFamily: 'var(--sys-font-mono)',
-                    fontSize: '0.8rem',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-                    <span style={{
-                      color: txn.amount >= 0 ? 'var(--sys-success)' : 'var(--sys-error)',
-                      fontWeight: 'bold',
-                      minWidth: '50px',
-                      textAlign: 'right',
-                    }}>
-                      {txn.amount >= 0 ? '+' : ''}{txn.amount}
-                    </span>
-                    <span style={{ color: 'var(--sys-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {TXN_TYPE_LABELS[txn.type] || txn.type}
-                    </span>
-                  </div>
-                  <span style={{ color: 'var(--sys-text-muted)', fontSize: '0.7rem', flexShrink: 0 }}>
+                <div key={txn.id} className="shop-txn-row">
+                  <span className="shop-txn-amount" style={{
+                    color: txn.amount >= 0 ? 'var(--sys-success)' : 'var(--sys-error)',
+                  }}>
+                    {txn.amount >= 0 ? '+' : ''}{txn.amount}
+                  </span>
+                  <span className="shop-txn-label">
+                    {TXN_TYPE_LABELS[txn.type] || txn.type}
+                  </span>
+                  <span className="shop-txn-time">
                     {timeAgo(txn.created_at)}
                   </span>
                 </div>

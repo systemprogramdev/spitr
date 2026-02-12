@@ -17,28 +17,24 @@ export function ItemCard({ item, quantity = 0, goldBalance, onBuy, onUse, buying
     (item.category === 'utility' && ['smoke_bomb', 'fake_death', 'name_tag'].includes(item.type))
 
   return (
-    <div className="shop-item-card">
-      <div className="shop-item-emoji">{item.emoji}</div>
+    <div className="shop-item-row">
+      <div className="shop-item-icon">{item.emoji}</div>
       <div className="shop-item-info">
-        <div className="shop-item-name">{item.name}</div>
-        {item.damage && (
-          <div className="shop-item-stat shop-item-stat-damage">{item.damage} DMG</div>
-        )}
-        {item.healAmount && (
-          <div className="shop-item-stat shop-item-stat-heal">+{item.healAmount} HP</div>
-        )}
-        {item.effect && (
-          <div className="shop-item-stat" style={{ color: 'var(--sys-primary)' }}>{item.effect}</div>
-        )}
-        {item.category === 'defense' && !item.effect && (
-          <div className="shop-item-stat" style={{ color: 'var(--sys-primary)' }}>Blocks attacks</div>
-        )}
+        <div className="shop-item-name">
+          {item.name}
+          {quantity > 0 && <span className="shop-item-qty">x{quantity}</span>}
+        </div>
+        <div className="shop-item-meta">
+          {item.damage && <span className="shop-item-stat-damage">{item.damage} DMG</span>}
+          {item.healAmount && <span className="shop-item-stat-heal">+{item.healAmount} HP</span>}
+          {item.effect && <span className="shop-item-stat-effect">{item.effect}</span>}
+          {item.category === 'defense' && !item.effect && <span className="shop-item-stat-effect">Blocks attacks</span>}
+          {item.type === 'emp' && <span className="shop-item-stat-special">+ strip buffs</span>}
+          {item.type === 'malware' && <span className="shop-item-stat-special">+ steal item</span>}
+        </div>
       </div>
-      <div className="shop-item-actions">
-        <div className="shop-item-cost">{item.goldCost}g</div>
-        {quantity > 0 && (
-          <div className="shop-item-qty">x{quantity}</div>
-        )}
+      <div className="shop-item-right">
+        <span className="shop-item-cost">{item.goldCost}g</span>
         <button
           className="btn btn-warning shop-item-buy"
           onClick={() => onBuy(item)}
@@ -51,7 +47,7 @@ export function ItemCard({ item, quantity = 0, goldBalance, onBuy, onUse, buying
             className="btn btn-primary shop-item-use"
             onClick={() => onUse(item)}
           >
-            {item.category === 'defense' ? 'Activate' : 'Use'}
+            {item.category === 'defense' ? 'Equip' : 'Use'}
           </button>
         )}
       </div>
