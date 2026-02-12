@@ -767,7 +767,7 @@ export default function BankPage() {
               <span className="bank-stock-unit">spits/share</span>
             </div>
             <div className="bank-chart-period-tabs">
-              {[7, 14, 30, 90].map(d => (
+              {[1, 7, 14, 30, 90].map(d => (
                 <button
                   key={d}
                   className={`bank-chart-period-btn ${chartDays === d ? 'active' : ''}`}

@@ -5904,10 +5904,50 @@ a:hover {
   overflow: hidden;
 }
 
+.stock-chart-container {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.stock-chart-tooltip-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  min-height: 1.5rem;
+  font-family: var(--sys-font-mono);
+}
+
+.stock-chart-tooltip-price {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-chart-tooltip-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock-chart-tooltip-time {
+  font-size: 0.7rem;
+  color: var(--sys-text-muted);
+  margin-left: auto;
+}
+
+.stock-chart-tooltip-hint {
+  font-size: 0.7rem;
+  color: var(--sys-text-muted);
+  opacity: 0.6;
+}
+
 .stock-chart-svg {
   width: 100%;
   height: auto;
   display: block;
+  cursor: crosshair;
 }
 
 /* Portfolio */
