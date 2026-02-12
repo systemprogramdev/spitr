@@ -48,6 +48,11 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
   const [result, setResult] = useState<AttackResult | null>(null)
   const [sprayResult, setSprayResult] = useState<boolean | null>(null)
 
+  // Only show weapons the user actually owns
+  const ownedWeapons = WEAPONS.filter(w => getQuantity(w.type) > 0)
+  const hasSprayPaint = targetType === 'user' && getQuantity('spray_paint') > 0
+  const hasNothing = ownedWeapons.length === 0 && !hasSprayPaint
+
   const handleAttack = async (weapon: GameItem) => {
     if (!user || attacking || !weapon.damage) return
 
@@ -144,7 +149,7 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
 
   return (
     <div className="pin-modal-overlay" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose() }}>
-      <div className="pin-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+      <div className="pin-modal" onClick={(e) => e.stopPropagation()}>
         <div className="pin-modal-header" style={{ color: 'var(--sys-danger)' }}>
           <span style={{ fontSize: '1.25rem' }}>⚔️</span>
           <span>Attack {targetName}</span>
@@ -213,87 +218,62 @@ export function AttackModal({ targetType, targetId, targetName, onClose, onAttac
             </button>
           </div>
         ) : (
-          <div className="pin-modal-body">
-            <p style={{ color: 'var(--sys-text-muted)', marginBottom: '0.75rem' }}>Choose a weapon:</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {WEAPONS.map((weapon) => {
-                const qty = getQuantity(weapon.type)
-                return (
-                  <button
-                    key={weapon.type}
-                    className="shop-weapon-select"
-                    onClick={() => handleAttack(weapon)}
-                    disabled={attacking || qty < 1}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.75rem',
-                      background: qty < 1 ? 'var(--sys-surface)' : 'rgba(255,68,68,0.05)',
-                      border: `1px solid ${qty < 1 ? 'var(--sys-border)' : 'var(--sys-danger)'}`,
-                      borderRadius: '8px',
-                      cursor: qty < 1 ? 'not-allowed' : 'pointer',
-                      opacity: qty < 1 ? 0.5 : 1,
-                      color: 'var(--sys-text)',
-                      width: '100%',
-                      textAlign: 'left',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>{weapon.emoji}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600 }}>{weapon.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--sys-danger)' }}>
-                        {weapon.damage} DMG
-                        {weapon.type === 'emp' && <span style={{ color: '#06b6d4', marginLeft: '0.5rem' }}>+ strip buffs</span>}
-                        {weapon.type === 'malware' && <span style={{ color: '#a855f7', marginLeft: '0.5rem' }}>+ steal item</span>}
-                      </div>
-                    </div>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--sys-text-muted)' }}>
-                      x{qty}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {targetType === 'user' && (
+          <div className="pin-modal-body attack-modal-body">
+            {hasNothing ? (
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                <p style={{ color: 'var(--sys-text-muted)', margin: '0 0 0.75rem' }}>
+                  You don&apos;t have any weapons. Buy some from the shop!
+                </p>
+                <a href="/shop" className="btn btn-primary">Go to Shop</a>
+              </div>
+            ) : (
               <>
-                <div style={{ borderTop: '1px solid var(--sys-border)', margin: '0.75rem 0', paddingTop: '0.75rem' }}>
-                  <p style={{ color: 'var(--sys-text-muted)', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Utility:</p>
-                  <button
-                    className="shop-weapon-select"
-                    onClick={handleSprayPaint}
-                    disabled={attacking || getQuantity('spray_paint') < 1}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.75rem',
-                      background: getQuantity('spray_paint') < 1 ? 'var(--sys-surface)' : 'rgba(34,197,94,0.05)',
-                      border: `1px solid ${getQuantity('spray_paint') < 1 ? 'var(--sys-border)' : 'var(--sys-success)'}`,
-                      borderRadius: '8px',
-                      cursor: getQuantity('spray_paint') < 1 ? 'not-allowed' : 'pointer',
-                      opacity: getQuantity('spray_paint') < 1 ? 0.5 : 1,
-                      color: 'var(--sys-text)',
-                      width: '100%',
-                      textAlign: 'left',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    <span style={{ fontSize: '1.5rem' }}>🎨</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600 }}>Spray Paint</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--sys-success)' }}>TAG for 24h</div>
-                    </div>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--sys-text-muted)' }}>
-                      x{getQuantity('spray_paint')}
-                    </span>
-                  </button>
+                <div className="attack-weapon-list">
+                  {ownedWeapons.map((weapon) => {
+                    const qty = getQuantity(weapon.type)
+                    return (
+                      <button
+                        key={weapon.type}
+                        className="attack-weapon-btn"
+                        onClick={() => handleAttack(weapon)}
+                        disabled={attacking}
+                      >
+                        <span className="attack-weapon-emoji">{weapon.emoji}</span>
+                        <div className="attack-weapon-info">
+                          <span className="attack-weapon-name">{weapon.name}</span>
+                          <span className="attack-weapon-dmg">
+                            {weapon.damage} DMG
+                            {weapon.type === 'emp' && <span style={{ color: '#06b6d4' }}> + strip</span>}
+                            {weapon.type === 'malware' && <span style={{ color: '#a855f7' }}> + steal</span>}
+                          </span>
+                        </div>
+                        <span className="attack-weapon-qty">x{qty}</span>
+                      </button>
+                    )
+                  })}
                 </div>
+
+                {hasSprayPaint && (
+                  <div style={{ borderTop: '1px solid var(--sys-border)', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
+                    <button
+                      className="attack-weapon-btn attack-weapon-btn-util"
+                      onClick={handleSprayPaint}
+                      disabled={attacking}
+                    >
+                      <span className="attack-weapon-emoji">🎨</span>
+                      <div className="attack-weapon-info">
+                        <span className="attack-weapon-name">Spray Paint</span>
+                        <span className="attack-weapon-dmg" style={{ color: 'var(--sys-success)' }}>TAG 24h</span>
+                      </div>
+                      <span className="attack-weapon-qty">x{getQuantity('spray_paint')}</span>
+                    </button>
+                  </div>
+                )}
               </>
             )}
+
             {attacking && (
-              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
                 <div className="loading-spinner"></div>
               </div>
             )}

@@ -3820,6 +3820,88 @@ a:hover {
   }
 }
 
+/* Attack modal */
+.attack-modal-body {
+  overflow-y: auto;
+  max-height: 60vh;
+  text-align: left;
+  padding: 0.75rem 1rem !important;
+}
+
+.attack-weapon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.attack-weapon-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.6rem;
+  background: rgba(255, 68, 68, 0.04);
+  border: 1px solid var(--sys-danger);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--sys-text);
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s, opacity 0.1s;
+}
+
+.attack-weapon-btn:hover:not(:disabled) {
+  background: rgba(255, 68, 68, 0.1);
+}
+
+.attack-weapon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.attack-weapon-btn-util {
+  border-color: var(--sys-success);
+  background: rgba(34, 197, 94, 0.04);
+}
+
+.attack-weapon-btn-util:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.attack-weapon-emoji {
+  font-size: 1.25rem;
+  width: 1.75rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.attack-weapon-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.attack-weapon-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.attack-weapon-dmg {
+  font-size: 0.75rem;
+  font-family: var(--sys-font-mono);
+  font-weight: 600;
+  color: var(--sys-danger);
+}
+
+.attack-weapon-qty {
+  font-size: 0.8rem;
+  font-family: var(--sys-font-mono);
+  font-weight: 700;
+  color: var(--sys-text-muted);
+  flex-shrink: 0;
+}
+
 /* ==================== HP Bar (Cyberpunk) ==================== */
 .hp-bar-wrap {
   width: 100%;
