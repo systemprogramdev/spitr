@@ -146,13 +146,8 @@ export function getStockCandles(
   let candleMs: number
   let samplesPerCandle: number
 
-  if (days <= 1) {
-    candleMs = 60 * 60 * 1000          // 1 hour candles
-    samplesPerCandle = 12               // sample every 5 min
-  } else {
-    candleMs = 6 * 60 * 60 * 1000      // 6 hour candles
-    samplesPerCandle = 12               // sample every 30 min
-  }
+  candleMs = 60 * 60 * 1000          // 1 hour candles
+  samplesPerCandle = 12               // sample every 5 min
 
   const startMs = now.getTime() - days * 86400 * 1000
   const totalCandles = Math.floor((days * 86400 * 1000) / candleMs)

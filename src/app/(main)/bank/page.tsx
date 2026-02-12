@@ -71,7 +71,7 @@ export default function BankPage() {
   const [isBuyingStock, setIsBuyingStock] = useState(false)
   const [isSellingStock, setIsSellingStock] = useState(false)
   const [buyingTicket, setBuyingTicket] = useState<string | null>(null)
-  const [chartDays, setChartDays] = useState(7)
+  const [chartDays] = useState(1)
   const [scratchedIds, setScratchedIds] = useState<Set<string>>(new Set())
   const [convertDir, setConvertDir] = useState<'toGold' | 'toSpit'>('toGold')
   const [spitToGoldAmount, setSpitToGoldAmount] = useState('')
@@ -766,17 +766,7 @@ export default function BankPage() {
               <span className="bank-stock-current text-glow">{stockPrice.toFixed(2)}</span>
               <span className="bank-stock-unit">spits/share</span>
             </div>
-            <div className="bank-chart-period-tabs">
-              {[1, 7].map(d => (
-                <button
-                  key={d}
-                  className={`bank-chart-period-btn ${chartDays === d ? 'active' : ''}`}
-                  onClick={() => setChartDays(d)}
-                >
-                  {d}d
-                </button>
-              ))}
-            </div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--sys-text-muted)', fontFamily: 'var(--sys-font-mono)' }}>24h</span>
           </div>
 
           <div className="bank-chart-wrapper">
