@@ -255,7 +255,7 @@ export default function GuidePage() {
             recent transaction history — every purchase, post, like, transfer, and conversion is logged.
           </p>
 
-          <h3 className="guide-subheading">Items</h3>
+          <h3 className="guide-subheading">Weapons</h3>
           <div className="guide-table">
             <div className="guide-table-row guide-table-header">
               <span className="guide-table-label">Item</span>
@@ -282,6 +282,18 @@ export default function GuidePage() {
               <span className="guide-table-value">250g — 2,500 damage</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">⚡ EMP</span>
+              <span className="guide-table-value">50g — 200 damage + strips ALL defense buffs from target</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🦠 Malware</span>
+              <span className="guide-table-value">15g — 75 damage + steals 1 random item from target&apos;s inventory</span>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Potions</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
               <span className="guide-table-label">🥤 Can of Soda</span>
               <span className="guide-table-value">1g — Heal 50 HP</span>
             </div>
@@ -295,19 +307,59 @@ export default function GuidePage() {
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">🏺 Large Potion</span>
-              <span className="guide-table-value">75g — Heal 5,000 HP</span>
+              <span className="guide-table-value">75g — Heal 5,000 HP (full restore)</span>
             </div>
+          </div>
+
+          <h3 className="guide-subheading">Defense</h3>
+          <div className="guide-table">
             <div className="guide-table-row">
               <span className="guide-table-label">🛡️ Firewall</span>
-              <span className="guide-table-value">15g — Blocks the next attack completely</span>
+              <span className="guide-table-value">15g — Blocks the next attack completely (1 charge)</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label">🦺 Kevlar Vest</span>
               <span className="guide-table-value">30g — Blocks next 3 attacks (not drones/nukes)</span>
             </div>
             <div className="guide-table-row">
+              <span className="guide-table-label">🪞 Mirror Shield</span>
+              <span className="guide-table-value">40g — Reflects 100% of next attack back at the attacker (1 charge)</span>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Power-Ups</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
+              <span className="guide-table-label">🔴 Rage Serum</span>
+              <span className="guide-table-value">25g — 2x damage on your next 3 attacks</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">💎 Critical Chip</span>
+              <span className="guide-table-value">15g — 30% chance for 3x damage on your next 5 attacks</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">📈 XP Boost</span>
+              <span className="guide-table-value">10g — 2x XP from all actions for 1 hour</span>
+            </div>
+          </div>
+
+          <h3 className="guide-subheading">Utility</h3>
+          <div className="guide-table">
+            <div className="guide-table-row">
               <span className="guide-table-label">🎨 Spray Paint</span>
               <span className="guide-table-value">5g — Tag someone&apos;s profile for 24 hours</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">💀 Fake Death</span>
+              <span className="guide-table-value">15g — Your profile shows 0 HP to others for 12 hours</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">🏷️ Name Tag</span>
+              <span className="guide-table-value">5g — Give someone a custom title on their profile for 24 hours</span>
+            </div>
+            <div className="guide-table-row">
+              <span className="guide-table-label">💨 Smoke Bomb</span>
+              <span className="guide-table-value">8g — Instantly clears all spray paints from your profile</span>
             </div>
           </div>
         </section>
@@ -341,6 +393,27 @@ export default function GuidePage() {
           <ul className="guide-list">
             <li><strong>🛡️ Firewall</strong> — Blocks the next attack completely. Any weapon, any damage. One-time use.</li>
             <li><strong>🦺 Kevlar Vest</strong> — Blocks the next 3 attacks from knives, guns, and soldiers. Drones and nukes bypass kevlar.</li>
+            <li><strong>🪞 Mirror Shield</strong> — Reflects 100% of the next attack back at the attacker. The attacker takes their own damage instead of you. One-time use.</li>
+          </ul>
+          <p style={{ marginTop: '0.5rem', color: 'var(--sys-text-muted)', fontSize: '0.9rem' }}>
+            Defense priority: Mirror Shield &gt; Firewall &gt; Kevlar. If you have multiple active defenses,
+            the strongest one triggers first.
+          </p>
+
+          <h3 className="guide-subheading">Offensive Power-Ups</h3>
+          <p>
+            Activate power-ups from the Shop&apos;s inventory before attacking to amplify your damage.
+          </p>
+          <ul className="guide-list">
+            <li><strong>🔴 Rage Serum</strong> — Doubles your damage for the next 3 attacks. Stacks with Critical Chip!</li>
+            <li><strong>💎 Critical Chip</strong> — Each of your next 5 attacks has a 30% chance to deal 3x damage. When it crits, you&apos;ll see &quot;CRITICAL HIT!&quot;</li>
+            <li><strong>📈 XP Boost</strong> — Doubles all XP earned for 1 hour. Great before a grinding session.</li>
+          </ul>
+
+          <h3 className="guide-subheading">Special Weapons</h3>
+          <ul className="guide-list">
+            <li><strong>⚡ EMP</strong> — Deals 200 damage AND strips ALL active defense buffs (firewall, kevlar, mirror shield) from the target. Use it against heavily defended players.</li>
+            <li><strong>🦠 Malware</strong> — Deals 75 damage AND steals a random item from the target&apos;s inventory. The stolen item goes straight into your inventory.</li>
           </ul>
 
           <h3 className="guide-subheading">Spray Paint</h3>
@@ -349,11 +422,18 @@ export default function GuidePage() {
             Use the spray paint option from the attack menu on any user&apos;s profile.
           </p>
 
+          <h3 className="guide-subheading">Utility Items</h3>
+          <ul className="guide-list">
+            <li><strong>💀 Fake Death</strong> — Makes your profile show 0 HP to other users for 12 hours. You can still act normally — only you see your real HP.</li>
+            <li><strong>🏷️ Name Tag</strong> — Give someone a custom title that appears on their profile for 24 hours. Enter any handle and a title (max 30 characters).</li>
+            <li><strong>💨 Smoke Bomb</strong> — Instantly clears ALL spray paint tags from your profile. Use it when you&apos;ve been tagged too many times.</li>
+          </ul>
+
           <div className="guide-callout guide-callout-warning">
             <span className="guide-callout-icon">⚔️</span>
             <div>
-              <strong>Pro tip:</strong> Stock up on potions and defensive items before you get into fights.
-              Once you&apos;re destroyed, you can still use potions from the Shop to recover.
+              <strong>Pro tip:</strong> Activate Rage Serum + Critical Chip before attacking for massive damage.
+              If both trigger, you deal 6x damage (2x rage × 3x crit). Stock up on potions and a Mirror Shield before fights.
             </div>
           </div>
         </section>
@@ -377,19 +457,19 @@ export default function GuidePage() {
           <div className="guide-table">
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#ffffff' }}>Common (70%)</span>
-              <span className="guide-table-value">5-15 credits, 1-3 gold, knife, or soda</span>
+              <span className="guide-table-value">5-15 credits, 1-3 gold, knife, soda, or smoke bomb</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#22c55e' }}>Uncommon (22%)</span>
-              <span className="guide-table-value">20-50 credits, 3-8 gold, or a small potion</span>
+              <span className="guide-table-value">20-50 credits, 3-8 gold, small potion, malware, name tag, or critical chip</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#3b82f6' }}>Rare (7%)</span>
-              <span className="guide-table-value">50-100 credits, 8-15 gold, gun, medium potion, or firewall</span>
+              <span className="guide-table-value">50-100 credits, 8-15 gold, gun, medium potion, firewall, rage serum, XP boost, or fake death</span>
             </div>
             <div className="guide-table-row">
               <span className="guide-table-label" style={{ color: '#a855f7' }}>Epic (1%)</span>
-              <span className="guide-table-value">100-200 credits, 15-30 gold, soldier, drone, or large potion</span>
+              <span className="guide-table-value">100-200 credits, 15-30 gold, soldier, drone, large potion, EMP, or mirror shield</span>
             </div>
           </div>
         </section>
@@ -956,8 +1036,11 @@ export default function GuidePage() {
             <li><strong>Bio</strong> — 160 characters to describe yourself</li>
             <li><strong>Handle</strong> — Your unique @username (can be changed in settings)</li>
             <li><strong>Stats</strong> — Follower/following counts, spit count, HP bar, XP bar, level badge</li>
+            <li><strong>Active Buffs</strong> — Icons for active buffs (firewall, kevlar, mirror shield, rage serum, critical chip, XP boost) are visible on your profile</li>
             <li><strong>Gunshot Wounds</strong> — Bullet holes appear on damaged profiles (1 wound per 500 HP lost)</li>
             <li><strong>Spray Paint</strong> — Tagged profiles show spray paint overlays for 24 hours</li>
+            <li><strong>Name Tags</strong> — Custom titles applied by other users via 🏷️ Name Tag items appear as a purple label on your profile for 24 hours</li>
+            <li><strong>Fake Death</strong> — If you activate 💀 Fake Death, other users see your HP as 0 and your profile as &quot;destroyed&quot; — but you can still act normally. Only you see your real HP</li>
           </ul>
         </section>
 
@@ -1210,6 +1293,30 @@ export default function GuidePage() {
             <div className="guide-tip">
               <span className="guide-tip-emoji">🎨</span>
               <p>Spray paint is the cheapest way to troll someone. 5 gold for 24 hours of visible tags on their profile.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">💨</span>
+              <p>Getting spray painted a lot? Use a Smoke Bomb (8g) to instantly clear all tags from your profile.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">🪞</span>
+              <p>Mirror Shield punishes attackers — they take their own full damage. A nuke reflected back deals 2,500 damage to them!</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">⚡</span>
+              <p>Target stacking defenses? An EMP (50g) strips firewall + kevlar + mirror shield all at once AND deals 200 damage.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">🦠</span>
+              <p>Malware is cheap (15g) and steals random items from your target. Attack rich players to steal their expensive weapons.</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">💀</span>
+              <p>Fake Death (15g) makes you look destroyed to others for 12 hours. Attackers will skip you — free protection!</p>
+            </div>
+            <div className="guide-tip">
+              <span className="guide-tip-emoji">📈</span>
+              <p>XP Boost (10g) doubles all XP for an hour. Pop one before a posting + attacking session to level up fast.</p>
             </div>
             <div className="guide-tip">
               <span className="guide-tip-emoji">🤖</span>
