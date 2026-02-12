@@ -127,6 +127,76 @@ export function getStockPriceHistory(
 }
 
 // ============================================
+// Candlestick OHLC Data
+// ============================================
+
+export interface CandleData {
+  time: number   // candle open timestamp
+  open: number
+  high: number
+  low: number
+  close: number
+}
+
+export function getStockCandles(
+  days: number = 30,
+  now: Date = new Date()
+): CandleData[] {
+  // Determine candle period and sample resolution
+  let candleMs: number
+  let samplesPerCandle: number
+
+  if (days <= 1) {
+    candleMs = 60 * 60 * 1000          // 1 hour candles
+    samplesPerCandle = 12               // sample every 5 min
+  } else if (days <= 7) {
+    candleMs = 6 * 60 * 60 * 1000      // 6 hour candles
+    samplesPerCandle = 12               // sample every 30 min
+  } else if (days <= 14) {
+    candleMs = 12 * 60 * 60 * 1000     // 12 hour candles
+    samplesPerCandle = 12               // sample every 60 min
+  } else if (days <= 30) {
+    candleMs = 24 * 60 * 60 * 1000     // 1 day candles
+    samplesPerCandle = 24               // sample every hour
+  } else {
+    candleMs = 3 * 24 * 60 * 60 * 1000 // 3 day candles
+    samplesPerCandle = 18               // sample every 4 hours
+  }
+
+  const startMs = now.getTime() - days * 86400 * 1000
+  const totalCandles = Math.floor((days * 86400 * 1000) / candleMs)
+  const sampleInterval = candleMs / samplesPerCandle
+
+  const candles: CandleData[] = []
+
+  for (let c = 0; c < totalCandles; c++) {
+    const candleStart = startMs + c * candleMs
+    const openPrice = getStockPrice(new Date(candleStart))
+    const closePrice = getStockPrice(new Date(candleStart + candleMs - 1))
+
+    let high = Math.max(openPrice, closePrice)
+    let low = Math.min(openPrice, closePrice)
+
+    // Sample within the candle to find true high/low
+    for (let s = 1; s < samplesPerCandle; s++) {
+      const p = getStockPrice(new Date(candleStart + s * sampleInterval))
+      if (p > high) high = p
+      if (p < low) low = p
+    }
+
+    candles.push({
+      time: candleStart,
+      open: openPrice,
+      high,
+      low,
+      close: closePrice,
+    })
+  }
+
+  return candles
+}
+
+// ============================================
 // Certificate of Deposits (CDs)
 // ============================================
 

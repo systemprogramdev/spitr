@@ -5913,7 +5913,8 @@ a:hover {
 .stock-chart-tooltip-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
   padding: 0.25rem 0.5rem;
   min-height: 1.5rem;
   font-family: var(--sys-font-mono);
@@ -5929,6 +5930,13 @@ a:hover {
   font-size: 0.75rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+.stock-chart-tooltip-ohlc {
+  font-size: 0.65rem;
+  color: var(--sys-text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .stock-chart-tooltip-time {

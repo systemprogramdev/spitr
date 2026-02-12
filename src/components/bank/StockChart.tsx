@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useRef, useCallback } from 'react'
-import { getStockPriceHistory, StockDataPoint } from '@/lib/bank'
+import { getStockCandles } from '@/lib/bank'
 
 interface StockChartProps {
   days?: number
@@ -14,94 +14,98 @@ function formatTime(ts: number, days: number): string {
   if (days <= 1) {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
-  if (days <= 14) {
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
-  }
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
 export function StockChart({ days = 30, width = 600, height = 220 }: StockChartProps) {
-  const ppd = days <= 1 ? 24 : days <= 7 ? 12 : days <= 14 ? 6 : 4
-  const data = useMemo(() => getStockPriceHistory(days, ppd), [days, ppd])
+  const candles = useMemo(() => getStockCandles(days), [days])
   const [hoverIndex, setHoverIndex] = useState<number | null>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
-  const getBarIndex = useCallback((clientX: number) => {
-    if (!svgRef.current || data.length < 2) return null
+  const padding = { top: 20, right: 48, bottom: 24, left: 45 }
+  const chartW = width - padding.left - padding.right
+  const chartH = height - padding.top - padding.bottom
+
+  const getCandleIndex = useCallback((clientX: number) => {
+    if (!svgRef.current || candles.length < 2) return null
     const rect = svgRef.current.getBoundingClientRect()
     const x = clientX - rect.left
     const ratio = x / rect.width
-    const padLeftRatio = 45 / width
-    const padRightRatio = 10 / width
+    const padLeftRatio = padding.left / width
+    const padRightRatio = padding.right / width
     const chartRatio = (ratio - padLeftRatio) / (1 - padLeftRatio - padRightRatio)
     if (chartRatio < 0 || chartRatio > 1) return null
-    const idx = Math.round(chartRatio * (data.length - 1))
-    return Math.max(0, Math.min(data.length - 1, idx))
-  }, [data, width])
+    const idx = Math.round(chartRatio * (candles.length - 1))
+    return Math.max(0, Math.min(candles.length - 1, idx))
+  }, [candles, width, padding.left, padding.right])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setHoverIndex(getBarIndex(e.clientX))
-  }, [getBarIndex])
+    setHoverIndex(getCandleIndex(e.clientX))
+  }, [getCandleIndex])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length > 0) {
-      setHoverIndex(getBarIndex(e.touches[0].clientX))
+      setHoverIndex(getCandleIndex(e.touches[0].clientX))
     }
-  }, [getBarIndex])
+  }, [getCandleIndex])
 
   const handleLeave = useCallback(() => setHoverIndex(null), [])
 
-  if (data.length < 2) return null
+  if (candles.length < 2) return null
 
-  const prices = data.map(d => d.price)
-  const minPrice = Math.min(...prices)
-  const maxPrice = Math.max(...prices)
+  // Compute Y range from all candle highs/lows
+  let minPrice = Infinity
+  let maxPrice = -Infinity
+  for (const c of candles) {
+    if (c.low < minPrice) minPrice = c.low
+    if (c.high > maxPrice) maxPrice = c.high
+  }
   const priceRange = maxPrice - minPrice || 0.5
-  // Add 10% padding to Y range
   const yMin = minPrice - priceRange * 0.1
   const yMax = maxPrice + priceRange * 0.1
   const yRange = yMax - yMin
 
-  const padding = { top: 20, right: 10, bottom: 24, left: 45 }
-  const chartW = width - padding.left - padding.right
-  const chartH = height - padding.top - padding.bottom
+  const candleGap = chartW / candles.length
+  const bodyWidth = Math.max(2, candleGap * 0.6)
+  const wickWidth = Math.max(1, bodyWidth * 0.15)
 
-  const barWidth = Math.max(1, (chartW / data.length) * 0.7)
-  const barGap = chartW / data.length
-
-  const toX = (i: number) => padding.left + i * barGap + barGap / 2
+  const toX = (i: number) => padding.left + i * candleGap + candleGap / 2
   const toY = (price: number) => padding.top + chartH - ((price - yMin) / yRange) * chartH
 
-  // Y-axis tick marks (3-4 ticks)
+  // Y-axis ticks
   const tickCount = 4
   const yTicks: number[] = []
   for (let i = 0; i <= tickCount; i++) {
     yTicks.push(yMin + (yRange * i) / tickCount)
   }
 
-  // X-axis labels (5-6 labels max)
-  const xLabelCount = Math.min(6, data.length)
-  const xLabelStep = Math.floor(data.length / xLabelCount)
+  // X-axis labels
+  const xLabelCount = Math.min(6, candles.length)
+  const xLabelStep = Math.floor(candles.length / xLabelCount)
 
-  const currentPrice = data[data.length - 1].price
-  const firstPrice = data[0].price
-  const isUp = currentPrice >= firstPrice
+  const lastCandle = candles[candles.length - 1]
+  const firstCandle = candles[0]
+  const isUp = lastCandle.close >= firstCandle.open
 
-  const hoveredPoint = hoverIndex !== null ? data[hoverIndex] : null
+  const hoveredCandle = hoverIndex !== null ? candles[hoverIndex] : null
 
   return (
     <div className="stock-chart-container">
       {/* Tooltip */}
       <div className="stock-chart-tooltip-bar">
-        {hoveredPoint ? (() => {
-          const change = hoveredPoint.price - firstPrice
-          const changePct = firstPrice > 0 ? (change / firstPrice) * 100 : 0
+        {hoveredCandle ? (() => {
+          const change = hoveredCandle.close - firstCandle.open
+          const changePct = firstCandle.open > 0 ? (change / firstCandle.open) * 100 : 0
+          const bullish = hoveredCandle.close >= hoveredCandle.open
           return (
             <>
               <span className="stock-chart-tooltip-price" style={{
-                color: hoveredPoint.price >= firstPrice ? 'var(--spit-green)' : 'var(--spit-pink)',
+                color: bullish ? 'var(--spit-green)' : 'var(--spit-pink)',
               }}>
-                ${hoveredPoint.price.toFixed(2)}
+                ${hoveredCandle.close.toFixed(2)}
+              </span>
+              <span className="stock-chart-tooltip-ohlc">
+                O:{hoveredCandle.open.toFixed(2)} H:{hoveredCandle.high.toFixed(2)} L:{hoveredCandle.low.toFixed(2)} C:{hoveredCandle.close.toFixed(2)}
               </span>
               <span className="stock-chart-tooltip-change" style={{
                 color: change >= 0 ? 'var(--spit-green)' : 'var(--spit-pink)',
@@ -109,12 +113,12 @@ export function StockChart({ days = 30, width = 600, height = 220 }: StockChartP
                 {change >= 0 ? '+' : ''}{change.toFixed(2)} ({changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%)
               </span>
               <span className="stock-chart-tooltip-time">
-                {formatTime(hoveredPoint.time, days)}
+                {formatTime(hoveredCandle.time, days)}
               </span>
             </>
           )
         })() : (
-          <span className="stock-chart-tooltip-hint">Tap or hover for price details</span>
+          <span className="stock-chart-tooltip-hint">Tap or hover for OHLC details</span>
         )}
       </div>
 
@@ -139,7 +143,7 @@ export function StockChart({ days = 30, width = 600, height = 220 }: StockChartP
               y2={toY(tick)}
               stroke="var(--sys-border)"
               strokeWidth="0.5"
-              strokeDasharray={i === 0 || i === tickCount ? "0" : "3,3"}
+              strokeDasharray={i === 0 || i === tickCount ? '0' : '3,3'}
             />
             <text
               x={padding.left - 6}
@@ -154,64 +158,111 @@ export function StockChart({ days = 30, width = 600, height = 220 }: StockChartP
           </g>
         ))}
 
-        {/* Current price line */}
+        {/* Current price dashed line */}
         <line
           x1={padding.left}
-          y1={toY(currentPrice)}
+          y1={toY(lastCandle.close)}
           x2={width - padding.right}
-          y2={toY(currentPrice)}
+          y2={toY(lastCandle.close)}
           stroke={isUp ? 'var(--spit-green)' : 'var(--spit-pink)'}
           strokeWidth="1"
           strokeDasharray="4,4"
           opacity="0.6"
         />
 
-        {/* Bars — colored relative to period open price */}
-        {data.map((d, i) => {
-          const barColor = d.price >= firstPrice ? 'var(--spit-green)' : 'var(--spit-pink)'
+        {/* Candlesticks */}
+        {candles.map((c, i) => {
+          const bullish = c.close >= c.open
+          const color = bullish ? 'var(--spit-green)' : 'var(--spit-pink)'
           const isHovered = hoverIndex === i
 
+          const bodyTop = toY(Math.max(c.open, c.close))
+          const bodyBottom = toY(Math.min(c.open, c.close))
+          const bodyH = Math.max(1, bodyBottom - bodyTop)
+
+          const wickTop = toY(c.high)
+          const wickBottom = toY(c.low)
+          const cx = toX(i)
+
           return (
-            <rect
-              key={i}
-              x={toX(i) - barWidth / 2}
-              y={toY(d.price)}
-              width={barWidth}
-              height={Math.max(1, toY(yMin) - toY(d.price))}
-              fill={barColor}
-              opacity={isHovered ? 1 : 0.7}
-              rx="1"
-            />
+            <g key={i} opacity={isHovered ? 1 : 0.85}>
+              {/* Wick (high to low) */}
+              <line
+                x1={cx}
+                y1={wickTop}
+                x2={cx}
+                y2={wickBottom}
+                stroke={color}
+                strokeWidth={wickWidth}
+              />
+              {/* Body (open to close) */}
+              <rect
+                x={cx - bodyWidth / 2}
+                y={bodyTop}
+                width={bodyWidth}
+                height={bodyH}
+                fill={bullish ? color : color}
+                stroke={color}
+                strokeWidth={bullish ? 0 : 0}
+                rx="0.5"
+              />
+            </g>
           )
         })}
 
         {/* Hover crosshair */}
-        {hoverIndex !== null && (
-          <>
-            <line
-              x1={toX(hoverIndex)}
-              y1={padding.top}
-              x2={toX(hoverIndex)}
-              y2={padding.top + chartH}
-              stroke="var(--sys-text-muted)"
-              strokeWidth="1"
-              strokeDasharray="2,2"
-              opacity="0.5"
-            />
-            <circle
-              cx={toX(hoverIndex)}
-              cy={toY(data[hoverIndex].price)}
-              r="3.5"
-              fill={data[hoverIndex].price >= firstPrice ? 'var(--spit-green)' : 'var(--spit-pink)'}
-              stroke="var(--sys-bg)"
-              strokeWidth="1.5"
-            />
-          </>
-        )}
+        {hoverIndex !== null && (() => {
+          const hc = candles[hoverIndex]
+          const bullish = hc.close >= hc.open
+          return (
+            <>
+              <line
+                x1={toX(hoverIndex)}
+                y1={padding.top}
+                x2={toX(hoverIndex)}
+                y2={padding.top + chartH}
+                stroke="var(--sys-text-muted)"
+                strokeWidth="1"
+                strokeDasharray="2,2"
+                opacity="0.5"
+              />
+              {/* Horizontal price line */}
+              <line
+                x1={padding.left}
+                y1={toY(hc.close)}
+                x2={width - padding.right}
+                y2={toY(hc.close)}
+                stroke="var(--sys-text-muted)"
+                strokeWidth="0.5"
+                strokeDasharray="2,2"
+                opacity="0.4"
+              />
+              {/* Price label on right */}
+              <rect
+                x={width - padding.right + 1}
+                y={toY(hc.close) - 7}
+                width="40"
+                height="14"
+                fill={bullish ? 'var(--spit-green)' : 'var(--spit-pink)'}
+                rx="2"
+              />
+              <text
+                x={width - padding.right + 4}
+                y={toY(hc.close) + 3}
+                fontSize="8"
+                fontFamily="var(--sys-font-mono)"
+                fill="var(--sys-bg)"
+                fontWeight="600"
+              >
+                ${hc.close.toFixed(2)}
+              </text>
+            </>
+          )
+        })()}
 
         {/* X-axis labels */}
         {Array.from({ length: xLabelCount }, (_, i) => {
-          const idx = Math.min(i * xLabelStep, data.length - 1)
+          const idx = Math.min(i * xLabelStep, candles.length - 1)
           return (
             <text
               key={i}
@@ -222,7 +273,7 @@ export function StockChart({ days = 30, width = 600, height = 220 }: StockChartP
               fontFamily="var(--sys-font-mono)"
               fill="var(--sys-text-muted)"
             >
-              {formatTime(data[idx].time, days)}
+              {formatTime(candles[idx].time, days)}
             </text>
           )
         })}
