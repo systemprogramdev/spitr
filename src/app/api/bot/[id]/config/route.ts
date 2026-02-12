@@ -42,6 +42,7 @@ export async function PATCH(
     if (body.is_active !== undefined) botUpdates.is_active = body.is_active
     if (body.personality !== undefined) botUpdates.personality = body.personality
     if (body.name !== undefined) botUpdates.name = body.name
+    if (body.action_frequency !== undefined) botUpdates.action_frequency = Math.min(100, Math.max(1, body.action_frequency))
 
     if (Object.keys(botUpdates).length > 0) {
       const { error } = await supabaseAdmin

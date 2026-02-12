@@ -37,6 +37,7 @@ interface Bot {
   personality: string
   is_active: boolean
   created_at: string
+  action_frequency: number
   bot_configs: BotConfig[]
   users: BotUserProfile | null
 }
@@ -84,6 +85,7 @@ export default function DatacenterPage() {
   const [editCombatStrategy, setEditCombatStrategy] = useState('')
   const [editBankingStrategy, setEditBankingStrategy] = useState('')
   const [editAutoHeal, setEditAutoHeal] = useState(50)
+  const [editActionFrequency, setEditActionFrequency] = useState(10)
   const [editCustomPrompt, setEditCustomPrompt] = useState('')
 
   // Profile editing state
@@ -187,6 +189,7 @@ export default function DatacenterPage() {
     setEditCombatStrategy(config?.combat_strategy || 'passive')
     setEditBankingStrategy(config?.banking_strategy || 'none')
     setEditAutoHeal(config?.auto_heal_threshold ?? 50)
+    setEditActionFrequency(bot.action_frequency ?? 10)
     setEditCustomPrompt(config?.custom_prompt || '')
 
     // Profile fields
@@ -230,6 +233,7 @@ export default function DatacenterPage() {
           combat_strategy: editCombatStrategy,
           banking_strategy: editBankingStrategy,
           auto_heal_threshold: editAutoHeal,
+          action_frequency: editActionFrequency,
           custom_prompt: editCustomPrompt,
         }),
       })
@@ -633,6 +637,22 @@ export default function DatacenterPage() {
                             step={5}
                             value={editAutoHeal}
                             onChange={e => setEditAutoHeal(Number(e.target.value))}
+                            className="dc-range"
+                          />
+                        </div>
+
+                        <div className="dc-field">
+                          <label className="dc-label">Action Frequency: {editActionFrequency}/day</label>
+                          <div className="dc-freq-labels">
+                            <span>Quiet</span><span>Active</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={1}
+                            max={100}
+                            step={1}
+                            value={editActionFrequency}
+                            onChange={e => setEditActionFrequency(Number(e.target.value))}
                             className="dc-range"
                           />
                         </div>

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       supabaseAdmin.from('user_buffs').select('buff_type, charges_remaining').eq('user_id', botUserId),
       supabaseAdmin.from('user_stock_holdings').select('shares').eq('user_id', botUserId).single(),
       supabaseAdmin.from('bank_cds').select('id, principal, rate, term_days, created_at, currency, matures_at').eq('user_id', botUserId).eq('redeemed', false),
-      supabaseAdmin.from('bots').select('bot_configs(banking_strategy)').eq('user_id', botUserId).single(),
+      supabaseAdmin.from('bots').select('action_frequency, bot_configs(banking_strategy)').eq('user_id', botUserId).single(),
       supabaseAdmin.from('credit_transactions').select('amount').eq('user_id', botUserId).eq('type', 'transfer_sent').gte('created_at', twentyFourHoursAgo),
       supabaseAdmin.from('gold_transactions').select('amount').eq('user_id', botUserId).eq('type', 'transfer_sent').gte('created_at', twentyFourHoursAgo),
     ])
@@ -353,6 +353,7 @@ export async function GET(request: NextRequest) {
       },
       suggested_action: suggestedAction,
       banking_strategy: bankingStrategy,
+      action_frequency: configRes.data?.action_frequency ?? 10,
       financial_advisor: financialAdvisor,
     })
   } catch (err) {

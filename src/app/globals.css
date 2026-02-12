@@ -6666,6 +6666,15 @@ a:hover {
   margin-top: 0.25rem;
 }
 
+.dc-freq-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6rem;
+  color: var(--sys-text-muted);
+  font-family: var(--sys-font-mono);
+  margin-bottom: -0.15rem;
+}
+
 .dc-save-btn {
   align-self: flex-start;
 }
