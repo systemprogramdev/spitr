@@ -29,7 +29,7 @@ export async function GET() {
     // Get sybil bots for this server
     const { data: bots } = await supabaseAdmin
       .from('sybil_bots')
-      .select('id, name, handle, avatar_url, hp, is_alive, is_deployed, deployed_at, died_at, created_at')
+      .select('id, user_id, name, handle, avatar_url, banner_url, hp, is_alive, is_deployed, deployed_at, died_at, created_at')
       .eq('server_id', server.id)
       .order('created_at', { ascending: true })
 

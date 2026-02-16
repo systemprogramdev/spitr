@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: updateErr.message }, { status: 500 })
     }
 
+    // Also update sybil_bots table so the datacenter UI stays in sync
+    await supabaseAdmin
+      .from('sybil_bots')
+      .update(updates)
+      .eq('user_id', user_id)
+
     return NextResponse.json({ success: true })
   } catch (err) {
     console.error('Sybil update-profile error:', err)
