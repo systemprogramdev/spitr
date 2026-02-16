@@ -240,6 +240,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Cap sybil HP before attack (sybils have max 100 HP but DB may have stale 5000)
+    let targetIsSybil = false
+    if (targetUserId) {
+      const { data: targetUser } = await supabaseAdmin
+        .from('users')
+        .select('account_type, hp')
+        .eq('id', targetUserId)
+        .single()
+
+      if (targetUser?.account_type === 'sybil') {
+        targetIsSybil = true
+        if (targetUser.hp > 100) {
+          await supabaseAdmin
+            .from('users')
+            .update({ hp: 100 })
+            .eq('id', targetUserId)
+        }
+      }
+    }
+
     // Call the server-side function with (possibly buffed) damage
     const { data, error } = await supabaseAdmin.rpc('perform_attack', {
       p_attacker_id: attackerId,
@@ -264,6 +284,14 @@ export async function POST(request: NextRequest) {
         { error: result.error || 'Attack failed' },
         { status: 400 }
       )
+    }
+
+    // Sync sybil_bots HP after attack on sybil
+    if (targetIsSybil && result.new_hp !== undefined) {
+      await supabaseAdmin
+        .from('sybil_bots')
+        .update({ hp: result.new_hp, is_alive: !result.destroyed })
+        .eq('user_id', targetUserId)
     }
 
     // --- Post-attack special effects ---

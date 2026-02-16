@@ -34,6 +34,29 @@ export async function GET() {
       .order('created_at', { ascending: true })
 
     const sybilBots = bots || []
+
+    // Fetch real HP + profile images from users table (sybil_bots can get out of sync after attacks/profile updates)
+    if (sybilBots.length > 0) {
+      const userIds = sybilBots.map(b => b.user_id)
+      const { data: users } = await supabaseAdmin
+        .from('users')
+        .select('id, hp, is_destroyed, avatar_url, banner_url')
+        .in('id', userIds)
+
+      if (users) {
+        const userMap = new Map(users.map(u => [u.id, u]))
+        for (const bot of sybilBots) {
+          const user = userMap.get(bot.user_id)
+          if (user) {
+            bot.hp = Math.min(user.hp, 100)
+            bot.is_alive = !user.is_destroyed
+            if (user.avatar_url) bot.avatar_url = user.avatar_url
+            if (user.banner_url) bot.banner_url = user.banner_url
+          }
+        }
+      }
+    }
+
     const alive = sybilBots.filter(b => b.is_alive && b.is_deployed).length
     const dead = sybilBots.filter(b => !b.is_alive).length
     const deploying = sybilBots.filter(b => !b.is_deployed && b.is_alive).length

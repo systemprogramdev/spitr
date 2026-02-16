@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       ])
       return NextResponse.json({
         account_type: 'sybil',
-        hp: userRes.data?.hp ?? 100,
+        hp: Math.min(userRes.data?.hp ?? 100, 100),
         max_hp: 100,
         destroyed: userRes.data?.is_destroyed ?? false,
         credits: creditsRes.data?.balance ?? 0,

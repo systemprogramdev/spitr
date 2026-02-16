@@ -198,7 +198,8 @@ export default function ProfilePage() {
       }
 
       setProfile(profileData)
-      setProfileHp(profileData.hp ?? getMaxHp(1))
+      const isSybilAccount = profileData.account_type === 'sybil'
+      setProfileHp(isSybilAccount ? Math.min(profileData.hp ?? 100, 100) : (profileData.hp ?? getMaxHp(1)))
       setProfileDestroyed(profileData.is_destroyed ?? false)
 
       const [followersRes, followingRes, spitsRes, creditsRes, goldRes, pinnedRes, xpRes, buffsRes, nameTagsRes] = await Promise.all([
