@@ -22,6 +22,9 @@ export type Database = {
           hp: number
           is_destroyed: boolean
           last_chest_claimed_at: string | null
+          account_type?: string | null
+          sybil_owner_id?: string | null
+          revivable?: boolean
           created_at: string
           updated_at: string
         }
@@ -37,6 +40,9 @@ export type Database = {
           hp?: number
           is_destroyed?: boolean
           last_chest_claimed_at?: string | null
+          account_type?: string | null
+          sybil_owner_id?: string | null
+          revivable?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -52,6 +58,9 @@ export type Database = {
           hp?: number
           is_destroyed?: boolean
           last_chest_claimed_at?: string | null
+          account_type?: string | null
+          sybil_owner_id?: string | null
+          revivable?: boolean
           created_at?: string
           updated_at?: string
         }

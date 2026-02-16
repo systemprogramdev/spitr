@@ -458,7 +458,7 @@ export default function ProfilePage() {
                 >
                   &#x1F4B8; Send
                 </button>
-                {!profileDestroyed && (
+                {!profileDestroyed && profile.account_type !== 'sybil' && (
                   <button
                     className="btn"
                     style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
@@ -525,7 +525,7 @@ export default function ProfilePage() {
           {/* HP Bar + Active Buffs */}
           <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ flex: 1 }}>
-              <HPBar hp={isFakeDeath ? 0 : profileHp} maxHp={getMaxHp(userLevel)} size="md" />
+              <HPBar hp={isFakeDeath ? 0 : profileHp} maxHp={profile.account_type === 'sybil' ? 100 : getMaxHp(userLevel)} size="md" />
             </div>
             {activeBuffs.map((buff) => {
               const BUFF_CONFIG: Record<string, { emoji: string; color: string; bg: string; border: string; label: string }> = {
@@ -612,8 +612,8 @@ export default function ProfilePage() {
       </div>
 
       {/* Gunshot Wounds */}
-      {!profileDestroyed && profileHp < getMaxHp(userLevel) && (
-        <GunshotWounds hp={profileHp} maxHp={getMaxHp(userLevel)} userId={profile.id} />
+      {!profileDestroyed && profileHp < (profile.account_type === 'sybil' ? 100 : getMaxHp(userLevel)) && (
+        <GunshotWounds hp={profileHp} maxHp={profile.account_type === 'sybil' ? 100 : getMaxHp(userLevel)} userId={profile.id} />
       )}
       {/* Spray Paint Overlay */}
       <SprayPaintOverlay targetUserId={profile.id} />
