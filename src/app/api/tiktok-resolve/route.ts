@@ -9,6 +9,18 @@ interface TikTokOEmbed {
 // Cache oEmbed results for 24 hours
 const cache = new Map<string, { data: TikTokOEmbed; expiresAt: number }>()
 
+// Resolve short URLs (vm.tiktok.com) to full canonical URLs
+async function resolveUrl(url: string): Promise<string> {
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'vm.tiktok.com') {
+      const res = await fetch(url, { redirect: 'follow' })
+      return res.url
+    }
+  } catch {}
+  return url
+}
+
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url')
   if (!url) {
@@ -22,7 +34,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
+    // Resolve short URLs before calling oEmbed
+    const canonicalUrl = await resolveUrl(url)
+
+    const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(canonicalUrl)}`
     const res = await fetch(oembedUrl)
     if (!res.ok) throw new Error('oEmbed fetch failed')
 
