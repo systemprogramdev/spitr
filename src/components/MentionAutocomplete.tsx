@@ -30,7 +30,6 @@ export function MentionAutocomplete({ searchTerm, onSelect, onClose, position }:
       const { data } = await supabase
         .from('users')
         .select('id, handle, name, avatar_url')
-        .or('account_type.neq.sybil,account_type.is.null')
         .ilike('handle', `${searchTerm}%`)
         .order('created_at', { ascending: false })
         .limit(5)

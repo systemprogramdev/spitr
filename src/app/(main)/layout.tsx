@@ -76,7 +76,6 @@ export default function MainLayout({
       const { data } = await supabase
         .from('users')
         .select('*')
-        .or('account_type.neq.sybil,account_type.is.null')
         .order('created_at', { ascending: false })
         .limit(10)
 
