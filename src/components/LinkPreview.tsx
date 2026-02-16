@@ -74,8 +74,11 @@ function getTikTokInfo(url: string): { videoId: string | null; isShortUrl: boole
       if (match) return { videoId: match[1], isShortUrl: false }
     }
 
-    // Short URL: vm.tiktok.com/xxxxx — needs server-side redirect resolution
+    // Short URLs: vm.tiktok.com/xxxxx or tiktok.com/t/xxxxx
     if (host === 'vm.tiktok.com' && u.pathname.length > 1) {
+      return { videoId: null, isShortUrl: true }
+    }
+    if ((host === 'tiktok.com' || host === 'm.tiktok.com') && u.pathname.startsWith('/t/')) {
       return { videoId: null, isShortUrl: true }
     }
 
