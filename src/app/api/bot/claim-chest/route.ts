@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP, rejectSybil } from '@/lib/bot-auth'
 import { rollChestLoot } from '@/lib/items'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
@@ -7,6 +7,7 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
   if (!context) return NextResponse.json({ error }, { status })
+  const blocked = rejectSybil(context); if (blocked) return blocked
 
   const { botUserId } = context
 

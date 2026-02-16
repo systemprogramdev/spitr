@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, rejectSybil } from '@/lib/bot-auth'
 import { calculateBankBalance } from '@/lib/bank'
 import { getStockPrice } from '@/lib/bank'
 import { BankDeposit } from '@/types'
@@ -11,6 +11,7 @@ const DAILY_GOLD_LIMIT = 10
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
   if (!context) return NextResponse.json({ error }, { status })
+  const blocked = rejectSybil(context); if (blocked) return blocked
 
   const { bot, botUserId } = context
 

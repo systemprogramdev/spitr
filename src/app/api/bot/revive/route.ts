@@ -22,6 +22,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing bot_user_id or item_type' }, { status: 400 })
     }
 
+    // Check if target account is revivable
+    const { data: targetUser } = await supabaseAdmin
+      .from('users')
+      .select('revivable')
+      .eq('id', bot_user_id)
+      .single()
+
+    if (targetUser && targetUser.revivable === false) {
+      return NextResponse.json({ error: 'This account cannot be revived' }, { status: 403 })
+    }
+
     const item = ITEM_MAP.get(item_type)
     if (!item || item.category !== 'potion') {
       return NextResponse.json({ error: 'Invalid potion type' }, { status: 400 })

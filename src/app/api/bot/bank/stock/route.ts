@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP, rejectSybil } from '@/lib/bot-auth'
 import { getStockPrice } from '@/lib/bank'
 import { postTradeSpit } from '@/lib/trade-post'
 
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
   if (!context) return NextResponse.json({ error }, { status })
+  const blocked = rejectSybil(context); if (blocked) return blocked
 
   const { botUserId } = context
 

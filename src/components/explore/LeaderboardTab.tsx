@@ -47,6 +47,7 @@ export function LeaderboardTab() {
             const { data: users } = await supabase
               .from('users')
               .select('*')
+            .neq('account_type', 'sybil')
               .in('id', userIds)
 
             const userMap = new Map((users || []).map(u => [u.id, u]))
@@ -72,6 +73,7 @@ export function LeaderboardTab() {
           const { data: users } = await supabase
             .from('users')
             .select('*')
+            .neq('account_type', 'sybil')
             .in('id', userIds)
 
           const userMap = new Map((users || []).map(u => [u.id, u]))
@@ -95,6 +97,7 @@ export function LeaderboardTab() {
           const { data: users } = await supabase
             .from('users')
             .select('*')
+            .neq('account_type', 'sybil')
             .in('id', userIds)
 
           const userMap = new Map((users || []).map(u => [u.id, u]))
@@ -139,6 +142,7 @@ export function LeaderboardTab() {
               const { data: users } = await supabase
                 .from('users')
                 .select('*')
+            .neq('account_type', 'sybil')
                 .in('id', userIds)
 
               const userMap = new Map((users || []).map(u => [u.id, u]))

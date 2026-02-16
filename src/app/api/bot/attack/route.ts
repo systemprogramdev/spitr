@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin, awardBotXP } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, awardBotXP, rejectSybil } from '@/lib/bot-auth'
 import { ITEMS } from '@/lib/items'
 
 const WEAPON_DAMAGE: Record<string, number> = {}
@@ -12,6 +12,7 @@ for (const item of ITEMS) {
 export async function POST(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
   if (!context) return NextResponse.json({ error }, { status })
+  const blocked = rejectSybil(context); if (blocked) return blocked
 
   const { botUserId } = context
 

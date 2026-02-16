@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { validateDatacenterKey } from '@/lib/bot-auth'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -9,19 +10,35 @@ const supabaseAdmin = createClient(
 
 const SYBIL_COST_GOLD = 1000
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    let ownerUserId: string
+
+    // Try datacenter key auth first, fall back to cookie auth
+    const datacenterKey = request.headers.get('X-Datacenter-Key')
+    if (datacenterKey) {
+      const { valid, error, status } = await validateDatacenterKey(request)
+      if (!valid) return NextResponse.json({ error }, { status })
+
+      const body = await request.json()
+      if (!body.owner_user_id) {
+        return NextResponse.json({ error: 'owner_user_id is required for datacenter auth' }, { status: 400 })
+      }
+      ownerUserId = body.owner_user_id
+    } else {
+      const supabase = await createServerClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      ownerUserId = user.id
     }
 
     // Check if user already has a sybil server
     const { data: existing } = await supabaseAdmin
       .from('sybil_servers')
       .select('id, status')
-      .eq('owner_user_id', user.id)
+      .eq('owner_user_id', ownerUserId)
       .single()
 
     if (existing) {
@@ -32,7 +49,7 @@ export async function POST() {
     const { data: gold } = await supabaseAdmin
       .from('user_gold')
       .select('balance')
-      .eq('user_id', user.id)
+      .eq('user_id', ownerUserId)
       .single()
 
     if (!gold || gold.balance < SYBIL_COST_GOLD) {
@@ -47,7 +64,7 @@ export async function POST() {
     const { error: deductErr } = await supabaseAdmin
       .from('user_gold')
       .update({ balance: newBalance })
-      .eq('user_id', user.id)
+      .eq('user_id', ownerUserId)
 
     if (deductErr) {
       return NextResponse.json({ error: 'Failed to deduct gold' }, { status: 500 })
@@ -55,7 +72,7 @@ export async function POST() {
 
     // Record transaction
     await supabaseAdmin.from('gold_transactions').insert({
-      user_id: user.id,
+      user_id: ownerUserId,
       type: 'purchase',
       amount: -SYBIL_COST_GOLD,
       balance_after: newBalance,
@@ -66,7 +83,7 @@ export async function POST() {
     const { data: server, error: serverErr } = await supabaseAdmin
       .from('sybil_servers')
       .insert({
-        owner_user_id: user.id,
+        owner_user_id: ownerUserId,
         status: 'provisioning',
         max_sybils: 50,
       })
@@ -78,7 +95,7 @@ export async function POST() {
       await supabaseAdmin
         .from('user_gold')
         .update({ balance: gold.balance })
-        .eq('user_id', user.id)
+        .eq('user_id', ownerUserId)
       return NextResponse.json({ error: 'Failed to create sybil server' }, { status: 500 })
     }
 

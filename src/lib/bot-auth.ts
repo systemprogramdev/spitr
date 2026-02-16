@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import { XP_AMOUNTS } from '@/lib/xp'
@@ -12,6 +12,8 @@ export const supabaseAdmin = createClient(
 interface BotContext {
   bot: { id: string; owner_id: string; user_id: string; name: string; handle: string; personality: string; is_active: boolean }
   botUserId: string
+  accountType: 'bot' | 'sybil'
+  sybilOwnerId?: string
 }
 
 interface ValidateResult {
@@ -52,7 +54,34 @@ export async function validateBotRequest(request: NextRequest): Promise<Validate
     .single()
 
   if (botErr || !bot) {
-    return { error: 'Bot not found', status: 404 }
+    // Fall back to sybil account lookup
+    const { data: sybilUser, error: sybilErr } = await supabaseAdmin
+      .from('users')
+      .select('id, handle, name, account_type, sybil_owner_id')
+      .eq('id', botId)
+      .eq('account_type', 'sybil')
+      .single()
+
+    if (sybilErr || !sybilUser) {
+      return { error: 'Bot not found', status: 404 }
+    }
+
+    return {
+      context: {
+        bot: {
+          id: sybilUser.id,
+          owner_id: sybilUser.sybil_owner_id,
+          user_id: sybilUser.id,
+          name: sybilUser.name,
+          handle: sybilUser.handle,
+          personality: '',
+          is_active: true,
+        },
+        botUserId: sybilUser.id,
+        accountType: 'sybil',
+        sybilOwnerId: sybilUser.sybil_owner_id,
+      },
+    }
   }
 
   if (!bot.is_active) {
@@ -66,6 +95,7 @@ export async function validateBotRequest(request: NextRequest): Promise<Validate
     context: {
       bot,
       botUserId: bot.user_id,
+      accountType: 'bot',
     },
   }
 }
@@ -151,6 +181,17 @@ export async function validateDatacenterKey(request: NextRequest): Promise<{ val
   }
 
   return { valid: true }
+}
+
+export function isSybil(context: BotContext): boolean {
+  return context.accountType === 'sybil'
+}
+
+export function rejectSybil(context: BotContext): NextResponse | null {
+  if (context.accountType === 'sybil') {
+    return NextResponse.json({ error: 'Sybil accounts cannot perform this action' }, { status: 403 })
+  }
+  return null
 }
 
 export async function awardBotXP(botUserId: string, action: string, referenceId?: string) {

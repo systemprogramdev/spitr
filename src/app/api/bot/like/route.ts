@@ -14,6 +14,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'spit_id is required' }, { status: 400 })
     }
 
+    // Sybil accounts can only like their owner's posts
+    if (context.accountType === 'sybil') {
+      const { data: spit } = await supabaseAdmin.from('spits').select('user_id').eq('id', spit_id).single()
+      if (!spit || spit.user_id !== context.sybilOwnerId) {
+        return NextResponse.json({ error: 'Sybil accounts can only interact with owner posts' }, { status: 403 })
+      }
+    }
+
     // Check credits
     const { data: credits } = await supabaseAdmin
       .from('user_credits')

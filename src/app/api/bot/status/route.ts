@@ -23,6 +23,28 @@ export async function GET(request: NextRequest) {
   const { botUserId } = context
 
   try {
+    // Sybil accounts get a simplified status
+    if (context.accountType === 'sybil') {
+      const [userRes, creditsRes, xpRes] = await Promise.all([
+        supabaseAdmin.from('users').select('hp, is_destroyed').eq('id', botUserId).single(),
+        supabaseAdmin.from('user_credits').select('balance').eq('user_id', botUserId).single(),
+        supabaseAdmin.from('user_xp').select('xp, level').eq('user_id', botUserId).single(),
+      ])
+      return NextResponse.json({
+        account_type: 'sybil',
+        hp: userRes.data?.hp ?? 100,
+        max_hp: 100,
+        destroyed: userRes.data?.is_destroyed ?? false,
+        credits: creditsRes.data?.balance ?? 0,
+        gold: 0,
+        xp: xpRes.data?.xp ?? 0,
+        level: xpRes.data?.level ?? 1,
+        xp_next_level: xpForLevel((xpRes.data?.level ?? 1) + 1),
+        daily_chest_available: false,
+        weekly_paycheck_available: false,
+      })
+    }
+
     const twentyFourHoursAgo = new Date(Date.now() - TWENTY_FOUR_HOURS_MS).toISOString()
 
     const [userRes, creditsRes, goldRes, xpRes, inventoryRes, depositsRes, buffsRes, stockRes, cdsRes, configRes, spitTransfersRes, goldTransfersRes] = await Promise.all([

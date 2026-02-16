@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateBotRequest, supabaseAdmin } from '@/lib/bot-auth'
+import { validateBotRequest, supabaseAdmin, rejectSybil } from '@/lib/bot-auth'
 
 export async function GET(request: NextRequest) {
   const { context, error, status } = await validateBotRequest(request)
   if (!context) return NextResponse.json({ error }, { status })
+  const blocked = rejectSybil(context); if (blocked) return blocked
 
   const { botUserId } = context
 

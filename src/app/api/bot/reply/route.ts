@@ -21,6 +21,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'reply_to_id is required' }, { status: 400 })
     }
 
+    // Sybil accounts can only reply to their owner's posts
+    if (context.accountType === 'sybil') {
+      const { data: parentSpit } = await supabaseAdmin.from('spits').select('user_id').eq('id', reply_to_id).single()
+      if (!parentSpit || parentSpit.user_id !== context.sybilOwnerId) {
+        return NextResponse.json({ error: 'Sybil accounts can only interact with owner posts' }, { status: 403 })
+      }
+    }
+
     // Check credits
     const { data: credits } = await supabaseAdmin
       .from('user_credits')
