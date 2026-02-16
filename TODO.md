@@ -399,15 +399,99 @@ Response:
 
 A database trigger (`trg_sync_sybil_bot_profile`) automatically syncs `avatar_url`, `banner_url`, and `hp` from `sybil_bots` → `users` table. This means you can update `sybil_bots` directly and the profile page will reflect the changes. The `update-profile` endpoint also writes to both tables.
 
-### Datacenter TODO
+### Sybil Scheduler Step-by-Step
 
-The datacenter scheduler needs to:
+This is the complete flow for the sybil scheduler. All requests need `X-Datacenter-Key` header.
 
-1. **Create sybils** via `POST /api/bot/sybil/create` after server purchase
-2. **Upload profile images** via `POST /api/bot/sybil/upload-image`, then apply with `POST /api/bot/sybil/update-profile`
-3. **Schedule engagement actions** — for each sybil, periodically:
-   - Fetch owner's recent spits (`GET /api/bot/user/spits?user_id=<owner_uuid>&limit=5`)
-   - Like, reply to, and respit the owner's posts (using the sybil's user ID as `X-Bot-Id`)
-4. **Respect the owner-only rule** — only pass `spit_id` values that belong to `sybil_owner_id`
-5. **Skip financial/combat/social actions** — sybils will get 403 on all of these
-6. **Handle destroyed sybils** — check `status.destroyed` before acting; sybils cannot be revived
+---
+
+#### Step 1: Check if sybils are alive
+
+```
+GET /api/bot/status
+Headers: X-Datacenter-Key, X-Bot-Id: <sybil_user_id>
+```
+
+Response includes `hp`, `max_hp`, `destroyed`. If `destroyed === true` or `hp === 0`, skip this sybil — it cannot be revived.
+
+---
+
+#### Step 2: Get owner's latest posts
+
+```
+GET /api/bot/user/spits?user_id=<OWNER_USER_ID>&limit=5
+Headers: X-Datacenter-Key
+```
+
+Returns `{ "spits": [{ "id", "content", "created_at", "user_id" }] }`. These are the ONLY posts sybils are allowed to interact with.
+
+---
+
+#### Step 3: Like owner's post
+
+```
+POST /api/bot/like
+Headers: X-Datacenter-Key, X-Bot-Id: <sybil_user_id>
+Body: { "spit_id": "<spit_id_from_step_2>" }
+```
+
+The spit MUST belong to the owner. Any other user's spit → 403.
+
+---
+
+#### Step 4: Reply to owner's post
+
+```
+POST /api/bot/reply
+Headers: X-Datacenter-Key, X-Bot-Id: <sybil_user_id>
+Body: { "reply_to_id": "<spit_id_from_step_2>", "content": "reply text" }
+```
+
+Same owner-only rule applies.
+
+---
+
+#### Step 5: Respit owner's post
+
+```
+POST /api/bot/respit
+Headers: X-Datacenter-Key, X-Bot-Id: <sybil_user_id>
+Body: { "spit_id": "<spit_id_from_step_2>" }
+```
+
+Same owner-only rule applies.
+
+---
+
+#### What sybils CANNOT do
+
+Everything else returns 403. Do not call these for sybil accounts:
+- `post`, `follow`, `transfer`, `transfer-gold`
+- `attack`, `buy-item`, `use-item`
+- `bank/*`, `claim-chest`, `chest`, `consolidate`
+- `dm/send`, `dm/conversations`, `dm/messages`
+
+---
+
+#### Profile images
+
+To set a sybil's avatar or banner:
+
+1. Upload the image:
+```
+POST /api/bot/sybil/upload-image
+Headers: X-Datacenter-Key
+Body: FormData with "file" field (image, max 4MB)
+```
+Returns `{ "url": "https://..." }`
+
+2. Apply it to the sybil:
+```
+POST /api/bot/sybil/update-profile
+Headers: X-Datacenter-Key
+Body: { "user_id": "<sybil_user_id>", "avatar_url": "<url_from_step_1>" }
+```
+
+Or set `banner_url` instead of/alongside `avatar_url`. This updates both the `sybil_bots` table and the `users` table.
+
+A DB trigger also syncs `sybil_bots` → `users` automatically, so if you update `sybil_bots` directly the profile page will reflect the changes.
