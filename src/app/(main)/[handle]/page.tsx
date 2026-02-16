@@ -458,7 +458,7 @@ export default function ProfilePage() {
                 >
                   &#x1F4B8; Send
                 </button>
-                {!profileDestroyed && profile.account_type !== 'sybil' && (
+                {!profileDestroyed && (
                   <button
                     className="btn"
                     style={{ background: 'var(--sys-danger)', color: 'var(--sys-bg)' }}
