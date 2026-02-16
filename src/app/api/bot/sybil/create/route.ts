@@ -64,8 +64,9 @@ export async function POST(request: NextRequest) {
     const sybilUserId = authData.user.id
 
     try {
-      // Create user profile with sybil properties
-      await supabaseAdmin.from('users').insert({
+      // Create/update user profile with sybil properties
+      // Use upsert because Supabase auth triggers may auto-create the users row
+      const { error: userErr } = await supabaseAdmin.from('users').upsert({
         id: sybilUserId,
         handle,
         name,
@@ -76,7 +77,29 @@ export async function POST(request: NextRequest) {
         account_type: 'sybil',
         sybil_owner_id: owner_user_id,
         revivable: false,
-      })
+      }, { onConflict: 'id' })
+
+      if (userErr) {
+        console.error('Sybil user upsert error:', userErr)
+        throw new Error(`User upsert failed: ${userErr.message}`)
+      }
+
+      // Verify the critical fields were set (belt and suspenders)
+      const { data: verify } = await supabaseAdmin
+        .from('users')
+        .select('account_type, sybil_owner_id')
+        .eq('id', sybilUserId)
+        .single()
+
+      if (!verify?.account_type || verify.account_type !== 'sybil') {
+        // Force update if upsert didn't set the fields (e.g. trigger race condition)
+        await supabaseAdmin.from('users').update({
+          account_type: 'sybil',
+          sybil_owner_id: owner_user_id,
+          revivable: false,
+          hp: 100,
+        }).eq('id', sybilUserId)
+      }
 
       // Create user_credits (no starting credits)
       await supabaseAdmin.from('user_credits').insert({

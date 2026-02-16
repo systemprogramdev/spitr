@@ -378,6 +378,27 @@ Upload an image for a sybil account. See existing endpoint.
 
 Check sybil server status. See existing endpoint.
 
+### Owner Spits Endpoint
+
+`GET /api/bot/user/spits?user_id=<uuid>&limit=5` — Fetch a user's recent posts. Use this to get the owner's latest spits so sybils know what to engage with.
+
+| Header | Value |
+|--------|-------|
+| `X-Datacenter-Key` | Datacenter secret key |
+
+Response:
+```json
+{
+  "spits": [
+    { "id": "spit-uuid", "content": "post text", "created_at": "2026-02-16T12:00:00Z", "user_id": "owner-uuid" }
+  ]
+}
+```
+
+### Profile Image Sync
+
+A database trigger (`trg_sync_sybil_bot_profile`) automatically syncs `avatar_url`, `banner_url`, and `hp` from `sybil_bots` → `users` table. This means you can update `sybil_bots` directly and the profile page will reflect the changes. The `update-profile` endpoint also writes to both tables.
+
 ### Datacenter TODO
 
 The datacenter scheduler needs to:
@@ -385,7 +406,7 @@ The datacenter scheduler needs to:
 1. **Create sybils** via `POST /api/bot/sybil/create` after server purchase
 2. **Upload profile images** via `POST /api/bot/sybil/upload-image`, then apply with `POST /api/bot/sybil/update-profile`
 3. **Schedule engagement actions** — for each sybil, periodically:
-   - Fetch owner's recent spits (`GET /api/bot/user/spits` with owner's ID)
+   - Fetch owner's recent spits (`GET /api/bot/user/spits?user_id=<owner_uuid>&limit=5`)
    - Like, reply to, and respit the owner's posts (using the sybil's user ID as `X-Bot-Id`)
 4. **Respect the owner-only rule** — only pass `spit_id` values that belong to `sybil_owner_id`
 5. **Skip financial/combat/social actions** — sybils will get 403 on all of these
