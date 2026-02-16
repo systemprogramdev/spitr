@@ -598,26 +598,82 @@ a:hover {
   pointer-events: auto;
 }
 
-.tiktok-embed {
-  position: relative;
-  z-index: 2;
+.tiktok-card {
+  display: flex;
+  gap: 0.75rem;
   margin-top: 0.75rem;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-  max-width: 325px;
-  max-height: 500px;
-  aspect-ratio: 9 / 16;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 0.625rem;
+  background: rgba(0, 255, 136, 0.04);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
   pointer-events: auto;
+  transition: border-color 0.2s;
+  overflow: hidden;
 }
 
-.tiktok-embed iframe {
+.tiktok-card:hover {
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.tiktok-card-thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 80px;
+  height: 106px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #111;
+}
+
+.tiktok-card-thumb img {
   width: 100%;
   height: 100%;
-  border: none;
-  pointer-events: auto;
+  object-fit: cover;
+}
+
+.tiktok-card-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.tiktok-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  justify-content: center;
+}
+
+.tiktok-card-site {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 255, 136, 0.6);
+}
+
+.tiktok-card-author {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tiktok-card-title {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .spotify-embed {

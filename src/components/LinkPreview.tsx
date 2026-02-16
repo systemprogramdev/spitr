@@ -17,8 +17,13 @@ interface LinkPreviewProps {
 // Simple in-memory cache for previews
 const previewCache = new Map<string, OGData | null>()
 
-// Cache for resolved TikTok short URLs
-const tiktokCache = new Map<string, string>()
+// Cache for TikTok oEmbed data
+interface TikTokOEmbed {
+  title: string
+  author_name: string
+  thumbnail_url: string
+}
+const tiktokCache = new Map<string, TikTokOEmbed>()
 
 // Extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
@@ -120,8 +125,8 @@ export function LinkPreview({ url }: LinkPreviewProps) {
   const [data, setData] = useState<OGData | null>(previewCache.get(url) || null)
   const [loading, setLoading] = useState(!previewCache.has(url))
   const [error, setError] = useState(false)
-  const [resolvedTikTokId, setResolvedTikTokId] = useState<string | null>(tiktokCache.get(url) || null)
-  const [tiktokResolving, setTiktokResolving] = useState(false)
+  const [tiktokData, setTiktokData] = useState<TikTokOEmbed | null>(tiktokCache.get(url) || null)
+  const [tiktokLoading, setTiktokLoading] = useState(false)
 
   const videoId = getYouTubeVideoId(url)
   const soundcloudUrl = getSoundCloudUrl(url)
@@ -129,31 +134,30 @@ export function LinkPreview({ url }: LinkPreviewProps) {
   const spotifyEmbed = getSpotifyEmbed(url)
   const tweetId = getTwitterTweetId(url)
 
-  // The effective TikTok video ID (direct or resolved)
-  const tiktokVideoId = tiktokInfo.videoId || resolvedTikTokId
+  const isTikTok = tiktokInfo.videoId || tiktokInfo.isShortUrl
 
-  // Resolve TikTok short URLs
+  // Fetch TikTok oEmbed data
   useEffect(() => {
-    if (!tiktokInfo.isShortUrl || tiktokVideoId) return
+    if (!isTikTok || tiktokData) return
     if (tiktokCache.has(url)) {
-      setResolvedTikTokId(tiktokCache.get(url)!)
+      setTiktokData(tiktokCache.get(url)!)
       return
     }
 
-    setTiktokResolving(true)
+    setTiktokLoading(true)
     fetch(`/api/tiktok-resolve?url=${encodeURIComponent(url)}`)
       .then(res => res.json())
       .then(data => {
-        if (data.videoId) {
-          tiktokCache.set(url, data.videoId)
-          setResolvedTikTokId(data.videoId)
+        if (data.title || data.thumbnail_url) {
+          tiktokCache.set(url, data)
+          setTiktokData(data)
         }
       })
       .catch(() => {})
-      .finally(() => setTiktokResolving(false))
-  }, [url, tiktokInfo.isShortUrl, tiktokVideoId])
+      .finally(() => setTiktokLoading(false))
+  }, [url, isTikTok, tiktokData])
 
-  const isEmbed = videoId || soundcloudUrl || tiktokVideoId || tiktokInfo.isShortUrl || spotifyEmbed || tweetId
+  const isEmbed = videoId || soundcloudUrl || isTikTok || spotifyEmbed || tweetId
 
   useEffect(() => {
     // Skip unfurl for embeddable URLs
@@ -201,26 +205,43 @@ export function LinkPreview({ url }: LinkPreviewProps) {
     )
   }
 
-  // TikTok embed
-  if (tiktokVideoId) {
+  // TikTok link preview card
+  if (isTikTok) {
+    if (tiktokLoading || !tiktokData) {
+      return (
+        <div className="link-preview link-preview-loading">
+          <div className="link-preview-skeleton" />
+        </div>
+      )
+    }
     return (
-      <div className="tiktok-embed" onClick={(e) => e.stopPropagation()}>
-        <iframe
-          src={`https://www.tiktok.com/embed/v2/${tiktokVideoId}`}
-          title="TikTok video"
-          allow="encrypted-media"
-          allowFullScreen
-        />
-      </div>
-    )
-  }
-
-  // TikTok short URL resolving
-  if (tiktokInfo.isShortUrl && tiktokResolving) {
-    return (
-      <div className="link-preview link-preview-loading">
-        <div className="link-preview-skeleton" />
-      </div>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="tiktok-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {tiktokData.thumbnail_url && (
+          <div className="tiktok-card-thumb">
+            <img src={tiktokData.thumbnail_url} alt="" loading="lazy" />
+            <div className="tiktok-card-play">&#9654;</div>
+          </div>
+        )}
+        <div className="tiktok-card-info">
+          <span className="tiktok-card-site">TikTok</span>
+          {tiktokData.author_name && (
+            <span className="tiktok-card-author">@{tiktokData.author_name}</span>
+          )}
+          {tiktokData.title && (
+            <span className="tiktok-card-title">
+              {tiktokData.title.length > 80
+                ? tiktokData.title.slice(0, 80) + '...'
+                : tiktokData.title}
+            </span>
+          )}
+        </div>
+      </a>
     )
   }
 
