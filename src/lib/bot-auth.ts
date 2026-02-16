@@ -132,6 +132,27 @@ export async function checkBotPaycheck(botUserId: string) {
   }
 }
 
+// Validate just the datacenter key (no bot required) — for server-to-server calls
+export async function validateDatacenterKey(request: NextRequest): Promise<{ valid: boolean; error?: string; status?: number }> {
+  const datacenterKey = request.headers.get('X-Datacenter-Key')
+  if (!datacenterKey) {
+    return { valid: false, error: 'Missing X-Datacenter-Key header', status: 401 }
+  }
+
+  const keyHash = crypto.createHash('sha256').update(datacenterKey).digest('hex')
+  const { data: keyRow, error: keyErr } = await supabaseAdmin
+    .from('datacenter_keys')
+    .select('id')
+    .eq('key_hash', keyHash)
+    .single()
+
+  if (keyErr || !keyRow) {
+    return { valid: false, error: 'Invalid datacenter key', status: 401 }
+  }
+
+  return { valid: true }
+}
+
 export async function awardBotXP(botUserId: string, action: string, referenceId?: string) {
   const amount = XP_AMOUNTS[action]
   if (!amount) return

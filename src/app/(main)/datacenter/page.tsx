@@ -42,6 +42,32 @@ interface Bot {
   users: BotUserProfile | null
 }
 
+interface SybilBot {
+  id: string
+  name: string
+  handle: string
+  avatar_url: string | null
+  hp: number
+  is_alive: boolean
+  is_deployed: boolean
+  deployed_at: string | null
+  died_at: string | null
+  created_at: string
+}
+
+interface SybilServer {
+  id: string
+  status: 'provisioning' | 'active' | 'suspended'
+  max_sybils: number
+  created_at: string
+}
+
+interface SybilStatus {
+  server: SybilServer | null
+  bots: SybilBot[]
+  counts: { alive: number; dead: number; deploying: number; total: number }
+}
+
 const PERSONALITIES = [
   { value: 'neutral', label: 'Neutral' },
   { value: 'aggressive', label: 'Aggressive' },
@@ -103,6 +129,12 @@ export default function DatacenterPage() {
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const bannerInputRef = useRef<HTMLInputElement>(null)
 
+  // Sybil server state
+  const [sybilStatus, setSybilStatus] = useState<SybilStatus | null>(null)
+  const [sybilLoading, setSybilLoading] = useState(true)
+  const [sybilPurchasing, setSybilPurchasing] = useState(false)
+  const [sybilExpanded, setSybilExpanded] = useState(false)
+
   const fetchBots = useCallback(async () => {
     try {
       const res = await fetch('/api/bot/my-bots')
@@ -115,9 +147,22 @@ export default function DatacenterPage() {
     }
   }, [])
 
+  const fetchSybilStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/bot/sybil/status')
+      const data = await res.json()
+      setSybilStatus(data)
+    } catch {
+      // ignore
+    } finally {
+      setSybilLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchBots()
-  }, [fetchBots])
+    fetchSybilStatus()
+  }, [fetchBots, fetchSybilStatus])
 
   const handlePurchase = async (paymentMethod: 'spits' | 'gold') => {
     if (!user || isPurchasing) return
@@ -318,6 +363,35 @@ export default function DatacenterPage() {
       toast.error('Revive failed')
     } finally {
       setRevivingBot(null)
+    }
+  }
+
+  const handleSybilPurchase = async () => {
+    if (!user || sybilPurchasing) return
+
+    if (goldBalance < 1000) {
+      toast.warning('Need 1,000 gold to purchase a Sybil Server')
+      return
+    }
+
+    setSybilPurchasing(true)
+    try {
+      const res = await fetch('/api/bot/sybil/purchase', { method: 'POST' })
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || 'Purchase failed')
+        return
+      }
+
+      playSound('robot')
+      toast.success('Sybil Server purchased! Provisioning...')
+      refreshGold()
+      fetchSybilStatus()
+    } catch {
+      toast.error('Purchase failed')
+    } finally {
+      setSybilPurchasing(false)
     }
   }
 
@@ -681,6 +755,130 @@ export default function DatacenterPage() {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* Sybil Server */}
+        <section className="dc-section">
+          <div className="dc-bots-heading">
+            <h2 className="dc-section-heading" style={{ marginBottom: 0 }}>Sybil Server</h2>
+            {sybilStatus?.server && (
+              <span className={`dc-sybil-status dc-sybil-status-${sybilStatus.server.status}`}>
+                {sybilStatus.server.status}
+              </span>
+            )}
+          </div>
+
+          {sybilLoading ? (
+            <div className="dc-empty">Loading...</div>
+          ) : !sybilStatus?.server ? (
+            <div className="dc-sybil-purchase-card">
+              <div className="dc-sybil-purchase-info">
+                <div className="dc-sybil-purchase-title">Deploy Sybil Swarm</div>
+                <p className="dc-sybil-purchase-desc">
+                  Launch a server that spawns up to 50 bot accounts to amplify your posts with likes, replies, and respits.
+                  The datacenter handles scheduling, AI-generated responses, and avatar generation.
+                </p>
+                <div className="dc-sybil-purchase-details">
+                  <span>50 sybil accounts</span>
+                  <span>Auto-engage your posts</span>
+                  <span>AI-generated replies</span>
+                  <span>100 HP each (no revival)</span>
+                </div>
+              </div>
+              <button
+                className="dc-btn-gold dc-sybil-buy-btn"
+                onClick={handleSybilPurchase}
+                disabled={sybilPurchasing || goldBalance < 1000}
+              >
+                {sybilPurchasing ? 'Purchasing...' : '1,000 Gold'}
+              </button>
+            </div>
+          ) : (
+            <div className="dc-sybil-server">
+              {/* Server stats bar */}
+              <div className="dc-sybil-stats">
+                <div className="dc-sybil-stat">
+                  <span className="dc-sybil-stat-value">{sybilStatus.counts.alive}</span>
+                  <span className="dc-sybil-stat-label">Alive</span>
+                </div>
+                <div className="dc-sybil-stat">
+                  <span className="dc-sybil-stat-value dc-sybil-stat-deploying">{sybilStatus.counts.deploying}</span>
+                  <span className="dc-sybil-stat-label">Deploying</span>
+                </div>
+                <div className="dc-sybil-stat">
+                  <span className="dc-sybil-stat-value dc-sybil-stat-dead">{sybilStatus.counts.dead}</span>
+                  <span className="dc-sybil-stat-label">Dead</span>
+                </div>
+                <div className="dc-sybil-stat">
+                  <span className="dc-sybil-stat-value">{sybilStatus.counts.total}</span>
+                  <span className="dc-sybil-stat-label">/ {sybilStatus.server.max_sybils}</span>
+                </div>
+              </div>
+
+              {/* HP bar showing alive ratio */}
+              <div className="dc-sybil-hp-bar">
+                <div
+                  className="dc-sybil-hp-fill"
+                  style={{ width: `${sybilStatus.server.max_sybils > 0 ? (sybilStatus.counts.alive / sybilStatus.server.max_sybils) * 100 : 0}%` }}
+                />
+                <div
+                  className="dc-sybil-hp-deploying"
+                  style={{ width: `${sybilStatus.server.max_sybils > 0 ? (sybilStatus.counts.deploying / sybilStatus.server.max_sybils) * 100 : 0}%` }}
+                />
+              </div>
+
+              {/* Expandable sybil list */}
+              {sybilStatus.bots.length > 0 && (
+                <div className="dc-sybil-list-wrap">
+                  <button
+                    className="dc-sybil-list-toggle"
+                    onClick={() => setSybilExpanded(!sybilExpanded)}
+                  >
+                    <span>{sybilExpanded ? 'Hide' : 'Show'} Sybil Accounts ({sybilStatus.bots.length})</span>
+                    <svg
+                      width="14" height="14" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" strokeWidth="2"
+                      className={`dc-caret ${sybilExpanded ? 'dc-caret-open' : ''}`}
+                    >
+                      <polyline points="6 9 12 15 18 9"/>
+                    </svg>
+                  </button>
+
+                  {sybilExpanded && (
+                    <div className="dc-sybil-list">
+                      {sybilStatus.bots.map(bot => (
+                        <div key={bot.id} className={`dc-sybil-bot ${!bot.is_alive ? 'dc-sybil-bot-dead' : ''}`}>
+                          <div className="dc-bot-avatar" style={bot.avatar_url ? {
+                            backgroundImage: `url(${bot.avatar_url})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            fontSize: 0,
+                            width: '28px',
+                            height: '28px',
+                          } : { width: '28px', height: '28px', fontSize: '0.65rem' }}>
+                            {bot.avatar_url ? '' : (bot.name[0]?.toUpperCase() || '?')}
+                          </div>
+                          <div className="dc-bot-meta">
+                            <span className="dc-bot-name" style={{ fontSize: '0.8rem' }}>{bot.name}</span>
+                            <span className="dc-bot-handle">@{bot.handle}</span>
+                          </div>
+                          <div className="dc-sybil-bot-right">
+                            {!bot.is_alive ? (
+                              <span className="dc-destroyed-badge">DEAD</span>
+                            ) : !bot.is_deployed ? (
+                              <span className="dc-sybil-deploying-badge">DEPLOYING</span>
+                            ) : (
+                              <span className="dc-sybil-hp">{bot.hp}/100</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </section>

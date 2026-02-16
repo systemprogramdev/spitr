@@ -6923,6 +6923,243 @@ a:hover {
   font-size: 0.65rem;
 }
 
+/* ---- Sybil Server ---- */
+
+.dc-sybil-status {
+  font-size: 0.6rem;
+  font-family: var(--sys-font-mono);
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dc-sybil-status-provisioning {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.dc-sybil-status-active {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.dc-sybil-status-suspended {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.dc-sybil-purchase-card {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.dc-sybil-purchase-title {
+  font-family: var(--sys-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--sys-text);
+  margin-bottom: 0.35rem;
+}
+
+.dc-sybil-purchase-desc {
+  color: var(--sys-text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0 0 0.75rem;
+}
+
+.dc-sybil-purchase-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dc-sybil-purchase-details span {
+  font-family: var(--sys-font-mono);
+  font-size: 0.7rem;
+  color: var(--sys-text-muted);
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--sys-border);
+  border-radius: 4px;
+  background: var(--sys-bg);
+}
+
+.dc-sybil-buy-btn {
+  align-self: flex-start;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.9rem;
+}
+
+/* Sybil Server Panel */
+.dc-sybil-server {
+  background: var(--sys-surface);
+  border: 1px solid var(--sys-border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dc-sybil-stats {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.dc-sybil-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.dc-sybil-stat-value {
+  font-family: var(--sys-font-mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sys-primary);
+}
+
+.dc-sybil-stat-deploying {
+  color: #f59e0b;
+}
+
+.dc-sybil-stat-dead {
+  color: #ef4444;
+}
+
+.dc-sybil-stat-label {
+  font-family: var(--sys-font-mono);
+  font-size: 0.6rem;
+  color: var(--sys-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* HP progress bar */
+.dc-sybil-hp-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--sys-bg);
+  border-radius: 999px;
+  overflow: hidden;
+  display: flex;
+}
+
+.dc-sybil-hp-fill {
+  height: 100%;
+  background: var(--sys-primary);
+  transition: width 0.3s;
+}
+
+.dc-sybil-hp-deploying {
+  height: 100%;
+  background: #f59e0b;
+  transition: width 0.3s;
+}
+
+/* Sybil list toggle */
+.dc-sybil-list-wrap {
+  border-top: 1px solid var(--sys-border);
+  padding-top: 0.5rem;
+}
+
+.dc-sybil-list-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--sys-text-muted);
+  font-family: var(--sys-font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: color 0.15s;
+}
+
+.dc-sybil-list-toggle:hover {
+  color: var(--sys-text);
+}
+
+/* Sybil bot list */
+.dc-sybil-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.dc-sybil-bot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(var(--sys-primary-rgb), 0.05);
+}
+
+.dc-sybil-bot:last-child {
+  border-bottom: none;
+}
+
+.dc-sybil-bot-dead {
+  opacity: 0.45;
+}
+
+.dc-sybil-bot-right {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.dc-sybil-deploying-badge {
+  font-size: 0.55rem;
+  font-weight: 700;
+  font-family: var(--sys-font-mono);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.dc-sybil-hp {
+  font-family: var(--sys-font-mono);
+  font-size: 0.7rem;
+  color: var(--sys-primary);
+}
+
+@media (max-width: 600px) {
+  .dc-sybil-stats {
+    gap: 0.75rem;
+  }
+
+  .dc-sybil-stat-value {
+    font-size: 0.95rem;
+  }
+
+  .dc-sybil-purchase-details {
+    flex-direction: column;
+  }
+
+  .dc-sybil-buy-btn {
+    width: 100%;
+  }
+}
+
 /* Activity Feed */
 .activity-entry {
   display: flex;
