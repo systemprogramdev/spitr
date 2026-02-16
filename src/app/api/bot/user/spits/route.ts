@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   const { data: spits, error } = await supabaseAdmin
     .from('spits')
-    .select('id, content, created_at, user_id, like_count, respit_count')
+    .select('id, content, created_at, user_id')
     .eq('user_id', userId)
     .is('reply_to_id', null)
     .order('created_at', { ascending: false })
@@ -43,8 +43,6 @@ export async function GET(request: NextRequest) {
       content: s.content,
       created_at: s.created_at,
       user_id: s.user_id,
-      likes: s.like_count,
-      respits: s.respit_count,
     })),
   })
 }
