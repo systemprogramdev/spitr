@@ -72,7 +72,7 @@ export function KillFeedTab() {
     const { data: users } = await supabase
       .from('users')
       .select('id, handle, name, avatar_url')
-      .neq('account_type', 'sybil')
+      .or('account_type.neq.sybil,account_type.is.null')
       .in('id', [...userIds])
 
     const userMap = new Map((users || []).map(u => [u.id, u]))

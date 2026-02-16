@@ -33,7 +33,7 @@ export default function SearchPage() {
     const { data } = await supabase
       .from('users')
       .select('*')
-      .neq('account_type', 'sybil')
+      .or('account_type.neq.sybil,account_type.is.null')
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -99,7 +99,7 @@ export default function SearchPage() {
       const { data } = await supabase
         .from('users')
         .select('*')
-        .neq('account_type', 'sybil')
+        .or('account_type.neq.sybil,account_type.is.null')
         .or(`handle.ilike.%${query}%,name.ilike.%${query}%`)
         .limit(20)
 

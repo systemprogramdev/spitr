@@ -46,7 +46,7 @@ export function NameTagModal({ onClose, onSuccess }: NameTagModalProps) {
       const { data } = await supabase
         .from('users')
         .select('id, handle, name, avatar_url')
-        .neq('account_type', 'sybil')
+        .or('account_type.neq.sybil,account_type.is.null')
         .ilike('handle', `${term}%`)
         .order('created_at', { ascending: false })
         .limit(5)
