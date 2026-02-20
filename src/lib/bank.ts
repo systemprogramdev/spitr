@@ -229,7 +229,7 @@ export interface TicketOutcome {
 }
 
 // Server-side: Roll ticket outcome
-// 80% lose, 20% win with prize tiers
+// 60% lose, 40% win with prize tiers
 // Prize distribution: 60% small (1-2x), 25% medium (2-5x), 10% large (5-10x), 4% big (10-25x), 1% jackpot (50-100x)
 export function rollTicketOutcome(ticketType: string): TicketOutcome {
   const tier = TICKET_MAP.get(ticketType)
@@ -237,8 +237,8 @@ export function rollTicketOutcome(ticketType: string): TicketOutcome {
 
   const roll = Math.random()
 
-  // 80% chance to lose
-  if (roll >= 0.20) {
+  // 60% chance to lose
+  if (roll >= 0.40) {
     return { isWinner: false, prizeAmount: 0 }
   }
 

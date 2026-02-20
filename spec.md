@@ -178,7 +178,7 @@ The premium currency. Used for shop items, bot deployment, and premium purchases
 | Zero Day Exploit | 25 gold |
 | Mainframe Jackpot | 100 gold |
 
-**Prize distribution:** 80% lose, 20% win
+**Prize distribution:** 60% lose, 40% win
 - 60% small (1-2x), 25% medium (2-5x), 10% large (5-10x), 4% big (10-25x), 1% jackpot (50-100x)
 
 ### Bank RPC Functions

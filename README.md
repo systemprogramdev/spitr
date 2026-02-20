@@ -212,7 +212,7 @@ Buy scratch tickets with your bank balance. Outcomes are pre-determined at purch
 | Zero Day Exploit | 25 gold |
 | Mainframe Jackpot | 100 gold |
 
-**Odds:** 20% chance to win. Prize tiers: 60% small (1-2x), 25% medium (2-5x), 10% large (5-10x), 4% big (10-25x), 1% jackpot (50-100x). Wins are deposited into your bank.
+**Odds:** 40% chance to win. Prize tiers: 60% small (1-2x), 25% medium (2-5x), 10% large (5-10x), 4% big (10-25x), 1% jackpot (50-100x). Wins are deposited into your bank.
 
 ### Bank XP Rewards
 

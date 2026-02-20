@@ -14,6 +14,7 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
   const [isScratching, setIsScratching] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const [result, setResult] = useState<{ isWinner: boolean; prizeAmount: number; prizeCurrency: string } | null>(null)
+  const [showPopup, setShowPopup] = useState(false)
   const scratchedRef = useRef(0)
   const isDrawingRef = useRef(false)
 
@@ -97,6 +98,9 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
         })
         onScratched(ticket.id)
 
+        // Show popup after a brief delay for the reveal animation
+        setTimeout(() => setShowPopup(true), 600)
+
         // Play sound
         try {
           const sound = data.isWinner ? '/sounds/winning.mp3' : '/sounds/losing.mp3'
@@ -126,45 +130,78 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
   }
 
   return (
-    <div className="scratch-card">
-      <div className="scratch-card-header">
-        <span>{tier?.emoji}</span>
-        <span>{tier?.name}</span>
-      </div>
-      <div className="scratch-card-body">
-        {/* Result layer (underneath) */}
-        <div className={`scratch-card-result ${revealed ? 'revealed' : ''}`}>
-          {result ? (
-            result.isWinner ? (
-              <div className="scratch-card-win">
-                <div className="scratch-card-win-label">WINNER!</div>
-                <div className="scratch-card-win-amount">
-                  +{result.prizeAmount.toFixed(2)} {result.prizeCurrency}
+    <>
+      <div className="scratch-card">
+        <div className="scratch-card-header">
+          <span>{tier?.emoji}</span>
+          <span>{tier?.name}</span>
+        </div>
+        <div className="scratch-card-body">
+          {/* Result layer (underneath) */}
+          <div className={`scratch-card-result ${revealed ? 'revealed' : ''}`}>
+            {result ? (
+              result.isWinner ? (
+                <div className="scratch-card-win">
+                  <div className="scratch-card-win-label">WINNER!</div>
+                  <div className="scratch-card-win-amount">
+                    +{result.prizeAmount.toFixed(2)} {result.prizeCurrency}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="scratch-card-lose">
+                  <div className="scratch-card-lose-label">NO LUCK</div>
+                  <div className="scratch-card-lose-sub">Try again!</div>
+                </div>
+              )
             ) : (
-              <div className="scratch-card-lose">
-                <div className="scratch-card-lose-label">NO LUCK</div>
-                <div className="scratch-card-lose-sub">Try again!</div>
-              </div>
-            )
-          ) : (
-            <div className="scratch-card-pending">???</div>
+              <div className="scratch-card-pending">???</div>
+            )}
+          </div>
+          {/* Canvas overlay */}
+          {!revealed && (
+            <canvas
+              ref={canvasRef}
+              className="scratch-card-canvas"
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              style={{ touchAction: 'none' }}
+            />
           )}
         </div>
-        {/* Canvas overlay */}
-        {!revealed && (
-          <canvas
-            ref={canvasRef}
-            className="scratch-card-canvas"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerLeave={handlePointerUp}
-            style={{ touchAction: 'none' }}
-          />
-        )}
       </div>
-    </div>
+
+      {/* Lottery result popup */}
+      {showPopup && result && (
+        <div className="lottery-popup-overlay" onClick={() => setShowPopup(false)}>
+          <div
+            className={`lottery-popup ${result.isWinner ? 'lottery-popup-win' : 'lottery-popup-lose'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="lottery-popup-icon">
+              {result.isWinner ? '🎉' : '💀'}
+            </div>
+            <div className="lottery-popup-title">
+              {result.isWinner ? 'YOU WON!' : 'SYSTEM CRASH'}
+            </div>
+            <div className="lottery-popup-subtitle">
+              {result.isWinner
+                ? `+${result.prizeAmount.toFixed(2)} ${result.prizeCurrency}`
+                : 'No payout this time'}
+            </div>
+            <div className="lottery-popup-ticket">
+              {tier?.emoji} {tier?.name}
+            </div>
+            <button
+              className="lottery-popup-btn"
+              onClick={() => setShowPopup(false)}
+            >
+              {result.isWinner ? 'COLLECT' : 'DISMISS'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

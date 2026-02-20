@@ -669,7 +669,7 @@ export default function GuidePage() {
           <div className="guide-callout">
             <span className="guide-callout-icon">🎰</span>
             <div>
-              <strong>Odds:</strong> 20% chance to win. Prizes range from 1x to 100x your ticket cost.
+              <strong>Odds:</strong> 40% chance to win. Prizes range from 1x to 100x your ticket cost.
               Lottery wins are deposited into your bank at 0% interest.
             </div>
           </div>
