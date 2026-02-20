@@ -105,7 +105,7 @@ function GoldCheckoutForm({
       <div style={{ textAlign: 'center', paddingBottom: '1rem', borderBottom: '1px solid var(--sys-border)' }}>
         <div style={{ fontSize: '0.85rem', color: 'var(--sys-text-muted)', marginBottom: '0.25rem' }}>{pkg.name}</div>
         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#FFD700', textShadow: '0 0 20px rgba(255, 215, 0, 0.5)' }}>
-          {pkg.gold} Gold
+          {pkg.gold.toLocaleString()} Gold
         </div>
         <div style={{ fontSize: '1.1rem', color: 'var(--sys-text)', marginTop: '0.25rem' }}>{formatPrice(pkg.price)}</div>
       </div>

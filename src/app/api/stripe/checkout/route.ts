@@ -13,10 +13,10 @@ const supabase = createClient(
 
 // Credit packages
 const CREDIT_PACKAGES = {
-  starter: { credits: 100, price: 199, name: 'Starter Pack' },
-  popular: { credits: 500, price: 799, name: 'Popular Pack' },
-  mega: { credits: 1500, price: 1999, name: 'Mega Pack' },
-  whale: { credits: 5000, price: 4999, name: 'Whale Pack' },
+  starter: { credits: 1000, price: 199, name: 'Starter Pack' },
+  popular: { credits: 5000, price: 799, name: 'Popular Pack' },
+  mega: { credits: 15000, price: 1999, name: 'Mega Pack' },
+  whale: { credits: 50000, price: 4999, name: 'Whale Pack' },
 }
 
 export async function POST(request: NextRequest) {

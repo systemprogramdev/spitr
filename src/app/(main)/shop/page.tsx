@@ -23,10 +23,10 @@ import { NameTagModal } from '@/components/shop/NameTagModal'
 const supabase = createClient()
 
 const CREDIT_PACKAGES = [
-  { id: 'starter', credits: 100, price: 199, name: 'Starter Pack', description: 'Perfect for trying things out' },
-  { id: 'popular', credits: 500, price: 799, name: 'Popular Pack', description: 'Best value for active users', popular: true },
-  { id: 'mega', credits: 1500, price: 1999, name: 'Mega Pack', description: 'For power users' },
-  { id: 'whale', credits: 5000, price: 4999, name: 'Whale Pack', description: 'Ultimate spitting power', whale: true },
+  { id: 'starter', credits: 1000, price: 199, name: 'Starter Pack', description: 'Perfect for trying things out' },
+  { id: 'popular', credits: 5000, price: 799, name: 'Popular Pack', description: 'Best value for active users', popular: true },
+  { id: 'mega', credits: 15000, price: 1999, name: 'Mega Pack', description: 'For power users' },
+  { id: 'whale', credits: 50000, price: 4999, name: 'Whale Pack', description: 'Ultimate spitting power', whale: true },
 ]
 
 const TXN_TYPE_LABELS: Record<string, string> = {
@@ -622,17 +622,15 @@ function ShopPageContent() {
           <span className="shop-toggle-arrow">{showBuyGold ? '▲' : '▼'}</span>
         </button>
         {showBuyGold && (
-          <div className="shop-packages-grid">
+          <div className="shop-packages-compact">
             {GOLD_PACKAGES.map((pkg) => (
               <button
                 key={pkg.id}
-                className={`shop-package ${pkg.popular ? 'shop-package-popular' : ''} ${pkg.whale ? 'shop-package-whale' : ''}`}
+                className={`shop-pkg-compact ${pkg.popular ? 'shop-pkg-highlight' : ''} ${pkg.whale ? 'shop-pkg-whale' : ''}`}
                 onClick={() => setCheckoutPkg(pkg)}
               >
-                {pkg.popular && <span className="shop-package-badge">POPULAR</span>}
-                {pkg.whale && <span className="shop-package-badge shop-package-badge-whale">BEST VALUE</span>}
-                <div className="shop-package-gold">{pkg.gold}g</div>
-                <div className="shop-package-price">${(pkg.price / 100).toFixed(2)}</div>
+                <span className="shop-pkg-compact-amount">{pkg.gold.toLocaleString()}g</span>
+                <span className="shop-pkg-compact-price">${(pkg.price / 100).toFixed(2)}</span>
               </button>
             ))}
           </div>
@@ -649,27 +647,16 @@ function ShopPageContent() {
           <span className="shop-toggle-arrow">{showBuySpits ? '▲' : '▼'}</span>
         </button>
         {showBuySpits && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div className="shop-packages-compact">
             {CREDIT_PACKAGES.map((pkg) => (
-              <div
+              <button
                 key={pkg.id}
-                className="shop-spit-pkg"
-                style={{
-                  borderColor: pkg.popular ? 'var(--sys-primary)' : pkg.whale ? 'var(--sys-warning)' : undefined,
-                  borderWidth: pkg.popular || pkg.whale ? '2px' : undefined,
-                }}
+                className={`shop-pkg-compact ${pkg.popular ? 'shop-pkg-highlight' : ''} ${pkg.whale ? 'shop-pkg-whale' : ''}`}
                 onClick={() => handleCreditPurchase(pkg)}
               >
-                <div>
-                  <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'var(--sys-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    {pkg.credits.toLocaleString()} Spits
-                    {pkg.popular && <span className="badge badge-glow" style={{ fontSize: '0.6rem' }}>Popular</span>}
-                  </div>
-                </div>
-                <button className={`btn ${pkg.whale ? 'btn-warning' : 'btn-primary'}`}>
-                  {formatPrice(pkg.price)}
-                </button>
-              </div>
+                <span className="shop-pkg-compact-amount">{pkg.credits.toLocaleString()}</span>
+                <span className="shop-pkg-compact-price">${(pkg.price / 100).toFixed(2)}</span>
+              </button>
             ))}
           </div>
         )}

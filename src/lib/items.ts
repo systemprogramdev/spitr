@@ -50,10 +50,10 @@ export const POWERUP_ITEMS = ITEMS.filter(i => i.category === 'powerup')
 export const UTILITY_ITEMS = ITEMS.filter(i => i.category === 'utility')
 
 export const GOLD_PACKAGES = [
-  { id: 'gold_10', gold: 10, price: 199, name: '10 Gold', description: 'A handful of gold' },
-  { id: 'gold_50', gold: 50, price: 799, name: '50 Gold', description: 'A pouch of gold' },
-  { id: 'gold_150', gold: 150, price: 1999, name: '150 Gold', description: 'A chest of gold', popular: true },
-  { id: 'gold_500', gold: 500, price: 4999, name: '500 Gold', description: 'A vault of gold', whale: true },
+  { id: 'gold_100', gold: 100, price: 199, name: '100 Gold', description: 'A handful of gold' },
+  { id: 'gold_500', gold: 500, price: 799, name: '500 Gold', description: 'A pouch of gold' },
+  { id: 'gold_1500', gold: 1500, price: 1999, name: '1,500 Gold', description: 'A chest of gold', popular: true },
+  { id: 'gold_5000', gold: 5000, price: 4999, name: '5,000 Gold', description: 'A vault of gold', whale: true },
 ]
 
 export const SPIT_TO_GOLD_RATIO = 10 // 10 spit = 1 gold

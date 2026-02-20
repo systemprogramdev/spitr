@@ -6,10 +6,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const GOLD_PACKAGES: Record<string, { gold: number; price: number; name: string }> = {
-  gold_10: { gold: 10, price: 199, name: '10 Gold' },
-  gold_50: { gold: 50, price: 799, name: '50 Gold' },
-  gold_150: { gold: 150, price: 1999, name: '150 Gold' },
-  gold_500: { gold: 500, price: 4999, name: '500 Gold' },
+  gold_100: { gold: 100, price: 199, name: '100 Gold' },
+  gold_500: { gold: 500, price: 799, name: '500 Gold' },
+  gold_1500: { gold: 1500, price: 1999, name: '1,500 Gold' },
+  gold_5000: { gold: 5000, price: 4999, name: '5,000 Gold' },
 }
 
 export async function POST(request: NextRequest) {

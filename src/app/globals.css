@@ -4637,21 +4637,60 @@ a:hover {
   color: var(--sys-text-muted);
 }
 
-/* Spit packages */
-.shop-spit-pkg {
+/* Compact purchase buttons (gold & spits) */
+.shop-packages-compact {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.shop-pkg-compact {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 0.75rem;
+  gap: 0.15rem;
+  padding: 0.5rem 0.25rem;
   background: var(--sys-surface);
   border: 1px solid var(--sys-border);
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: all 0.15s;
+  color: var(--sys-text);
 }
 
-.shop-spit-pkg:hover {
-  border-color: rgba(var(--sys-primary-rgb), 0.5);
+.shop-pkg-compact:hover {
+  border-color: #FFD700;
+  transform: translateY(-1px);
+}
+
+.shop-pkg-highlight {
+  border-color: #FFD700;
+}
+
+.shop-pkg-whale {
+  border-color: var(--spit-purple);
+}
+
+.shop-pkg-compact-amount {
+  font-family: var(--sys-font-display);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #FFD700;
+}
+
+.shop-pkg-whale .shop-pkg-compact-amount {
+  color: var(--spit-purple);
+}
+
+.shop-pkg-compact-price {
+  font-size: 0.7rem;
+  color: var(--sys-text-muted);
+}
+
+@media (max-width: 400px) {
+  .shop-packages-compact {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* Transaction rows */
