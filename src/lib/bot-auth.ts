@@ -121,15 +121,21 @@ export async function checkBotPaycheck(botUserId: string) {
 
     // Atomic claim
     const tempBalance = credits.balance + WEEKLY_FREE_CREDITS
-    const { data: claimed } = await supabaseAdmin
+    let claimQuery = supabaseAdmin
       .from('user_credits')
       .update({
         balance: tempBalance,
         free_credits_at: new Date().toISOString(),
       })
       .eq('user_id', botUserId)
-      .is('free_credits_at', credits.free_credits_at)
-      .select('user_id')
+
+    if (credits.free_credits_at) {
+      claimQuery = claimQuery.eq('free_credits_at', credits.free_credits_at)
+    } else {
+      claimQuery = claimQuery.is('free_credits_at', null)
+    }
+
+    const { data: claimed } = await claimQuery.select('user_id')
 
     if (!claimed || claimed.length === 0) return
 

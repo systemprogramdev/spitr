@@ -40,20 +40,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Atomic claim: only update if still eligible (prevents race condition)
-    const claimCondition = credits.free_credits_at
-      ? `free_credits_at = '${credits.free_credits_at}'`
-      : 'free_credits_at IS NULL'
-
     const tempBalance = credits.balance + WEEKLY_FREE_CREDITS
-    const { data: claimed, error: claimErr } = await supabaseAdmin
+    let claimQuery = supabaseAdmin
       .from('user_credits')
       .update({
         balance: tempBalance,
         free_credits_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
-      .or(claimCondition)
-      .select('user_id')
+
+    if (credits.free_credits_at) {
+      claimQuery = claimQuery.eq('free_credits_at', credits.free_credits_at)
+    } else {
+      claimQuery = claimQuery.is('free_credits_at', null)
+    }
+
+    const { data: claimed, error: claimErr } = await claimQuery.select('user_id')
 
     if (claimErr || !claimed || claimed.length === 0) {
       return NextResponse.json({ error: 'Already claimed' }, { status: 400 })
