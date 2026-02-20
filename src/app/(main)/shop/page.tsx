@@ -109,10 +109,6 @@ function ShopPageContent() {
   const [loadingTxns, setLoadingTxns] = useState(true)
   const [showAllTxns, setShowAllTxns] = useState(false)
 
-  // Currency sub-section toggle
-  const [showBuyGold, setShowBuyGold] = useState(false)
-  const [showBuySpits, setShowBuySpits] = useState(false)
-
   // Handle Stripe redirect URL params
   useEffect(() => {
     const success = searchParams.get('success')
@@ -614,52 +610,40 @@ function ShopPageContent() {
 
       {/* Buy Gold */}
       <div className="shop-section">
-        <button
-          className="shop-section-title shop-section-toggle"
-          onClick={() => setShowBuyGold(!showBuyGold)}
-        >
+        <h2 className="shop-section-title">
           <span>🪙</span> Buy Gold
-          <span className="shop-toggle-arrow">{showBuyGold ? '▲' : '▼'}</span>
-        </button>
-        {showBuyGold && (
-          <div className="shop-packages-compact">
-            {GOLD_PACKAGES.map((pkg) => (
-              <button
-                key={pkg.id}
-                className={`shop-pkg-compact ${pkg.popular ? 'shop-pkg-highlight' : ''} ${pkg.whale ? 'shop-pkg-whale' : ''}`}
-                onClick={() => setCheckoutPkg(pkg)}
-              >
-                <span className="shop-pkg-compact-amount">{pkg.gold.toLocaleString()}g</span>
-                <span className="shop-pkg-compact-price">${(pkg.price / 100).toFixed(2)}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        </h2>
+        <div className="shop-packages-compact">
+          {GOLD_PACKAGES.map((pkg) => (
+            <button
+              key={pkg.id}
+              className={`shop-pkg-compact ${pkg.popular ? 'shop-pkg-highlight' : ''} ${pkg.whale ? 'shop-pkg-whale' : ''}`}
+              onClick={() => setCheckoutPkg(pkg)}
+            >
+              <span className="shop-pkg-compact-amount">{pkg.gold.toLocaleString()}g</span>
+              <span className="shop-pkg-compact-price">${(pkg.price / 100).toFixed(2)}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Buy Spits */}
       <div className="shop-section">
-        <button
-          className="shop-section-title shop-section-toggle"
-          onClick={() => setShowBuySpits(!showBuySpits)}
-        >
+        <h2 className="shop-section-title">
           <span>⭐</span> Buy Spits
-          <span className="shop-toggle-arrow">{showBuySpits ? '▲' : '▼'}</span>
-        </button>
-        {showBuySpits && (
-          <div className="shop-packages-compact">
-            {CREDIT_PACKAGES.map((pkg) => (
-              <button
-                key={pkg.id}
-                className={`shop-pkg-compact ${pkg.popular ? 'shop-pkg-highlight' : ''} ${pkg.whale ? 'shop-pkg-whale' : ''}`}
-                onClick={() => handleCreditPurchase(pkg)}
-              >
-                <span className="shop-pkg-compact-amount">{pkg.credits.toLocaleString()}</span>
-                <span className="shop-pkg-compact-price">${(pkg.price / 100).toFixed(2)}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        </h2>
+        <div className="shop-packages-compact">
+          {CREDIT_PACKAGES.map((pkg) => (
+            <button
+              key={pkg.id}
+              className={`shop-pkg-compact ${pkg.popular ? 'shop-pkg-highlight' : ''} ${pkg.whale ? 'shop-pkg-whale' : ''}`}
+              onClick={() => handleCreditPurchase(pkg)}
+            >
+              <span className="shop-pkg-compact-amount">{pkg.credits.toLocaleString()}</span>
+              <span className="shop-pkg-compact-price">${(pkg.price / 100).toFixed(2)}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Transaction History */}
