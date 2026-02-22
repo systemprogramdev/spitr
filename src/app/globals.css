@@ -7419,9 +7419,11 @@ a:hover {
   font-size: 0.7rem;
   font-weight: 700;
   color: #fff;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  background: rgba(50, 50, 50, 0.85);
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
 }
 
 /* Info panel (right of card) */
