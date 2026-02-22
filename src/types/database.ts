@@ -1078,6 +1078,87 @@ export type Database = {
           }
         ]
       }
+      user_credit_cards: {
+        Row: {
+          user_id: string
+          credit_limit: number
+          current_balance: number
+          credit_score: number
+          activated_at: string
+          billing_cycle_start: string
+          last_payment_at: string | null
+          consecutive_on_time: number
+          missed_payments: number
+          total_spent: number
+          total_paid: number
+          last_limit_increase_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          credit_limit?: number
+          current_balance?: number
+          credit_score?: number
+          activated_at?: string
+          billing_cycle_start?: string
+          last_payment_at?: string | null
+          consecutive_on_time?: number
+          missed_payments?: number
+          total_spent?: number
+          total_paid?: number
+          last_limit_increase_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          credit_limit?: number
+          current_balance?: number
+          credit_score?: number
+          activated_at?: string
+          billing_cycle_start?: string
+          last_payment_at?: string | null
+          consecutive_on_time?: number
+          missed_payments?: number
+          total_spent?: number
+          total_paid?: number
+          last_limit_increase_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_card_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          amount: number
+          balance_after: number
+          description: string | null
+          reference_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          amount: number
+          balance_after: number
+          description?: string | null
+          reference_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          amount?: number
+          balance_after?: number
+          description?: string | null
+          reference_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1127,6 +1208,34 @@ export type StockTransaction = Database['public']['Tables']['stock_transactions'
 export type LotteryTicket = Database['public']['Tables']['lottery_tickets']['Row']
 export type BankCD = Database['public']['Tables']['bank_cds']['Row']
 export type NameTag = Database['public']['Tables']['name_tags']['Row']
+
+// Credit Card types (manual — not in codegen yet)
+export interface UserCreditCard {
+  user_id: string
+  credit_limit: number
+  current_balance: number
+  credit_score: number
+  activated_at: string
+  billing_cycle_start: string
+  last_payment_at: string | null
+  consecutive_on_time: number
+  missed_payments: number
+  total_spent: number
+  total_paid: number
+  last_limit_increase_at: string | null
+  updated_at: string
+}
+
+export interface CreditCardTransaction {
+  id: string
+  user_id: string
+  type: 'purchase' | 'cash_advance' | 'payment' | 'interest' | 'late_fee' | 'reward'
+  amount: number
+  balance_after: number
+  description: string | null
+  reference_id: string | null
+  created_at: string
+}
 
 // Extended types for UI
 export interface SpitWithAuthor extends Spit {

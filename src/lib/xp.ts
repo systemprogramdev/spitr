@@ -17,6 +17,9 @@ export const XP_AMOUNTS: Record<string, number> = {
   cd_buy: 5,
   cd_redeem: 8,
   dm_send: 3,
+  cc_activate: 25,
+  cc_payment: 5,
+  cc_cash_advance: 3,
 }
 
 // XP needed to reach a given level (cumulative)

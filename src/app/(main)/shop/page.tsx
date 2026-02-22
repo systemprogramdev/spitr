@@ -19,6 +19,8 @@ import { useSound } from '@/hooks/useSound'
 import { useXP } from '@/hooks/useXP'
 import { toast } from '@/stores/toastStore'
 import { NameTagModal } from '@/components/shop/NameTagModal'
+import { useCreditCard } from '@/hooks/useCreditCard'
+import { getAvailableCredit } from '@/lib/creditCard'
 
 const supabase = createClient()
 
@@ -96,6 +98,11 @@ function ShopPageContent() {
   const [unopenedChests, setUnopenedChests] = useState<UserChest[]>([])
   const [buyingChest, setBuyingChest] = useState(false)
   const [activeTab, setActiveTab] = useState<ShopTab>('weapons')
+
+  // Credit card
+  const { card: ccCard, refresh: refreshCC } = useCreditCard()
+  const [payMethod, setPayMethod] = useState<'gold' | 'credit'>('gold')
+  const ccAvailable = ccCard ? getAvailableCredit(ccCard.credit_limit, ccCard.current_balance) : 0
 
   // Name tag modal
   const [showNameTagModal, setShowNameTagModal] = useState(false)
@@ -205,18 +212,54 @@ function ShopPageContent() {
 
   const handleBuyItem = async (item: GameItem) => {
     if (!user || buyingItem) return
-    if (!hasGold(item.goldCost)) {
-      toast.warning('Insufficient gold!')
-      return
+
+    const useCredit = payMethod === 'credit' && ccCard
+
+    if (useCredit) {
+      if (ccAvailable < item.goldCost) {
+        toast.warning('Insufficient credit!')
+        return
+      }
+    } else {
+      if (!hasGold(item.goldCost)) {
+        toast.warning('Insufficient gold!')
+        return
+      }
     }
 
     setBuyingItem(item.type)
 
-    const deducted = await deductGold(item.goldCost, 'item_purchase', item.type)
-    if (!deducted) {
-      toast.error('Failed to purchase item.')
-      setBuyingItem(null)
-      return
+    if (useCredit) {
+      // Pay via credit card
+      try {
+        const res = await fetch('/api/credit-card/purchase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: item.goldCost,
+            description: `Shop: ${item.name}`,
+            referenceId: item.type,
+          }),
+        })
+        const data = await res.json()
+        if (!data.success) {
+          toast.error(data.error || 'Credit purchase failed')
+          setBuyingItem(null)
+          return
+        }
+      } catch {
+        toast.error('Network error')
+        setBuyingItem(null)
+        return
+      }
+    } else {
+      // Pay via gold wallet
+      const deducted = await deductGold(item.goldCost, 'item_purchase', item.type)
+      if (!deducted) {
+        toast.error('Failed to purchase item.')
+        setBuyingItem(null)
+        return
+      }
     }
 
     const { data: existing } = await supabase
@@ -244,6 +287,7 @@ function ShopPageContent() {
     } else {
       playSound('gold')
       await refreshInventory()
+      if (useCredit) await refreshCC()
     }
 
     setBuyingItem(null)
@@ -460,6 +504,25 @@ function ShopPageContent() {
         <div style={{ marginTop: '0.75rem' }}>
           <HPBar hp={userHp} maxHp={getMaxHp(userLevel)} size="md" />
         </div>
+        {ccCard && (
+          <div className="shop-payment-toggle">
+            <span style={{ fontSize: '0.7rem', color: 'var(--sys-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pay with:</span>
+            <div className="shop-pay-tabs">
+              <button
+                className={`shop-pay-tab ${payMethod === 'gold' ? 'shop-pay-tab-active' : ''}`}
+                onClick={() => setPayMethod('gold')}
+              >
+                🪙 Gold ({goldBalance.toLocaleString()})
+              </button>
+              <button
+                className={`shop-pay-tab ${payMethod === 'credit' ? 'shop-pay-tab-active' : ''}`}
+                onClick={() => setPayMethod('credit')}
+              >
+                💳 Credit ({ccAvailable.toLocaleString()})
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Inventory */}

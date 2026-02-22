@@ -22,6 +22,7 @@ import {
 import { InterestTicker, DepositRowTicker } from '@/components/bank/InterestTicker'
 import { StockChart } from '@/components/bank/StockChart'
 import { ScratchCard } from '@/components/bank/ScratchCard'
+import { CreditCardSection } from '@/components/bank/CreditCardSection'
 
 function timeAgo(dateStr: string) {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
@@ -484,6 +485,11 @@ export default function BankPage() {
             </div>
           </div>
         </section>
+
+        {/* ============================================ */}
+        {/* CREDIT CARD */}
+        {/* ============================================ */}
+        <CreditCardSection />
 
         {/* ============================================ */}
         {/* CONVERT */}

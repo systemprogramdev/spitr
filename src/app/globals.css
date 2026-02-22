@@ -4728,6 +4728,39 @@ a:hover {
   flex-shrink: 0;
 }
 
+/* Payment method toggle */
+.shop-payment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--sys-border);
+}
+.shop-pay-tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+.shop-pay-tab {
+  background: transparent;
+  border: 1px solid var(--sys-border);
+  border-radius: 0.35rem;
+  color: var(--sys-text-muted);
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.shop-pay-tab:hover {
+  border-color: var(--sys-text-muted);
+}
+.shop-pay-tab-active {
+  background: var(--sys-primary);
+  border-color: var(--sys-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
 /* ============================================ */
 /* DESTROYED PAGE */
 /* ============================================ */
@@ -7315,4 +7348,296 @@ a:hover {
 
 .activity-stock .activity-detail {
   color: var(--sys-primary);
+}
+
+/* ============================================ */
+/* CREDIT CARD                                  */
+/* ============================================ */
+
+/* Offer state (no card yet) */
+.cc-offer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--sys-border);
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+}
+.cc-offer-text {
+  flex: 1;
+}
+.cc-offer-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--sys-text);
+  margin-bottom: 0.25rem;
+}
+.cc-offer-desc {
+  font-size: 0.75rem;
+  color: var(--sys-text-muted);
+  line-height: 1.4;
+}
+.cc-offer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Card image */
+.cc-card-image {
+  width: 220px;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  transition: box-shadow 0.3s;
+}
+.cc-card-image:hover {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+}
+.cc-card-dim {
+  width: 160px;
+  opacity: 0.8;
+  filter: grayscale(0.3);
+}
+
+/* Card area: image + info side by side */
+.cc-card-area {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+.cc-card-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.cc-card-overlay {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.25rem;
+}
+.cc-card-handle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Info panel (right of card) */
+.cc-info-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* Credit score section */
+.cc-score-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.cc-score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.cc-score-label {
+  font-size: 0.7rem;
+  color: var(--sys-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cc-score-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+}
+.cc-score-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cc-score-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.cc-score-tier {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Balance row */
+.cc-balance-row {
+  display: flex;
+  gap: 1.5rem;
+}
+.cc-balance-label {
+  font-size: 0.6rem;
+  color: var(--sys-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.1rem;
+}
+.cc-balance-value {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--sys-text);
+}
+
+/* Utilization bar */
+.cc-util-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.cc-util-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease, background 0.3s;
+}
+
+/* Meta row (billing cycle, interest warning) */
+.cc-meta-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.cc-meta-item {
+  font-size: 0.65rem;
+  color: var(--sys-text-muted);
+}
+
+/* Action cards (payment + ATM) */
+.cc-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.cc-action-card {
+  padding: 0.75rem;
+  border: 1px solid var(--sys-border);
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+.cc-action-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--sys-text);
+  margin-bottom: 0.15rem;
+}
+.cc-action-sub {
+  font-size: 0.6rem;
+  color: var(--sys-text-muted);
+  margin-bottom: 0.5rem;
+}
+.cc-action-form {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+.cc-action-form .input {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.5rem;
+}
+
+/* Limit increase row */
+.cc-increase-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.cc-increase-hint {
+  font-size: 0.65rem;
+  color: var(--sys-text-muted);
+  font-family: var(--font-mono);
+}
+
+/* Transaction history */
+.cc-txn-section {
+  border-top: 1px solid var(--sys-border);
+  padding-top: 0.5rem;
+}
+.cc-txn-toggle {
+  background: none;
+  border: none;
+  color: var(--sys-text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  width: 100%;
+  text-align: left;
+}
+.cc-txn-toggle:hover {
+  color: var(--sys-text);
+}
+.cc-txn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.cc-txn-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.65rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.cc-txn-type {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--sys-text-muted);
+  text-transform: uppercase;
+  font-size: 0.55rem;
+  letter-spacing: 0.05em;
+  width: 70px;
+}
+.cc-txn-desc {
+  flex: 1;
+  color: var(--sys-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cc-txn-amount {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .cc-offer {
+    flex-direction: column;
+    text-align: center;
+  }
+  .cc-card-area {
+    flex-direction: column;
+    align-items: center;
+  }
+  .cc-card-image {
+    width: 180px;
+  }
+  .cc-actions {
+    grid-template-columns: 1fr;
+  }
+  .cc-balance-row {
+    gap: 0.75rem;
+  }
 }
