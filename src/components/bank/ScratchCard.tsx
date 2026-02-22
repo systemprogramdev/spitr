@@ -96,7 +96,6 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
           prizeAmount: data.prizeAmount,
           prizeCurrency: data.prizeCurrency,
         })
-        onScratched(ticket.id)
 
         // Show popup after a brief delay for the reveal animation
         setTimeout(() => setShowPopup(true), 600)
@@ -174,7 +173,7 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
 
       {/* Lottery result popup */}
       {showPopup && result && (
-        <div className="lottery-popup-overlay" onClick={() => setShowPopup(false)}>
+        <div className="lottery-popup-overlay" onClick={() => { setShowPopup(false); onScratched(ticket.id) }}>
           <div
             className={`lottery-popup ${result.isWinner ? 'lottery-popup-win' : 'lottery-popup-lose'}`}
             onClick={(e) => e.stopPropagation()}
@@ -195,7 +194,7 @@ export function ScratchCard({ ticket, onScratched }: ScratchCardProps) {
             </div>
             <button
               className="lottery-popup-btn"
-              onClick={() => setShowPopup(false)}
+              onClick={() => { setShowPopup(false); onScratched(ticket.id) }}
             >
               {result.isWinner ? 'COLLECT' : 'DISMISS'}
             </button>
