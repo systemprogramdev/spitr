@@ -7857,14 +7857,14 @@ a:hover {
 
 .slot-grid {
   position: absolute;
-  top: 10%;
-  left: 10%;
-  right: 10%;
-  bottom: 10%;
+  top: 10.8%;
+  left: 10.2%;
+  right: 10.5%;
+  bottom: 16.5%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 0;
+  gap: 2.7%;
 }
 
 .slot-cell {
