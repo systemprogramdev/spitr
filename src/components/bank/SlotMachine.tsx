@@ -601,7 +601,7 @@ export function SlotMachine() {
 
   const busy = isSpinning || !!bonusPhase || !!cascadePhase
 
-  const streakMult = streak >= 5 ? 3 : streak >= 4 ? 2 : streak >= 3 ? 1.5 : 1
+  const streakMult = streak >= 5 ? 2 : streak >= 4 ? 1.5 : streak >= 3 ? 1.2 : 1
 
   return (
     <div className="slot-machine">

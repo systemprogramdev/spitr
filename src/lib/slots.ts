@@ -7,16 +7,17 @@
 export const WILD_SYMBOL = 7
 export const SCATTER_SYMBOL = 8
 
+// Rebalanced for ~93% base RTP — house edge with expanding wilds, cascades, etc.
 export const SLOT_SYMBOLS = [
-  { id: 1, name: 'Cola', rarity: 'common', payout: 2, weight: 12 },
-  { id: 6, name: 'Dice', rarity: 'common', payout: 2, weight: 11 },
-  { id: 5, name: 'Blades', rarity: 'common', payout: 3, weight: 10 },
-  { id: 3, name: 'Cash', rarity: 'uncommon', payout: 4, weight: 9 },
-  { id: 2, name: 'Seven', rarity: 'uncommon', payout: 5, weight: 8 },
-  { id: 4, name: 'Bike', rarity: 'rare', payout: 8, weight: 6 },
-  { id: 7, name: 'Skull', rarity: 'rare', payout: 12, weight: 4 },
-  { id: 8, name: 'Diamond', rarity: 'very_rare', payout: 25, weight: 2 },
-  { id: 9, name: 'Jackpot', rarity: 'ultra_rare', payout: 60, weight: 2 },
+  { id: 1, name: 'Cola', rarity: 'common', payout: 2, weight: 14 },
+  { id: 6, name: 'Dice', rarity: 'common', payout: 2, weight: 13 },
+  { id: 5, name: 'Blades', rarity: 'common', payout: 2, weight: 11 },
+  { id: 3, name: 'Cash', rarity: 'uncommon', payout: 3, weight: 9 },
+  { id: 2, name: 'Seven', rarity: 'uncommon', payout: 3, weight: 8 },
+  { id: 4, name: 'Bike', rarity: 'rare', payout: 5, weight: 6 },
+  { id: 7, name: 'Skull', rarity: 'rare', payout: 8, weight: 2 },
+  { id: 8, name: 'Diamond', rarity: 'very_rare', payout: 12, weight: 2 },
+  { id: 9, name: 'Jackpot', rarity: 'ultra_rare', payout: 30, weight: 1 },
 ] as const
 
 export type SlotSymbol = (typeof SLOT_SYMBOLS)[number]
@@ -128,8 +129,8 @@ export function evaluateScatter(
     }
   }
   if (count < 2) return null
-  const mults: Record<number, number> = { 2: 2, 3: 5, 4: 10, 5: 15 }
-  const mult = mults[Math.min(count, 5)] || 2
+  const mults: Record<number, number> = { 2: 1, 3: 2, 4: 5, 5: 8 }
+  const mult = mults[Math.min(count, 5)] || 1
   return { count, payout: Math.floor(totalBet * mult) }
 }
 
@@ -142,7 +143,7 @@ export interface CascadeStep {
   multiplier: number
 }
 
-export const CASCADE_MULTIPLIERS = [1.5, 2, 3, 5]
+export const CASCADE_MULTIPLIERS = [1.25, 1.5, 2, 3]
 
 export function cascadeWins(
   grid: number[][],
@@ -221,7 +222,7 @@ function pairMatch(a: number, b: number): number | null {
 export function checkNudge(grid: number[][], existingWins: SlotWin[]): NudgeResult | null {
   const byte = new Uint8Array(1)
   crypto.getRandomValues(byte)
-  if (byte[0] / 255 > 0.35) return null
+  if (byte[0] / 255 > 0.20) return null
 
   const wonLines = new Set(existingWins.map((w) => w.lineIndex))
 
@@ -332,8 +333,8 @@ export function resolveGamble(): boolean {
 // ---- Streak Multiplier ----
 // 3+ consecutive winning spins = escalating multiplier
 export function getStreakMultiplier(streak: number): number {
-  if (streak >= 5) return 3
-  if (streak >= 4) return 2
-  if (streak >= 3) return 1.5
+  if (streak >= 5) return 2
+  if (streak >= 4) return 1.5
+  if (streak >= 3) return 1.2
   return 1
 }
