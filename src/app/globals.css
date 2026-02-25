@@ -8454,19 +8454,18 @@ a:hover {
     height: 48%;
   }
 
+  /* Keep single-row layout identical to desktop, just scale down */
   .slot-control-bar {
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    padding: 0.35rem;
-    justify-content: center;
-  }
-
-  .slot-ctrl-divider {
-    display: none;
+    padding: 0.3rem 0.15rem;
   }
 
   .slot-ctrl-group {
+    gap: 0.2rem;
     padding: 0 0.25rem;
+  }
+
+  .slot-ctrl-divider {
+    height: 24px;
   }
 
   .slot-btn img {
@@ -8477,9 +8476,15 @@ a:hover {
     height: 50px;
   }
 
-  .slot-win-amount { font-size: 2rem; }
+  .slot-bet-display {
+    min-width: 40px;
+    padding: 0.1rem 0.35rem;
+  }
+
   .slot-bet-value { font-size: 0.9rem; }
+  .slot-bet-label { font-size: 0.4rem; }
   .slot-balance-amount { font-size: 0.95rem; }
+  .slot-win-amount { font-size: 2rem; }
 
   .slot-gamble-title { font-size: 1rem; }
   .slot-gamble-amount { font-size: 1.4rem; }
@@ -8492,4 +8497,30 @@ a:hover {
   .slot-streak-badge {
     font-size: 0.65rem;
   }
+
+  .slot-jp-amount { font-size: 0.85rem; }
+  .slot-jp-label { font-size: 0.5rem; }
+}
+
+/* Extra small screens — scale buttons down slightly more */
+@media (max-width: 380px) {
+  .slot-btn img {
+    height: 36px;
+  }
+
+  .slot-btn-spin img {
+    height: 44px;
+  }
+
+  .slot-ctrl-group {
+    gap: 0.15rem;
+    padding: 0 0.15rem;
+  }
+
+  .slot-bet-display {
+    min-width: 34px;
+    padding: 0.1rem 0.25rem;
+  }
+
+  .slot-bet-value { font-size: 0.8rem; }
 }
