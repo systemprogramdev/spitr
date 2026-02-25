@@ -7944,14 +7944,14 @@ a:hover {
 
 @keyframes slotWinGlow {
   from {
-    box-shadow: 0 0 8px var(--sys-primary), inset 0 0 6px rgba(var(--sys-primary-rgb), 0.3);
-    outline: 2px solid var(--sys-primary);
-    outline-offset: -2px;
+    box-shadow: 0 0 6px var(--sys-primary), inset 0 0 4px rgba(var(--sys-primary-rgb), 0.25);
+    outline: 1.5px solid var(--sys-primary);
+    outline-offset: -3px;
   }
   to {
-    box-shadow: 0 0 22px var(--sys-primary), inset 0 0 14px rgba(var(--sys-primary-rgb), 0.5);
-    outline: 2px solid var(--sys-primary);
-    outline-offset: -2px;
+    box-shadow: 0 0 16px var(--sys-primary), inset 0 0 10px rgba(var(--sys-primary-rgb), 0.4);
+    outline: 1.5px solid var(--sys-primary);
+    outline-offset: -3px;
   }
 }
 
