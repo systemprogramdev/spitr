@@ -141,7 +141,7 @@ export function SlotMachine() {
       toast.success(`BONUS! ${data.bonus.spins} FREE SPINS!`)
       schedule(() => {
         setBonusIntro(false)
-        setFreeSpins((n) => n + data.bonus!.spins)
+        // Don't set freeSpins — bonus grids are pre-resolved server-side
         setBonusPhase({
           grids: data.bonus!.grids,
           payouts: data.bonus!.payouts,
