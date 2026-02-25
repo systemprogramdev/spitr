@@ -3,7 +3,7 @@
 import { useCallback } from 'react'
 import { useUIStore } from '@/stores/uiStore'
 
-export type SoundName = 'knife' | 'gold' | 'drone' | 'spit' | 'gunshot' | 'chest' | 'potion' | 'nuke' | 'levelup' | 'shield' | 'block' | 'spraypaint' | 'notification' | 'send' | 'destroy' | 'paper' | 'winning' | 'losing' | 'check' | 'robot'
+export type SoundName = 'knife' | 'gold' | 'drone' | 'spit' | 'gunshot' | 'chest' | 'potion' | 'nuke' | 'levelup' | 'shield' | 'block' | 'spraypaint' | 'notification' | 'send' | 'destroy' | 'paper' | 'winning' | 'losing' | 'check' | 'robot' | 'spin' | 'payout' | 'bonus'
 
 const audioCache: Partial<Record<SoundName, HTMLAudioElement>> = {}
 
