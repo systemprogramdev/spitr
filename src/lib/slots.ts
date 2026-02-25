@@ -7,17 +7,17 @@
 export const WILD_SYMBOL = 7
 export const SCATTER_SYMBOL = 8
 
-// Rebalanced for ~93% base RTP — house edge with expanding wilds, cascades, etc.
+// Tuned for ~94% RTP with expanding wilds, cascades, scatter, nudge
 export const SLOT_SYMBOLS = [
-  { id: 1, name: 'Cola', rarity: 'common', payout: 2, weight: 14 },
-  { id: 6, name: 'Dice', rarity: 'common', payout: 2, weight: 13 },
-  { id: 5, name: 'Blades', rarity: 'common', payout: 2, weight: 11 },
-  { id: 3, name: 'Cash', rarity: 'uncommon', payout: 3, weight: 9 },
-  { id: 2, name: 'Seven', rarity: 'uncommon', payout: 3, weight: 8 },
-  { id: 4, name: 'Bike', rarity: 'rare', payout: 5, weight: 6 },
-  { id: 7, name: 'Skull', rarity: 'rare', payout: 8, weight: 2 },
-  { id: 8, name: 'Diamond', rarity: 'very_rare', payout: 12, weight: 2 },
-  { id: 9, name: 'Jackpot', rarity: 'ultra_rare', payout: 30, weight: 1 },
+  { id: 1, name: 'Cola', rarity: 'common', payout: 3, weight: 14 },
+  { id: 6, name: 'Dice', rarity: 'common', payout: 3, weight: 13 },
+  { id: 5, name: 'Blades', rarity: 'common', payout: 4, weight: 11 },
+  { id: 3, name: 'Cash', rarity: 'uncommon', payout: 6, weight: 9 },
+  { id: 2, name: 'Seven', rarity: 'uncommon', payout: 7, weight: 8 },
+  { id: 4, name: 'Bike', rarity: 'rare', payout: 10, weight: 6 },
+  { id: 7, name: 'Skull', rarity: 'rare', payout: 15, weight: 2 },
+  { id: 8, name: 'Diamond', rarity: 'very_rare', payout: 25, weight: 2 },
+  { id: 9, name: 'Jackpot', rarity: 'ultra_rare', payout: 55, weight: 1 },
 ] as const
 
 export type SlotSymbol = (typeof SLOT_SYMBOLS)[number]
