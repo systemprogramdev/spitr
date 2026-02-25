@@ -7877,16 +7877,6 @@ a:hover {
   position: relative;
 }
 
-/* Middle row icons shift up 20% */
-.slot-cell:nth-child(n+4):nth-child(-n+6) .slot-symbol {
-  transform: translateY(-20%);
-}
-
-/* Bottom row icons shift up 30% */
-.slot-cell:nth-child(n+7):nth-child(-n+9) .slot-symbol {
-  transform: translateY(-30%);
-}
-
 .slot-symbol {
   width: 55%;
   height: 55%;
@@ -7906,35 +7896,10 @@ a:hover {
   opacity: 1;
 }
 
-/* Bounce keyframes per row (accounting for vertical offset) */
 @keyframes slotBounce {
   0% { transform: translateY(-8px) scale(1.06); }
   50% { transform: translateY(3px) scale(0.96); }
   100% { transform: translateY(0) scale(1); }
-}
-
-/* Middle row bounce preserves -20% offset */
-.slot-cell:nth-child(n+4):nth-child(-n+6) .slot-reel-stopping .slot-symbol,
-.slot-cell:nth-child(n+4):nth-child(-n+6).slot-reel-stopping .slot-symbol {
-  animation: slotBounceMiddle 0.3s ease-out forwards;
-}
-
-@keyframes slotBounceMiddle {
-  0% { transform: translateY(calc(-20% - 8px)) scale(1.06); }
-  50% { transform: translateY(calc(-20% + 3px)) scale(0.96); }
-  100% { transform: translateY(-20%) scale(1); }
-}
-
-/* Bottom row bounce preserves -30% offset */
-.slot-cell:nth-child(n+7):nth-child(-n+9) .slot-reel-stopping .slot-symbol,
-.slot-cell:nth-child(n+7):nth-child(-n+9).slot-reel-stopping .slot-symbol {
-  animation: slotBounceBottom 0.3s ease-out forwards;
-}
-
-@keyframes slotBounceBottom {
-  0% { transform: translateY(calc(-30% - 8px)) scale(1.06); }
-  50% { transform: translateY(calc(-30% + 3px)) scale(0.96); }
-  100% { transform: translateY(-30%) scale(1); }
 }
 
 .slot-win-cell {
